@@ -1,0 +1,7 @@
+<form action="" enctype="multipart/form-data" method="post">{% csrf_token %}
+	<h2>Model Name</h2><br>
+	{{ form.name }}<br>
+	<h2>Model Upload</h2><br>
+	{{ form.file }}<br>
+	<input type="submit" value="Submit">
+</form>

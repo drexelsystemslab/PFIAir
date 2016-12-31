@@ -1,0 +1,23 @@
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+<h2>Models</h2>
+<div class="table-responsive">
+	<table class="table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>File name</th>
+				<th>Indexed</th>
+			</tr>
+		</thead>
+		{% for userModel in userModel_list %}
+			<tr>
+				<th>{{ userModel.pk }}</th>
+				<th>{{ userModel.fields.name }}</th>
+				<th>{{ userModel.fields.file }}</th>
+				<th>{{ userModel.fields.indexed }}</th>
+			</tr>
+		{% endfor %}
+	</table>
+</div>

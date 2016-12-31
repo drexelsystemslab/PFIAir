@@ -1,0 +1,6 @@
+<form action="/search/" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h2>Search using a file</h2><br>
+    {{ form }}<br><br>
+    <input type="submit" value="Submit" />
+</form>
