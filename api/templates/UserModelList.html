@@ -1,23 +1,41 @@
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-<h2>Models</h2>
-<div class="table-responsive">
-	<table class="table">
-		<thead>
-			<tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>File name</th>
-				<th>Indexed</th>
-			</tr>
-		</thead>
+<head>
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="127.0.0.1:8080/media/style.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
+	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/three.js"></script>
+	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/Detector.js"></script>
+	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/OrbitControls.js"></script>
+	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/OBJLoader.js"></script>
+	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/3dPreview.js"></script>
+</head>
+<body>
+	<div class="container">
+		<h2>Models</h2>
+		<div id="preview"></div>
+		<div id="usermodels" class="row list-group">
 		{% for userModel in userModel_list %}
-			<tr>
-				<th>{{ userModel.pk }}</th>
-				<th>{{ userModel.fields.name }}</th>
-				<th>{{ userModel.fields.file }}</th>
-				<th>{{ userModel.fields.indexed }}</th>
-			</tr>
-		{% endfor %}
-	</table>
-</div>
+			<div id="UserModel {{ userModel.pk }}"class="item  col-xs-4 col-lg-4">
+	            <div class="thumbnail">
+	                <div class="col-xs-12 col-md-12" id="preview2" style="height:300px;background-color: #000000;"></div>
+	                <div class="caption">
+	                    <h4 class="group inner list-group-item-heading">{{ userModel.fields.name }}</h4>
+	                    <h4></h4>
+	                    <p class="group inner list-group-item-text">Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+	                    <div class="row">
+	                        <div class="col-xs-12 col-md-6">
+	                            <p>Indexed: {{ userModel.fields.indexed }}</p>
+	                        </div>
+	                        <div class="col-xs-12 col-md-6">
+	                            <a class="btn btn-success" href="/download/{{userModel.pk}}" target="_blank">Download</a>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    {% endfor %}
+		</div>
+	</div>
+</body>

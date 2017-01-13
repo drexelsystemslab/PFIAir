@@ -9,7 +9,8 @@ import random
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import pickle
-
+import mimetypes
+import os 
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
@@ -30,7 +31,7 @@ def getUserModel(request):
 
 def search(request):
 	if(request.method == "POST"):
-		#The user is submitting a fiel to search
+		#The user is submitting a file to search
 		#let's get the file from the request
 		form = SearchForm(request.POST, request.FILES)
 		if(form.is_valid()): #TODO: check for legal file types
@@ -56,7 +57,7 @@ def search(request):
 			topthree = sorted(range(len(closeness[:-1,-1])), key=lambda i:closeness[:-1,-1][i],reverse=True)[0:3]
 			results = []
 			for result in topthree:
-				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result))
+				matchedUserModels = serializers.serialize('python',UserModel.objects.get(pk=result))
 				results.append(matchedUserModels[0])
 			return render(request, 'UserModelList.html', {"userModel_list":results})
 			
@@ -67,6 +68,18 @@ def search(request):
 	else:
 		form = SearchForm()
 		return render(request, 'Search.html', {'form':form})
+
+def download(request,file_pk):
+	usermodel = UserModel.objects.get(pk=file_pk)
+	file_path = usermodel.file.url.split('/',2)[2] #TODO: why is there an extra /uploads/
+	file_name = usermodel.file.url.split('/')[-1]
+	file_wrapper = open(file_path,'rb')
+	file_mimetype = mimetypes.guess_type(file_path)
+	response = HttpResponse(file_wrapper, content_type=file_mimetype)
+	response['X-Sendfile'] = file_path
+	response['Content-Length'] = os.stat(file_path).st_size
+	response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+	return response
 
 def handle_uploaded_file(f,form_id):
 	with open("temp/"+form_id+'.um','wb+') as destination:

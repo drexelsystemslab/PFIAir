@@ -1,6 +1,14 @@
-<form action="/search/" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <h2>Search using a file</h2><br>
-    {{ form }}<br><br>
-    <input type="submit" value="Submit" />
-</form>
+<head>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+</head>
+<body>
+	<div class="container">
+		<form action="/search/" method="post" enctype="multipart/form-data">
+		    {% csrf_token %}
+		    <h2>Search using a file</h2><br>
+		    {{ form }}<br><br>
+		    <input type="submit" value="Submit" />
+		</form>
+	</div>
+</body>
