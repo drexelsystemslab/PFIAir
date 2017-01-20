@@ -45,7 +45,7 @@ def search(request):
 			documents = []
 			docPks = [] #Im using lists because I want to maintain order. Ideally this would be a dictionary
 			for userModel in usermodels:
-				documents.append(userModel.file.url)
+				documents.append(userModel.file.url.split('/',2)[2])
 				docPks.append(userModel.pk)
 
 			documents.append("temp/"+form_id+".um")#add the new file
@@ -57,7 +57,7 @@ def search(request):
 			topthree = sorted(range(len(closeness[:-1,-1])), key=lambda i:closeness[:-1,-1][i],reverse=True)[0:3]
 			results = []
 			for result in topthree:
-				matchedUserModels = serializers.serialize('python',UserModel.objects.get(pk=result))
+				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result))
 				results.append(matchedUserModels[0])
 			return render(request, 'UserModelList.html', {"userModel_list":results})
 			
