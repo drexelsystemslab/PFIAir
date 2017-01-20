@@ -1,14 +1,14 @@
 <head>
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-	<link rel="stylesheet" href="127.0.0.1:8080/media/style.css">
+	{% load static %}
+	<link rel="stylesheet" href="{% static "style.css" %}">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
-	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/three.js"></script>
-	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/Detector.js"></script>
-	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/OrbitControls.js"></script>
-	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/OBJLoader.js"></script>
-	<script type="text/javascript" src="http://127.0.0.1:8888/uploads/3dPreview.js"></script>
+	<script type="text/javascript" src="{% static "three.js" %}"></script>
+	<script type="text/javascript" src="{% static "Detector.js" %}"></script>
+	<script type="text/javascript" src="{% static "OrbitControls.js" %}"></script>
+	<script type="text/javascript" src="{% static "OBJLoader.js" %}"></script>
+	<script type="text/javascript" src="{% static "3dPreview.js" %}"></script>
 </head>
 <body>
 	<div class="container">

@@ -26,4 +26,4 @@ urlpatterns = [
     url(r'^usermodels/', views.getUserModel, name='getUserModel'),
     url(r'^search/', views.search, name='search'),
     url(r'^download/(?P<file_pk>.+)$',views.download,name='download')
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
