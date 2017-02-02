@@ -1,2 +1,3 @@
 /temp/
 /uploads/
+*.sqlite3

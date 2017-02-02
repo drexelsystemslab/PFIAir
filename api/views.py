@@ -81,6 +81,15 @@ def download(request,file_pk):
 	response['Content-Disposition'] = 'attachment; filename=%s' % file_name
 	return response
 
+def delete(request,file_pk):
+	data = {"success":False}
+	if(request.method == "DELETE"):
+		usermodel = UserModel.objects.get(pk=file_pk)
+		usermodel.delete()
+		data["success"] = True
+
+	return JsonResponse(data)
+
 def handle_uploaded_file(f,form_id):
 	with open("temp/"+form_id+'.um','wb+') as destination:
 		for chunk in f.chunks():

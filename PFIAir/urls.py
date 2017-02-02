@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^upload/', views.upload, name='upload'),
     url(r'^usermodels/', views.getUserModel, name='getUserModel'),
     url(r'^search/', views.search, name='search'),
-    url(r'^download/(?P<file_pk>.+)$',views.download,name='download')
+    url(r'^download/(?P<file_pk>.+)$',views.download,name='download'),
+    url(r'^delete/(?P<file_pk>.+)$',views.delete,name='delete')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

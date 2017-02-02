@@ -9,6 +9,51 @@
 	<script type="text/javascript" src="{% static "OrbitControls.js" %}"></script>
 	<script type="text/javascript" src="{% static "OBJLoader.js" %}"></script>
 	<script type="text/javascript" src="{% static "3dPreview.js" %}"></script>
+	<script type="text/javascript">
+		function getCookie(name) {
+    		var cookieValue = null;
+    		if (document.cookie && document.cookie !== '') {
+        		var cookies = document.cookie.split(';');
+        		for (var i = 0; i < cookies.length; i++) {
+            		var cookie = jQuery.trim(cookies[i]);
+            		// Does this cookie string begin with the name we want?
+            		if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                		cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                		break;
+            		}
+        		}
+    		}
+    		return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+		function csrfSafeMethod(method) {
+    		// these HTTP methods do not require CSRF protection
+    		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		$.ajaxSetup({
+    		beforeSend: function(xhr, settings) {
+        		if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            		xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        		}
+    		}
+		});
+		function deleter(pk){
+			if(window.confirm("Are you sure you want to delete?")){
+			$.ajax({
+					type:"DELETE",
+					url:"/delete/"+pk,
+					success: function(msg) {
+						console.log("Deleted, ready to reload")
+						window.location.reload(false); 
+					},
+					error: function (xhr, ajaxOptions, thrownError) {
+						console.log("Delete failed");
+					}
+				});
+			}
+			return false;
+		}
+	</script>
 </head>
 <body>
 	<div class="container">
@@ -25,11 +70,14 @@
 	                    <p class="group inner list-group-item-text">Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
 	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
 	                    <div class="row">
-	                        <div class="col-xs-12 col-md-6">
+	                        <div class="col-xs-12 col-md-4">
 	                            <p>Indexed: {{ userModel.fields.indexed }}</p>
 	                        </div>
-	                        <div class="col-xs-12 col-md-6">
-	                            <a class="btn btn-success" href="/download/{{userModel.pk}}" target="_blank">Download</a>
+	                        <div class="col-xs-12 col-md-8">
+	                            <a class="btn btn-success" href="/download/{{userModel.pk}}" target="_blank" style="float:right;"">Download</a>
+	                            <form onsubmit="return deleter({{userModel.pk}})" style="float:right;margin-right: 10px;">
+	                            	<input class="btn btn-danger" type="submit" value="Delete">
+	                            </form>
 	                        </div>
 	                    </div>
 	                </div>
