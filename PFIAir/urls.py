@@ -28,3 +28,12 @@ urlpatterns = [
     url(r'^download/(?P<file_pk>.+)$',views.download,name='download'),
     url(r'^delete/(?P<file_pk>.+)$',views.delete,name='delete')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# copied from the internet because it might be useful in the future
+# urlpatterns += patterns('',
+#         url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+#             'document_root': settings.MEDIA_ROOT,
+#         }),
+#         url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
+#             'document_root': settings.STATIC_ROOT,
+#         }),

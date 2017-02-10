@@ -1,14 +1,9 @@
 <head>
-	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	{% load static %}
 	<link rel="stylesheet" href="{% static "style.css" %}">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-	<script type="text/javascript" src="{% static "three.js" %}"></script>
-	<script type="text/javascript" src="{% static "Detector.js" %}"></script>
-	<script type="text/javascript" src="{% static "OrbitControls.js" %}"></script>
-	<script type="text/javascript" src="{% static "OBJLoader.js" %}"></script>
-	<script type="text/javascript" src="{% static "3dPreview.js" %}"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 	<script type="text/javascript">
 		function getCookie(name) {
     		var cookieValue = null;
@@ -53,17 +48,44 @@
 			}
 			return false;
 		}
+		function thumbError(self) {
+			self.src = "/static/error.png";
+		}
 	</script>
 </head>
 <body>
 	<div class="container">
-		<h2>Models</h2>
+		<nav class="navbar navbar-default">
+		  <div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="#">Models</a>
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		      <ul class="nav navbar-nav">
+		        <li class="active"><a href="/usermodels/">Models<span class="sr-only">(current)</span></a></li>
+		        <li><a href="/upload/">Upload</a></li>
+		        <li><a href="/search/">Search</a></li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
 		<div id="preview"></div>
 		<div id="usermodels" class="row list-group">
 		{% for userModel in userModel_list %}
 			<div id="UserModel {{ userModel.pk }}"class="item  col-xs-4 col-lg-4">
 	            <div class="thumbnail">
-	                <div class="col-xs-12 col-md-12" id="preview2" style="height:300px;background-color: #000000;"></div>
+	                <div class="col-xs-12 col-md-12" id="preview2" style="background-color: #FFFFFF;">
+	                	<img style="width: 100%;" src="/{{userModel.fields.preview}}" onerror="thumbError(this)">
+	                </div>
 	                <div class="caption">
 	                    <h4 class="group inner list-group-item-heading">{{ userModel.fields.name }}</h4>
 	                    <h4></h4>

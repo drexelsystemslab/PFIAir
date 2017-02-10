@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.http import HttpResponseRedirect
 from django.core import serializers
+from django.conf import settings
 from api.models import UserModel
 from api.models import UserModelForm
 from api.forms import SearchForm
@@ -11,6 +13,7 @@ import numpy as np
 import pickle
 import mimetypes
 import os 
+import tasks
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
@@ -19,8 +22,9 @@ def upload(request):
 	if request.method == "POST":
 		form = UserModelForm(request.POST,request.FILES)
 		if form.is_valid():
-			form.save()
-			return HttpResponse("Thank you for uploading")
+			newUserModel = form.save()
+			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
+			return HttpResponseRedirect('/usermodels')
 	else:
 		form = UserModelForm()
 	return render(request, 'upload.html', {'form':form})
@@ -71,8 +75,9 @@ def search(request):
 
 def download(request,file_pk):
 	usermodel = UserModel.objects.get(pk=file_pk)
-	file_path = usermodel.file.url.split('/',2)[2] #TODO: why is there an extra /uploads/
+	file_path = usermodel.file.url #TODO: why is there an extra /uploads/
 	file_name = usermodel.file.url.split('/')[-1]
+	print(file_path)
 	file_wrapper = open(file_path,'rb')
 	file_mimetype = mimetypes.guess_type(file_path)
 	response = HttpResponse(file_wrapper, content_type=file_mimetype)

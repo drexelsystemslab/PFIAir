@@ -1,3 +1,4 @@
 /temp/
 /uploads/
 *.sqlite3
+*.pyc

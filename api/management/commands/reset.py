@@ -7,5 +7,5 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         usermodels = UserModel.objects.all()
         for usermodel in usermodels:
-            usermodel.indexed = False
-            usermodel.save()
+        	usermodel.indexed = False
+        	usermodel.save()
