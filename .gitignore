@@ -2,3 +2,5 @@
 /uploads/
 *.sqlite3
 *.pyc
+/models/
+/static/previews
