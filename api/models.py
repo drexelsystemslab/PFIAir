@@ -7,6 +7,7 @@ class UserModel(models.Model):
 	name = models.TextField()
 	file = models.FileField(upload_to='models/')
 	indexed = models.BooleanField(default=False)
+	descriptor = models.TextField(default="[]",null=True,blank=True)
 	preview = models.ImageField(upload_to='static/previews/',default=None)
 	def filename(self):
 		return os.path.basename(self.file.name)

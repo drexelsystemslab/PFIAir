@@ -126,5 +126,9 @@ STATICFILES_DIRS = (
   os.path.join(BASE_DIR, 'static/'),
 )
 
+CELERY_ACCEPT_CONTENT = ['pickle','application/json']
+CELERY_TASKS_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'
+
 #MEDIA_URL = 'uploads/'#no preceding slash for relative paths
 #MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')

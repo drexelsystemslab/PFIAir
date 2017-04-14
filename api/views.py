@@ -14,9 +14,16 @@ import pickle
 import mimetypes
 import os 
 import tasks
+import ToolBox
+from stl import mesh
+from tasks import *
+from celery import chord
+from celery import group
+from celery import chain
+import json
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    return HttpResponse("Hello, world. You're at the index.")
 
 def upload(request):
 	if request.method == "POST":
@@ -24,6 +31,30 @@ def upload(request):
 		if form.is_valid():
 			newUserModel = form.save()
 			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
+
+			stlmodel = mesh.Mesh.from_file(newUserModel.file.url)
+			model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
+			genDescriptorChain = []
+
+			indexes = range(0,len(model["points"]))
+			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
+			genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
+			genDescriptorChain.append(genGraphWorkflow)
+
+			genDescriptorChain.append(saveNeighbors.s(newUserModel.pk))
+
+			descriptorsChain = []
+
+			#descriptorsChain.append(angleHistTask.s())
+			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
+			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
+
+			genDescriptorChain.append(angleHistTask.s())
+
+			genDescriptorChain.append(saveDescriptor.s(newUserModel.pk))
+			generate = chain(*genDescriptorChain)
+			result = generate.delay()
+
 			return HttpResponseRedirect('/usermodels')
 	else:
 		form = UserModelForm()
@@ -43,25 +74,47 @@ def search(request):
 			handle_uploaded_file(request.FILES['userModel'],form_id)
 
 			#ok now the file is in temp/[form_id].um (stands for user model)
-			#TFIDF implementation
-			tfidf = pickle.load(open('tfidf.pkl',"rb"))
-			usermodels = UserModel.objects.filter(indexed=True)
-			documents = []
-			docPks = [] #Im using lists because I want to maintain order. Ideally this would be a dictionary
-			for userModel in usermodels:
-				documents.append(userModel.file.url.split('/',2)[2])
-				docPks.append(userModel.pk)
+			#so let's generate it's descriptor
+			stlmodel = mesh.Mesh.from_file('temp/'+form_id+'.um')##TODO: these should be a new type of models so we can track them
+			model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
+			genDescriptorChain = []
 
-			documents.append("temp/"+form_id+".um")#add the new file
-				
-			tdm = tfidf.transform(documents)
-			closeness = np.array((tdm*tdm.T).A)
-			#print closeness
-			#print closeness[:-1,-1]
-			topthree = sorted(range(len(closeness[:-1,-1])), key=lambda i:closeness[:-1,-1][i],reverse=True)[0:3]
+			indexes = range(0,len(model["points"]))
+			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
+			genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
+			genDescriptorChain.append(genGraphWorkflow)
+
+			descriptorsChain = []
+
+			#descriptorsChain.append(angleHistTask.s())
+			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
+			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
+
+			genDescriptorChain.append(angleHistTask.s())
+			generate = chain(*genDescriptorChain)
+			process = generate.delay()
+
+			start = time.time()
+			while (process.ready() == False):
+  				print(time.time()-start)
+    			time.sleep(1)
+
+			newUserModelDescriptor = process.get(timeout=1)#don't need to json.loads because the process returns a python array already
+			newUserModelAngleHist = np.array(newUserModelDescriptor[1])#strip off the lable to get at the data
+			usermodels = UserModel.objects.filter(indexed=True)
+			models = []
+			for userModel in usermodels:
+				descriptor = json.loads(userModel.descriptor)
+				angleHist = np.array(descriptor[1])
+				distance = np.linalg.norm(newUserModelAngleHist[:,1]-angleHist[:,1])#because the data is [lable,value] we need to just subtract values
+				models.append({"pk":userModel.pk,"distance":distance})
+
+			print(models)
+			topthree = sorted(models, key=lambda i:i["distance"])[0:3]
 			results = []
+			print(topthree)
 			for result in topthree:
-				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result))
+				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result["pk"]))
 				results.append(matchedUserModels[0])
 			return render(request, 'UserModelList.html', {"userModel_list":results})
 			
