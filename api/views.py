@@ -8,7 +8,6 @@ from api.models import UserModel
 from api.models import UserModelForm
 from api.forms import SearchForm
 import random
-from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import pickle
 import mimetypes
@@ -96,8 +95,8 @@ def search(request):
 
 			start = time.time()
 			while (process.ready() == False):
-  				print(time.time()-start)
-    			time.sleep(1)
+				print(time.time()-start)
+				time.sleep(1)
 
 			newUserModelDescriptor = process.get(timeout=1)#don't need to json.loads because the process returns a python array already
 			newUserModelAngleHist = np.array(newUserModelDescriptor[1])#strip off the lable to get at the data
