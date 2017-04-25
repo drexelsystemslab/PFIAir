@@ -12,10 +12,9 @@ import numpy as np
 import pickle
 import mimetypes
 import os 
-import tasks
-import ToolBox
+from api import ToolBox
 from stl import mesh
-from tasks import *
+from api import tasks
 from celery import chord
 from celery import group
 from celery import chain
@@ -37,10 +36,10 @@ def upload(request):
 
 			indexes = range(0,len(model["points"]))
 			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
-			genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
+			genGraphWorkflow = chord((tasks.findNeighborsTask.s(model,chunk) for chunk in chunks),tasks.reducer.s())
 			genDescriptorChain.append(genGraphWorkflow)
 
-			genDescriptorChain.append(saveNeighbors.s(newUserModel.pk))
+			genDescriptorChain.append(tasks.saveNeighbors.s(newUserModel.pk))
 
 			descriptorsChain = []
 
@@ -48,9 +47,9 @@ def upload(request):
 			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
 			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
 
-			genDescriptorChain.append(angleHistTask.s())
+			genDescriptorChain.append(task.angleHistTask.s())
 
-			genDescriptorChain.append(saveDescriptor.s(newUserModel.pk))
+			genDescriptorChain.append(tasks.saveDescriptor.s(newUserModel.pk))
 			generate = chain(*genDescriptorChain)
 			result = generate.delay()
 
