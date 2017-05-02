@@ -9,6 +9,7 @@ from api.ToolBox import *
 import numpy as np
 import math
 import json
+import time
 
 @shared_task
 def generatePreview(usermodelpk):
@@ -18,7 +19,7 @@ def generatePreview(usermodelpk):
 	filename = userModel.file.url.split('/')[-1]
 	name = filename.split('.')[0]
 	previewFileName = name+'.png'
-	with open('static/previews/'+previewFileName,'r') as f:
+	with open('static/previews/'+previewFileName,'rb') as f:
 		image_file = File(f)
 		userModel.preview.save(previewFileName,image_file,True)
 
@@ -86,21 +87,24 @@ def reducer(lists):
 def angleHistTask(neighborsGraph):
     return angleHist(neighborsGraph)
 
-@shared_task(queue='IOQueue')
+#@shared_task(queue='IOQueue')
+@shared_task
 def printResults(results):
     print(results)
     return
 
-@shared_task(queue='IOQueue')
+#@shared_task(queue='IOQueue')
+@shared_task
 def saveNeighbors(neighborsGraph,modelID):
     userModel = UserModel.objects.get(pk=modelID)
     fileURL = userModel.file.url.rsplit('/',1)[0]
     filename = userModel.file.url.split('/')[-1]
-    file = open(fileURL+"/"+filename+'_neighbors.pkl', 'w')
+    file = open(fileURL+"/"+filename+'_neighbors.pkl', 'wb')
     pickle.dump(neighborsGraph,file)
     return neighborsGraph #allow pass through for next task
 
-@shared_task(queue='IOQueue')
+#@shared_task(queue='IOQueue')
+@shared_task
 def saveDescriptor(descriptor,modelID):
     userModel = UserModel.objects.get(pk=modelID)
     userModel.descriptor = json.dumps(descriptor)

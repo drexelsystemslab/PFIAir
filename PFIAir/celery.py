@@ -17,7 +17,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 # add a new queue to seperate tasks that require file IO
-app.control.add_consumer('IOQueue', reply=True)
+#app.control.add_consumer('IOQueue', reply=True)
 
 @app.task(bind=True)
 def debug_task(self):

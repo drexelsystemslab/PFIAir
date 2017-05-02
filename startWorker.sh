@@ -1,2 +1,3 @@
-celery -A PFIAir worker -l DEBUG -n worker1@%h -Q celery
+source activate py35
+celery -A PFIAir worker -l DEBUG -n worker1@%h
 

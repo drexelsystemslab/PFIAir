@@ -34,7 +34,7 @@ def upload(request):
 			model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
 			genDescriptorChain = []
 
-			indexes = range(0,len(model["points"]))
+			indexes = list(range(0,len(model["points"])))
 			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
 			genGraphWorkflow = chord((tasks.findNeighborsTask.s(model,chunk) for chunk in chunks),tasks.reducer.s())
 			genDescriptorChain.append(genGraphWorkflow)
@@ -47,7 +47,7 @@ def upload(request):
 			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
 			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
 
-			genDescriptorChain.append(task.angleHistTask.s())
+			genDescriptorChain.append(tasks.angleHistTask.s())
 
 			genDescriptorChain.append(tasks.saveDescriptor.s(newUserModel.pk))
 			generate = chain(*genDescriptorChain)
