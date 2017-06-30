@@ -1,0 +1,1 @@
+celery -A tasks worker --loglevel=DEBUG --pool=solo -n worker1@%h -Q celery
