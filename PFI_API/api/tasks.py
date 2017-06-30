@@ -13,15 +13,27 @@ import time
 
 @shared_task
 def generatePreview(usermodelpk):
-	print("Generating preview for usermodel: " + str(usermodelpk))
-	userModel = UserModel.objects.get(pk=usermodelpk)
-	call(["blender", "--background","--python","api/management/commands/blenderObjToStl.py","--",userModel.file.url])
-	filename = userModel.file.url.split('/')[-1]
-	name = filename.split('.')[0]
-	previewFileName = name+'.png'
-	with open('static/previews/'+previewFileName,'rb') as f:
-		image_file = File(f)
-		userModel.preview.save(previewFileName,image_file,True)
+    try:
+        print("Generating preview for usermodel: " + str(usermodelpk))
+        userModel = UserModel.objects.get(pk=usermodelpk)
+        print(userModel.file.url)
+        filename = userModel.file.url.split('/')[-1]
+        name = filename.split('.')[0]
+        target_url = os.path.abspath(filename).rsplit("/",1)[0]+"/static/previews/"+name+".png"
+        call(["blender",
+              "--background",
+              "--python",
+              "api/management/commands/blenderObjToStl.py",
+              "--",
+              userModel.file.url,
+              target_url])
+
+        previewFileName = name+'.png'
+        with open('static/previews/'+previewFileName,'rb') as f:
+            image_file = File(f)
+            userModel.preview.save(previewFileName,image_file,True)
+    except Exception as e:
+        print(e.message)
 
 # @shared_task
 # def generateDescriptor(usermodelpk):
