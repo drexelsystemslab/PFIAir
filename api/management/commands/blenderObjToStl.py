@@ -8,7 +8,7 @@ stl_in = argv[0]
 #stl_in = '/home/austin/Documents/GitHub/PFIAir/uploads/models/bolt.obj'
 
 filename = stl_in.split('/')[-1]
-previewFilename = '/home/austin/Documents/GitHub/PFIAir/static/previews/'+filename.split('.')[0]+'.png'
+previewFilename = '/home/ubuntu/Documents/GitHub/PFIAir/static/previews/'+filename.split('.')[0]+'.png'#TODO:this should be a relative path
 
 if(filename.split('.')[1] == "stl"):
 	bpy.ops.import_mesh.stl(filepath=stl_in)

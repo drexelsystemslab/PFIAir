@@ -19,6 +19,7 @@ from celery import chord
 from celery import group
 from celery import chain
 import json
+import trimesh
 
 def index(request):
     return HttpResponse("Hello, world. You're at the index.")
@@ -28,30 +29,38 @@ def upload(request):
 		form = UserModelForm(request.POST,request.FILES)
 		if form.is_valid():
 			newUserModel = form.save()
-			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
+			model = trimesh.load_mesh(newUserModel.file.url)
+			neighbors = ToolBox.findNeighbors(model)
 
-			stlmodel = mesh.Mesh.from_file(newUserModel.file.url)
-			model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
-			genDescriptorChain = []
+			descriptor = ToolBox.angleHist(neighbors)
+			newUserModel.descriptor = json.dumps(descriptor)
+			newUserModel.indexed = True
+			newUserModel.save()
+			tasks.generatePreview(newUserModel.pk)	
+			#tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
 
-			indexes = list(range(0,len(model["points"])))
-			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
-			genGraphWorkflow = chord((tasks.findNeighborsTask.s(model,chunk) for chunk in chunks),tasks.reducer.s())
-			genDescriptorChain.append(genGraphWorkflow)
+			#stlmodel = mesh.Mesh.from_file(newUserModel.file.url)
+			#model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
+			#genDescriptorChain = []
 
-			genDescriptorChain.append(tasks.saveNeighbors.s(newUserModel.pk))
+			#indexes = list(range(0,len(model["points"])))
+			#chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
+			#genGraphWorkflow = tasks.findNeighborsTask.s(model)
+			#genDescriptorChain.append(genGraphWorkflow)
 
-			descriptorsChain = []
+			#genDescriptorChain.append(tasks.saveNeighbors.s(newUserModel.pk))
+
+			#descriptorsChain = []
 
 			#descriptorsChain.append(angleHistTask.s())
 			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
 			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
 
-			genDescriptorChain.append(tasks.angleHistTask.s())
+			#genDescriptorChain.append(tasks.angleHistTask.s())
 
-			genDescriptorChain.append(tasks.saveDescriptor.s(newUserModel.pk))
-			generate = chain(*genDescriptorChain)
-			result = generate.delay()
+			#genDescriptorChain.append(tasks.saveDescriptor.s(newUserModel.pk))
+			#generate = chain(*genDescriptorChain)
+			#result = generate.delay()
 
 			return HttpResponseRedirect('/usermodels')
 	else:
@@ -73,37 +82,44 @@ def search(request):
 
 			#ok now the file is in temp/[form_id].um (stands for user model)
 			#so let's generate it's descriptor
-			stlmodel = mesh.Mesh.from_file('temp/'+form_id+'.um')##TODO: these should be a new type of models so we can track them
-			model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
-			genDescriptorChain = []
+			#stlmodel = mesh.Mesh.from_file('temp/'+form_id+'.um')##TODO: these should be a new type of models so we can track them
+			#model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
+			#genDescriptorChain = []
 
-			indexes = range(0,len(model["points"]))
-			chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
-			genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
-			genDescriptorChain.append(genGraphWorkflow)
+			#indexes = range(0,len(model["points"]))
+			#chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
+			#genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
+			#genDescriptorChain.append(genGraphWorkflow)
 
-			descriptorsChain = []
+			#descriptorsChain = []
 
 			#descriptorsChain.append(angleHistTask.s())
 			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
 			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
 
-			genDescriptorChain.append(angleHistTask.s())
-			generate = chain(*genDescriptorChain)
-			process = generate.delay()
+			#genDescriptorChain.append(angleHistTask.s())
+			#generate = chain(*genDescriptorChain)
+			#process = generate.delay()
 
-			start = time.time()
-			while (process.ready() == False):
-				print(time.time()-start)
-				time.sleep(1)
+			#start = time.time()
+			#while (process.ready() == False):
+			#	print(time.time()-start)
+			#	time.sleep(1)
+			model = trimesh.load_mesh('temp/'+form_id+'.stl')
+			neighbors = ToolBox.findNeighbors(model)
 
-			newUserModelDescriptor = process.get(timeout=1)#don't need to json.loads because the process returns a python array already
-			newUserModelAngleHist = np.array(newUserModelDescriptor[1])#strip off the lable to get at the data
+			descriptor = []
+			angleHist = np.array(ToolBox.angleHist(neighbors)['angleHist'])
+			print(angleHist)
+			#newUserModelDescriptor = process.get(timeout=1)#don't need to json.loads because the process returns a python array already
+			#newUserModelAngleHist = np.array(newUserModelDescriptor[1])#strip off the lable to get at the data
+			newUserModelAngleHist = angleHist
 			usermodels = UserModel.objects.filter(indexed=True)
 			models = []
 			for userModel in usermodels:
 				descriptor = json.loads(userModel.descriptor)
-				angleHist = np.array(descriptor[1])
+				print(descriptor)
+				angleHist = np.array(descriptor['angleHist'])
 				distance = np.linalg.norm(newUserModelAngleHist[:,1]-angleHist[:,1])#because the data is [lable,value] we need to just subtract values
 				models.append({"pk":userModel.pk,"distance":distance})
 
@@ -147,7 +163,7 @@ def delete(request,file_pk):
 	return JsonResponse(data)
 
 def handle_uploaded_file(f,form_id):
-	with open("temp/"+form_id+'.um','wb+') as destination:
+	with open("temp/"+form_id+'.stl','wb+') as destination:
 		for chunk in f.chunks():
 			destination.write(chunk)
 	pass

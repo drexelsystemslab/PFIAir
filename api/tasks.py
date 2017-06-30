@@ -72,8 +72,8 @@ def clean_acos(cos_angle):
     return math.acos(min(1, max(cos_angle, -1)))
 
 @shared_task
-def findNeighborsTask(model,indexes):#TODO: move out of this module
-    return findNeighbors(model,indexes)
+def findNeighborsTask(model):#TODO: move out of this module
+    return findNeighbors(model)
 
 @shared_task
 def reducer(lists):
