@@ -1,0 +1,6 @@
+*.pyc
+*.pkl
+*.npy
+*.obj
+*.stl
+.idea/
