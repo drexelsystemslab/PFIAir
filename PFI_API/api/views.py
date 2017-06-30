@@ -12,8 +12,8 @@ import numpy as np
 import mimetypes
 import os
 import sys
-sys.path.append("../../PFI_Python/Toolbox.py")
-from api import ToolBox
+sys.path.append("../PFI_Python/")
+import ToolBox
 from api import tasks
 from celery import group
 import json

@@ -14,7 +14,7 @@ import logging, sys
 from django.core.wsgi import get_wsgi_application
 
 logging.basicConfig(stream=sys.stderr)
-print(sys.prefix, file=sys.stderr)
+#print(sys.prefix, file=sys.stderr)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PFIAir.settings")
 
