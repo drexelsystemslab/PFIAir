@@ -1,0 +1,111 @@
+<head>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	{% load static %}
+	<link rel="stylesheet" href="{% static "style.css" %}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script type="text/javascript">
+		function getCookie(name) {
+    		var cookieValue = null;
+    		if (document.cookie && document.cookie !== '') {
+        		var cookies = document.cookie.split(';');
+        		for (var i = 0; i < cookies.length; i++) {
+            		var cookie = jQuery.trim(cookies[i]);
+            		// Does this cookie string begin with the name we want?
+            		if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                		cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                		break;
+            		}
+        		}
+    		}
+    		return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+		function csrfSafeMethod(method) {
+    		// these HTTP methods do not require CSRF protection
+    		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		$.ajaxSetup({
+    		beforeSend: function(xhr, settings) {
+        		if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            		xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        		}
+    		}
+		});
+		function deleter(pk){
+			if(window.confirm("Are you sure you want to delete?")){
+			$.ajax({
+					type:"DELETE",
+					url:"/delete/"+pk,
+					success: function(msg) {
+						console.log("Deleted, ready to reload")
+						window.location.reload(false); 
+					},
+					error: function (xhr, ajaxOptions, thrownError) {
+						console.log("Delete failed");
+					}
+				});
+			}
+			return false;
+		}
+		function thumbError(self) {
+			self.src = "/static/error.png";
+		}
+	</script>
+</head>
+<body>
+	<div class="container">
+		<nav class="navbar navbar-default">
+		  <div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="#">Models</a>
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		      <ul class="nav navbar-nav">
+		        <li class="active"><a href="/usermodels/">Models<span class="sr-only">(current)</span></a></li>
+		        <li><a href="/upload/">Upload</a></li>
+		        <li><a href="/search/">Search</a></li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
+		<div id="preview"></div>
+		<div id="usermodels" class="row list-group">
+		{% for userModel in userModel_list %}
+			<div id="UserModel {{ userModel.pk }}"class="item  col-xs-4 col-lg-4">
+	            <div class="thumbnail">
+	                <div class="col-xs-12 col-md-12" id="preview2" style="background-color: #FFFFFF;">
+	                	<img style="width: 100%;" src="/{{userModel.fields.preview}}" onerror="thumbError(this)">
+	                </div>
+	                <div class="caption">
+	                    <h4 class="group inner list-group-item-heading">{{ userModel.fields.name }}</h4>
+	                    <h4></h4>
+	                    <p class="group inner list-group-item-text">Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+	                    <div class="row">
+	                        <div class="col-xs-12 col-md-4">
+	                            <p>Indexed: {{ userModel.fields.indexed }}</p>
+	                        </div>
+	                        <div class="col-xs-12 col-md-8">
+	                            <a class="btn btn-success" href="/download/{{userModel.pk}}" target="_blank" style="float:right;"">Download</a>
+	                            <form onsubmit="return deleter({{userModel.pk}})" style="float:right;margin-right: 10px;">
+	                            	<input class="btn btn-danger" type="submit" value="Delete">
+	                            </form>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    {% endfor %}
+		</div>
+	</div>
+</body>
