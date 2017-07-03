@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.core import serializers
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from models import UserModel
 from models import UserModelForm
 from forms import SearchForm
@@ -40,9 +41,18 @@ def upload(request):
 	return render(request, 'upload.html', {'form':form})
 
 def getUserModel(request):
-	userModels = serializers.serialize('python',UserModel.objects.all())
-	return render(request, 'UserModelList.html', {"userModel_list":userModels})
+	if(request.META['HTTP_ACCEPT'] == 'application/json'):
+		try: 
+			userModels = serializers.serialize('python',UserModel.objects.all())
+			return JsonResponse(models_to_json(userModels))
+		except Exception as e:
+			return JsonResponse({'error':e.message})
 
+	else:
+		userModels = serializers.serialize('python',UserModel.objects.all())
+		return render(request, 'UserModelList.html', {"userModel_list":userModels})
+
+@csrf_exempt
 def search(request):
 	if(request.method == "POST"):
 		#The user is submitting a file to search
@@ -68,17 +78,20 @@ def search(request):
 				distance = np.linalg.norm(newUserModelAngleHist[:,1]-angleHist[:,1])#because the data is [lable,value] we need to just subtract values
 				models.append({"pk":userModel.pk,"distance":distance})
 
-			print(models)
 			topsix = sorted(models, key=lambda i:i["distance"])[0:6]
 			results = []
 			print(topsix)
 			for result in topsix:
 				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result["pk"]))
 				results.append(matchedUserModels[0])
-			return render(request, 'UserModelList.html', {"userModel_list":results})
-			
 
-			return HttpResponse("thank you for uploading")
+			if(request.META['HTTP_ACCEPT'] == 'application/json'):
+				try: 
+					return JsonResponse(models_to_json(results))
+				except Exception as e:
+					return JsonResponse({'error':e.message})
+			else:
+				return render(request, 'UserModelList.html', {"userModel_list":results})
 		else:
 			return HttpResponse("FORM Error")
 	else:
@@ -112,3 +125,14 @@ def handle_uploaded_file(f,form_id):
 		for chunk in f.chunks():
 			destination.write(chunk)
 	pass
+
+def models_to_json(models):
+	results = {'models':[]}
+	for model in models:
+		results['models'].append({
+			"name":model['fields']['name'],
+			"id":model['pk'],
+			"preview":model['fields']['preview'],
+			"location":"/download/"+str(model['pk'])
+		})
+	return results
