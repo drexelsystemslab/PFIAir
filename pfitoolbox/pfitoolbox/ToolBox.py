@@ -10,7 +10,8 @@ import networkx as nx
 from trimesh import sample,grouping,geometry
 
 
-def angleHist(neighborsGraph):
+def angleHist(model):
+    neighborsGraph = findNeighbors(model)
     angles = neighborsGraph[:, 2]
     # plot with degree lables
     (hist, labels) = np.histogram(angles, bins=np.linspace(0, 2 * math.pi, 20), density=True)
