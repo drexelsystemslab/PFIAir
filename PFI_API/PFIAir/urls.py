@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.getUserModel, name='User Models'),
     url(r'^upload/', views.upload, name='upload'),
     url(r'^usermodels/', views.getUserModel, name='getUserModel'),
     url(r'^search/', views.search, name='search'),
