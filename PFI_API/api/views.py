@@ -12,7 +12,7 @@ import numpy as np
 import mimetypes
 import os
 import sys
-from PFI_Python import ToolBox
+from pfitoolbox import ToolBox
 import tasks
 from celery import group
 import json
