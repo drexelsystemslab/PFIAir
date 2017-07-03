@@ -16,7 +16,7 @@ def angleHist(model):
     # plot with degree lables
     (hist, labels) = np.histogram(angles, bins=np.linspace(0, 2 * math.pi, 20), density=True)
     labels = labels[1:20] * 180 / 3.14  # strip out the first label (==0) and convert from degrees to radians
-    print(hist.shape)
+    #print(hist.shape)
     descriptor = []  # append hist and lables such that [[labels[0],hist[0]]
     for bin in range(0, len(hist)):
         descriptor.append([labels[bin], hist[bin]])
@@ -94,9 +94,9 @@ def faceAreaHist(model):
     largestBounds = model.extents[model.extents.argsort()[-2:]]
     (hist, labels) = np.histogram(facets_area[np.where(facets_area > largestBounds[0] * largestBounds[1] / 100)],
                                   bins=np.linspace(0, largestBounds[0] * largestBounds[1], 20))
-    labels = labels / (largestBounds[0] * largestBounds[1])
-    plt.bar(labels[:-1], hist, width=0.05)
-    plt.show()
+    #labels = labels / (largestBounds[0] * largestBounds[1])
+    #plt.bar(labels[:-1], hist, width=0.05)
+    #plt.show()
     descriptor = []
     for bin in range(0, len(hist)):
         descriptor.append([labels[bin], hist[bin]])

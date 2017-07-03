@@ -26,39 +26,14 @@ def upload(request):
 		form = UserModelForm(request.POST,request.FILES)
 		if form.is_valid():
 			newUserModel = form.save()
-			model = trimesh.load_mesh(newUserModel.file.url)
-			neighbors = ToolBox.findNeighbors(model)
-
-			descriptor = ToolBox.angleHist(neighbors)
-			newUserModel.descriptor = json.dumps(descriptor)
-			newUserModel.indexed = True
-			newUserModel.save()
+			# model = trimesh.load_mesh(newUserModel.file.url)
+			# descriptor = ToolBox.angleHist(model)
+			# newUserModel.descriptor = json.dumps(descriptor)
+			# newUserModel.indexed = True
+			# newUserModel.save()
 			#tasks.generatePreview(newUserModel.pk)
 			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
-
-			#stlmodel = mesh.Mesh.from_file(newUserModel.file.url)
-			#model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
-			#genDescriptorChain = []
-
-			#indexes = list(range(0,len(model["points"])))
-			#chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
-			#genGraphWorkflow = tasks.findNeighborsTask.s(model)
-			#genDescriptorChain.append(genGraphWorkflow)
-
-			#genDescriptorChain.append(tasks.saveNeighbors.s(newUserModel.pk))
-
-			#descriptorsChain = []
-
-			#descriptorsChain.append(angleHistTask.s())
-			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
-			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
-
-			#genDescriptorChain.append(tasks.angleHistTask.s())
-
-			#genDescriptorChain.append(tasks.saveDescriptor.s(newUserModel.pk))
-			#generate = chain(*genDescriptorChain)
-			#result = generate.delay()
-
+			tasks.generateDescriptor.delay(newUserModel.pk)
 			return HttpResponseRedirect('/usermodels')
 	else:
 		form = UserModelForm()
@@ -79,52 +54,25 @@ def search(request):
 
 			#ok now the file is in temp/[form_id].um (stands for user model)
 			#so let's generate it's descriptor
-			#stlmodel = mesh.Mesh.from_file('temp/'+form_id+'.um')##TODO: these should be a new type of models so we can track them
-			#model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}
-			#genDescriptorChain = []
-
-			#indexes = range(0,len(model["points"]))
-			#chunks= ToolBox.chunker(indexes,1000)#break the list into 10 parts
-			#genGraphWorkflow = chord((findNeighborsTask.s(model,chunk) for chunk in chunks),reducer.s())
-			#genDescriptorChain.append(genGraphWorkflow)
-
-			#descriptorsChain = []
-
-			#descriptorsChain.append(angleHistTask.s())
-			#descriptorsWorkflow = chord(group(*descriptorsChain),reducer.s())
-			#genDescriptorChain.append(descriptorsWorkflow)#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
-
-			#genDescriptorChain.append(angleHistTask.s())
-			#generate = chain(*genDescriptorChain)
-			#process = generate.delay()
-
-			#start = time.time()
-			#while (process.ready() == False):
-			#	print(time.time()-start)
-			#	time.sleep(1)
 			model = trimesh.load_mesh('temp/'+form_id+'.stl')
-			neighbors = ToolBox.findNeighbors(model)
-
-			descriptor = []
-			angleHist = np.array(ToolBox.angleHist(neighbors)['angleHist'])
-			print(angleHist)
-			#newUserModelDescriptor = process.get(timeout=1)#don't need to json.loads because the process returns a python array already
-			#newUserModelAngleHist = np.array(newUserModelDescriptor[1])#strip off the lable to get at the data
+			
+			angleHist = np.array(ToolBox.angleHist(model)['angleHist'])#strip the descriptor of its label and convert it to a numpy array
+			faceAreaHist = np.array(ToolBox.faceAreaHist(model)['faceAreaHist'])
+			
 			newUserModelAngleHist = angleHist
-			usermodels = UserModel.objects.filter(indexed=True)
+			usermodels = UserModel.objects.filter(indexed=True)#get all indexed models in the database
 			models = []
 			for userModel in usermodels:
 				descriptor = json.loads(userModel.descriptor)
-				print(descriptor)
 				angleHist = np.array(descriptor['angleHist'])
 				distance = np.linalg.norm(newUserModelAngleHist[:,1]-angleHist[:,1])#because the data is [lable,value] we need to just subtract values
 				models.append({"pk":userModel.pk,"distance":distance})
 
 			print(models)
-			topthree = sorted(models, key=lambda i:i["distance"])[0:3]
+			topsix = sorted(models, key=lambda i:i["distance"])[0:6]
 			results = []
-			print(topthree)
-			for result in topthree:
+			print(topsix)
+			for result in topsix:
 				matchedUserModels = serializers.serialize('python',UserModel.objects.filter(pk=result["pk"]))
 				results.append(matchedUserModels[0])
 			return render(request, 'UserModelList.html', {"userModel_list":results})

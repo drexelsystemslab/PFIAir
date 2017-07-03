@@ -1,17 +1,17 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
+from celery import group
+from celery import chord
 from django.core.files import File
 from api.models import UserModel
 from subprocess import call
 import os
-import sys
-sys.path.append("../PFI_Python/")
-
-from PFI_Python import ToolBox
+from pfitoolbox import ToolBox
 import numpy as np
 import math
 import json
 import time
+import trimesh
 
 
 @shared_task
@@ -40,58 +40,72 @@ def generatePreview(usermodelpk):
 
 
 
-# @shared_task
-# def generateDescriptor(usermodelpk):
-#     fileName = filepath.split('/')[-1]
-#     print("Generating descriptor for usermodel: " + fileName)
-#     userModel = UserModel.objects.get(pk=usermodelpk)
-#     try:
-#         model = mesh.Mesh.from_file(userModel.file.url)
-#     except(OSError,IOError):
-#         print("31: stl file missing")
-#         return
+@shared_task
+def generateDescriptor(usermodelpk):
+    userModel = UserModel.objects.get(pk=usermodelpk)
 
-# 	toolbox = ToolBox(True)
+    fileName = userModel.file.url.split('/')[-1]
+    print("Generating descriptor for usermodel: " + fileName)
 
-#     #Start generating task chain
-#     genDescriptorChain = []
-#     neighbors = toolbox.loadNeighborsGraph(fileName)#TODO: worker threads wouldn't have the file
-#     if(len(model.points) != len(neighbors)):#we don't have a neighbors entry fro every point so something is wrong, let's regenreate the neighbor's graph
-#         genDescriptorChain.append(tasks.findNeighbors)
-#         indexes = len(model.points)
-#         chunks= chunker(indexes,10)#break the list into 10 parts
-#         genGraphWorkflow = chord((findNeighbors.s(model,chunk) for chunk in chunks),reducer.s())
-#         genDescriptorChain.append(genGraphWorkflow)  
+    descriptorsChain = group([angleHistTask.s(usermodelpk),faceAreaHistTask.s(usermodelpk)])
+    
+    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk)).get()
+    #print(results.get())
+    
+    #userModel.descriptor.save(toolbox.getDescriptor())
 
-
-#     descriptorsChain = []
-
-#     descriptorsChain.append(angleHist.s(neighbors))
-#     genDescriptorChain.append(chord(group(*descriptorsChain),reducer.s()))#make the descriptors a group so they can be executed in parallel, then use a chord to merge them
-#     userModel.descriptor.save(toolbox.getDescriptor())
-
-#     generate = chain(*genDescriptorChain)
-#     generate.delay()
+    #generate = chain(*genDescriptorChain)
+    #generate.delay()
 
     #TODO: need to make as indexed
 
 @shared_task
-def findNeighborsTask(model):
-    return ToolBox.findNeighbors(model)
+def findNeighborsTask(usermodelpk):
+    userModel = UserModel.objects.get(pk=usermodelpk)
+    try:
+        model = trimesh.load_mesh(userModel.file.url)
+        return ToolBox.findNeighbors(model)
+    except(OSError,IOError):
+        print("31: stl file missing")
+        return
+    
 
 @shared_task
-def angleHistTask(neighborsGraph):
-    return ToolBox.angleHist(neighborsGraph)
-
+def angleHistTask(usermodelpk):
+    userModel = UserModel.objects.get(pk=usermodelpk)
+    try:
+        model = trimesh.load_mesh(userModel.file.url)
+        return ToolBox.angleHist(model)
+    except(OSError,IOError):
+        print("31: stl file missing")
+        return
+    
+@shared_task
+def faceAreaHistTask(usermodelpk):
+    userModel = UserModel.objects.get(pk=usermodelpk)
+    try:
+        model = trimesh.load_mesh(userModel.file.url)
+        return ToolBox.faceAreaHist(model)
+    except(OSError,IOError):
+        print("31: stl file missing")
+        return
+    
 @shared_task
 def printResults(results):
     print(results)
-    return
+    return results
 
 @shared_task
-def saveDescriptor(descriptor,modelID):
+def saveDescriptor(results,modelID):
     userModel = UserModel.objects.get(pk=modelID)
-    userModel.descriptor = json.dumps(descriptor)
+    print("Saving descriptor for: " + str(modelID))
+    combined_descriptor = {}#the reformatted descriptor
+    for descriptor in results:# [{'descriptor1':["something"]},{'descriptor1':["something"]}] -> {'descriptor1':["something"],'descriptor2':["something"]}
+        combined_descriptor[descriptor.keys()[0]] = descriptor[descriptor.keys()[0]]
+    
+
+    print(combined_descriptor)
+    userModel.descriptor = json.dumps(combined_descriptor)
     userModel.indexed = True
     userModel.save()
-    return descriptor
+    return results
