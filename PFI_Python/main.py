@@ -1,6 +1,6 @@
 #from stl import mesh
 import time
-import ToolBox
+from pfitoolbox import ToolBox
 import tasks
 import matplotlib.pyplot as plt
 import matplotlib

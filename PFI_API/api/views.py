@@ -4,17 +4,16 @@ from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.core import serializers
 from django.conf import settings
-from api.models import UserModel
-from api.models import UserModelForm
-from api.forms import SearchForm
+from models import UserModel
+from models import UserModelForm
+from forms import SearchForm
 import random
 import numpy as np
 import mimetypes
 import os
 import sys
-sys.path.append("../PFI_Python/")
-import ToolBox
-from api import tasks
+from PFI_Python import ToolBox
+import tasks
 from celery import group
 import json
 import trimesh
@@ -34,8 +33,8 @@ def upload(request):
 			newUserModel.descriptor = json.dumps(descriptor)
 			newUserModel.indexed = True
 			newUserModel.save()
-			tasks.generatePreview(newUserModel.pk)	
-			#tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
+			#tasks.generatePreview(newUserModel.pk)
+			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
 
 			#stlmodel = mesh.Mesh.from_file(newUserModel.file.url)
 			#model = {"points":stlmodel.points.tolist(),"normals":stlmodel.normals.tolist()}

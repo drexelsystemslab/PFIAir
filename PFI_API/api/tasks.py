@@ -5,11 +5,14 @@ from api.models import UserModel
 from subprocess import call
 import os
 import sys
-from ToolBox import *
+sys.path.append("../PFI_Python/")
+
+from PFI_Python import ToolBox
 import numpy as np
 import math
 import json
 import time
+
 
 @shared_task
 def generatePreview(usermodelpk):
@@ -34,6 +37,8 @@ def generatePreview(usermodelpk):
             userModel.preview.save(previewFileName,image_file,True)
     except Exception as e:
         print(e.message)
+
+
 
 # @shared_task
 # def generateDescriptor(usermodelpk):
@@ -70,52 +75,19 @@ def generatePreview(usermodelpk):
 
     #TODO: need to make as indexed
 
-
-def chunker(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
-def mag(x):
-    return math.sqrt(x[0] ** 2 + x[1] ** 2 + x[2] ** 2)
-
-
-def clean_acos(cos_angle):
-    return math.acos(min(1, max(cos_angle, -1)))
-
 @shared_task
-def findNeighborsTask(model):#TODO: move out of this module
-    return findNeighbors(model)
-
-@shared_task
-def reducer(lists):
-    print(lists)
-    results = []
-    for l in lists:
-        results += l
-    return results #TODO: how can we cache this?
+def findNeighborsTask(model):
+    return ToolBox.findNeighbors(model)
 
 @shared_task
 def angleHistTask(neighborsGraph):
-    return angleHist(neighborsGraph)
+    return ToolBox.angleHist(neighborsGraph)
 
-#@shared_task(queue='IOQueue')
 @shared_task
 def printResults(results):
     print(results)
     return
 
-#@shared_task(queue='IOQueue')
-@shared_task
-def saveNeighbors(neighborsGraph,modelID):
-    userModel = UserModel.objects.get(pk=modelID)
-    fileURL = userModel.file.url.rsplit('/',1)[0]
-    filename = userModel.file.url.split('/')[-1]
-    file = open(fileURL+"/"+filename+'_neighbors.pkl', 'wb')
-    pickle.dump(neighborsGraph,file)
-    return neighborsGraph #allow pass through for next task
-
-#@shared_task(queue='IOQueue')
 @shared_task
 def saveDescriptor(descriptor,modelID):
     userModel = UserModel.objects.get(pk=modelID)
