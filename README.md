@@ -49,9 +49,18 @@ Check out [this page](https://www.blender.org/download/) for the download link a
 In the download directory, run the command
 ```
 tar -xjf <blender install file>
-sudo cp <unziped directory> /usr/lib/blender -r
-[Add blender to path]
-
+mv <unzipped directory> blender
+sudo mv blender /usr/lib/
 ```
 
+Then add `/usr/lib/blender` to your path
 [change default scene]
+
+### pfitoolbox
+
+This package contains all functions to generate descriptors for the project. In the `PFIAir/pfitoolbox` directory run the following command:
+
+```
+source activate py2.7
+pip install -e .
+```
