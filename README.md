@@ -55,7 +55,7 @@ sudo mv blender /usr/lib/
 
 Then add `/usr/lib/blender` to your path.
 
-There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.73/config`.
+There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`.
 
 ### pfitoolbox
 
@@ -84,4 +84,5 @@ Once that has started, open a second command window, change to the `PFIAir/PFI_A
 source activate py2.7
 python manage.py migrate
 ```
+
 At this point you should be able to browse to `127.0.0.1:8000` and see that the server is running.
