@@ -1,7 +1,7 @@
 # PFIAir Installation
 
 ## Installation requirements
-This project does not run on MS Windows. Minmium requirements are as follows, please check individual project pages for other requirements.
+This project does not run on MS Windows. Software requirements are as follows, please check individual project pages for other requirements.
 Installation instructions will be written for Ubuntu, and may differ on other platforms.
 
 - Python 2.7
@@ -53,14 +53,35 @@ mv <unzipped directory> blender
 sudo mv blender /usr/lib/
 ```
 
-Then add `/usr/lib/blender` to your path
-[change default scene]
+Then add `/usr/lib/blender` to your path.
+
+There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.73/config`.
 
 ### pfitoolbox
 
-This package contains all functions to generate descriptors for the project. In the `PFIAir/pfitoolbox` directory run the following command:
+### Additional Python Dependancies
+
+There are a few other libraries required by the project. To install them, run the following commands:
+```
+source activate py2.7
+pip install django
+pip install trimesh
+```
+
+Additionally, please installthe python library associated with this project. In the `PFIAir/pfitoolbox` directory run the following command:
 
 ```
 source activate py2.7
 pip install -e .
 ```
+
+## Running the server
+The server has two parts: a Celery worker to handle sycronous tasks, and a Django server to provide UI. To start the worker, change to the `PFIAir/PFI_API` directory and run the `startWorker.sh` script.
+
+Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time runnign the server, you will need to run the follwoing commands:
+
+```
+source activate py2.7
+python manage.py migrate
+```
+At this point you should be able to browse to `127.0.0.1:8000` and see that the server is running.
