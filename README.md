@@ -42,6 +42,11 @@ source deactivate py2.7
 
 Check out [this page](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery) for instructions on installing Celery 4
 This project uses the RabbitMQ broker, so please use that part of the installation instructions
+For Mac: http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery
+If you have homebrew installed: use the 
+```
+brew install rabbitmq-server
+```
 
 ### Blender
 
