@@ -55,7 +55,7 @@ sudo mv blender /usr/lib/
 
 Then add `/usr/lib/blender` to your path.
 
-There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`.
+There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`. Blender will not initially create this directory. To have it created, open Blender and "Save startup file" (under File>Save Startup File).
 
 ### pfitoolbox
 
