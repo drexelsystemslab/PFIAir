@@ -23,14 +23,13 @@ from django.conf.urls.static import static
 urlpatterns = [
     #url(r'^admin/', admin.site.urls),
     url(r'^$', fend_views.getUserModels, name='User Models'),
-    url(r'^upload/', fend_views.upload, name='upload'),
-    url(r'^usermodels/', fend_views.getUserModels, name='getUserModel'),
-    url(r'^search/', fend_views.search, name='apiSearch'),
-    url(r'^api/upload/', api_views.upload, name='apiUpload'),
-    url(r'^api/models/', api_views.getUserModels, name='apiGetUserModel'),
-    url(r'^api/search/', api_views.search, name='search'),
+    url(r'^upload/$', fend_views.upload, name='upload'),
+    url(r'^usermodels/$', fend_views.getUserModels, name='getUserModel'),
+    url(r'^search/$', fend_views.search, name='apiSearch'),
+    url(r'^api/models/$', api_views.models, name='apiGetUserModel'),
+    url(r'^api/search/$', api_views.search, name='search'),
     url(r'^api/download/(?P<file_pk>.+)$',api_views.download,name='download'),
-    url(r'^api/delete/(?P<file_pk>.+)$',api_views.delete,name='delete')
+    url(r'^api/models/(?P<file_pk>.+)$',api_views.delete,name='delete')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # copied from the internet because it might be useful in the future
