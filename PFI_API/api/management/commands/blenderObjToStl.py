@@ -11,18 +11,21 @@ filename = stl_in.split('/')[-1]
 
 previewFilename = argv[1]
 
-if(filename.split('.')[1] == "stl"):
+if(filename.split('.')[1] == "stl" or filename.split('.')[1] == "STL"):
 	bpy.ops.import_mesh.stl(filepath=stl_in)
 	print("stl")
-elif(filename.split('.')[1] == "obj"):
-	bpy.ops.import_scene.obj(filepath=stl_in)
-	print("obj")
+else:
+	raise Exception('file type not supported')
 
 bpy.context.scene.render.filepath = previewFilename
 bpy.context.scene.render.use_overwrite = True
 
 objects = bpy.context.selected_objects
-bpy.context.scene.objects.active = objects[0]
+try:
+	bpy.context.scene.objects.active = objects[0]
+except IndexError:
+	print(bpy.context.selected_objects)
+	raise Exception('file import failed')
 x,y,z = bpy.context.active_object.dimensions
 
 maxDimension = max(x,y,z)
