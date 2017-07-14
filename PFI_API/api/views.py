@@ -1,19 +1,4 @@
-<<<<<<< Updated upstream
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.http import JsonResponse
-from django.http import HttpResponseRedirect
-from django.core import serializers
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from models import UserModel
-from models import UserModelForm
-from forms import SearchForm
-import random
-import numpy as np
-=======
 import json
->>>>>>> Stashed changes
 import mimetypes
 import os
 import random
