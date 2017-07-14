@@ -15,18 +15,22 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from api import views
+from api import views as api_views
+from fend import views as fend_views
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^$', views.getUserModel, name='User Models'),
-    url(r'^upload/', views.upload, name='upload'),
-    url(r'^usermodels/', views.getUserModel, name='getUserModel'),
-    url(r'^search/', views.search, name='search'),
-    url(r'^download/(?P<file_pk>.+)$',views.download,name='download'),
-    url(r'^delete/(?P<file_pk>.+)$',views.delete,name='delete')
+    #url(r'^admin/', admin.site.urls),
+    url(r'^$', fend_views.getUserModels, name='User Models'),
+    url(r'^upload/', fend_views.upload, name='upload'),
+    url(r'^usermodels/', fend_views.getUserModels, name='getUserModel'),
+    url(r'^search/', fend_views.search, name='apiSearch'),
+    url(r'^api/upload/', api_views.upload, name='apiUpload'),
+    url(r'^api/models/', api_views.getUserModels, name='apiGetUserModel'),
+    url(r'^api/search/', api_views.search, name='search'),
+    url(r'^api/download/(?P<file_pk>.+)$',api_views.download,name='download'),
+    url(r'^api/delete/(?P<file_pk>.+)$',api_views.delete,name='delete')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # copied from the internet because it might be useful in the future
