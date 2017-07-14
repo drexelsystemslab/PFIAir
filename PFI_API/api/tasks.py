@@ -49,7 +49,7 @@ def generateDescriptor(usermodelpk):
 
     descriptorsChain = group([angleHistTask.s(usermodelpk),faceAreaHistTask.s(usermodelpk)])
     
-    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk)).get()
+    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk))
     #print(results.get())
     
     #userModel.descriptor.save(toolbox.getDescriptor())

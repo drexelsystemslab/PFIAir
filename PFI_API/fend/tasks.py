@@ -26,7 +26,7 @@ def generatePreview(usermodelpk):
         call(["blender",
               "--background",
               "--python",
-              "api/management/commands/blenderObjToStl.py",
+              "api/management/commands/renderPreview.py",
               "--",
               userModel.file.url,
               target_url])
@@ -49,7 +49,7 @@ def generateDescriptor(usermodelpk):
 
     descriptorsChain = group([angleHistTask.s(usermodelpk),faceAreaHistTask.s(usermodelpk)])
     
-    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk)).get()
+    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk))
     #print(results.get())
     
     #userModel.descriptor.save(toolbox.getDescriptor())
