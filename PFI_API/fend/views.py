@@ -10,7 +10,7 @@ import trimesh
 import json
 from pfitoolbox import ToolBox
 from fend.forms import SearchForm
-from models import UserModelForm
+from api.models import UserModelForm
 import tasks
 
 def getUserModels(request):

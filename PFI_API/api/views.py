@@ -17,21 +17,17 @@ from fend.forms import SearchForm
 from api.models import UserModel
 from api.models import UserModelForm
 
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def upload(request):
     form = UserModelForm(request.POST, request.FILES)
     if form.is_valid():
         newUserModel = form.save()
-        # model = trimesh.load_mesh(newUserModel.file.url)
-        # descriptor = ToolBox.angleHist(model)
-        # newUserModel.descriptor = json.dumps(descriptor)
-        # newUserModel.indexed = True
-        # newUserModel.save()
-        # tasks.generatePreview(newUserModel.pk)
         tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
         tasks.generateDescriptor.delay(newUserModel.pk)
         return JsonResponse({"success": True})
+    else:
+        return HttpResponseBadRequest("Invalid Form")
 
 
 @require_http_methods(["GET"])
@@ -51,7 +47,7 @@ def search(request):
     form = SearchForm(request.POST, request.FILES)
     if (form.is_valid()):  # TODO: check for legal file types
         form_id = ''.join([random.choice('1234567890qwertyuiopasdfghjklzxcvbnm') for i in range(7)])
-        handle_uploaded_file(request.FILES['userModel'], form_id)
+        handle_uploaded_file(request.FILES['file'], form_id)
 
         # ok now the file is in temp/[form_id].um (stands for user model)
         # so let's generate it's descriptor
@@ -87,7 +83,7 @@ def search(request):
     else:
         return HttpResponseBadRequest()
 
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def download(request, file_pk):
     usermodel = UserModel.objects.get(pk=file_pk)
@@ -103,14 +99,14 @@ def download(request, file_pk):
     return response
 
 
-@require_http_methods(["POST"])
+@csrf_exempt
+@require_http_methods(["DELETE"])
 def delete(request, file_pk):
+    print("test")
     data = {"success": False}
-    if (request.method == "DELETE"):
-        usermodel = UserModel.objects.get(pk=file_pk)
-        usermodel.delete()
-        data["success"] = True
-
+    usermodel = UserModel.objects.get(pk=file_pk)
+    usermodel.delete()
+    data["success"] = True
     return JsonResponse(data)
 
 
