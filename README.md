@@ -95,7 +95,7 @@ The server has two parts: a Celery worker to handle sycronous tasks, and a Djang
 
 Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time running the server, you will need to run the follwoing commands:
 
-For Mac, also run the command `rabbit-mq`
+For Mac, also run the command `rabbitmq-server`
 
 
 ```
