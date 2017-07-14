@@ -64,12 +64,13 @@ sudo mv blender /usr/lib/
 
 Then add `/usr/lib/blender` to your path.
 
-There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`.
+There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`. (Mac: `/home/<UserName>/Library/Application Support/Blender/2.78/config`)
 
 For Mac: Paste path for blender.exe file to /etc/paths using:
 ```
 vi /etc/paths
 ```
+
 
 
 ### pfitoolbox
