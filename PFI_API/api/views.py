@@ -22,10 +22,11 @@ from api.models import UserModelForm
 def models(request):
     if(request.method == "GET"):
         try:
-            userModels = serializers.serialize('python', UserModel.objects.all())
+            models = UserModel.objects.only('id', 'name', 'preview', 'file')
+            userModels = serializers.serialize('python', models)
             return JsonResponse(models_to_json(userModels))
         except Exception as e:
-            return HttpResponseServerError()
+            return HttpResponseServerError(str(e))
     elif(request.method == "POST"):
         form = UserModelForm(request.POST, request.FILES)
         if form.is_valid():
@@ -60,22 +61,26 @@ def search(request):
         newUserModelAngleHist = angleHist
         usermodels = UserModel.objects.filter(indexed=True)  # get all indexed models in the database
         models = []
+        distances = []
         for userModel in usermodels:
             descriptor = json.loads(userModel.descriptor)
             angleHist = np.array(descriptor['angleHist'])
-            distance = np.linalg.norm(newUserModelAngleHist[:, 1] - angleHist[:,
-                                                                    1])  # because the data is [lable,value] we need to just subtract values
-            models.append({"pk": userModel.pk, "distance": distance})
+            distance = np.linalg.norm(newUserModelAngleHist[:, 1] - angleHist[:,1])  # because the data is [lable,value] we need to just subtract values
+            models.append({"pk":userModel.pk,"distance":distance})
 
         topsix = sorted(models, key=lambda i: i["distance"])[0:6]
         results = []
-        print(topsix)
         for result in topsix:
-            matchedUserModels = serializers.serialize('python', UserModel.objects.filter(pk=result["pk"]))
-            results.append(matchedUserModels[0])
+            matchedUserModel = serializers.serialize('python',UserModel.objects.filter(pk=result["pk"]))
 
+            modelObject = models_to_json(matchedUserModel)["models"][0]
+            modelObject["distance"] = result["distance"]
+            #modelObject["distance"] = result["distance"]
+            results.append(modelObject)
+
+        print(results)
         try:
-            return JsonResponse(models_to_json(results))
+            return JsonResponse({"models":results})
         except Exception as e:
             response = JsonResponse({'error': e.message})
             response.status_code = 400
@@ -129,3 +134,4 @@ def models_to_json(models):
             "location": "/download/" + str(model['pk'])
         })
     return results
+
