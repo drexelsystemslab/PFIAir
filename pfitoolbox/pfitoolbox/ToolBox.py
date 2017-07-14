@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import math
 import time
@@ -8,6 +9,8 @@ import sys
 import trimesh
 import networkx as nx
 from trimesh import sample,grouping,geometry
+import random
+
 
 
 def angleHist(model):
@@ -123,3 +126,32 @@ def localNeighborhoods(model):
     model.show()
 
     return "test"
+
+def randomWalker(model):
+    graph = nx.Graph()
+    graph.add_edges_from(model.face_adjacency)
+    neighbors = np.array(graph.adjacency_list())
+    num_of_particles = 1000
+    t_f = 100
+    walks = np.random.randint(0,3,(num_of_particles,t_f))#each particle has a row of length equal to the number of time steps
+    current_position = np.zeros((num_of_particles,t_f+1),dtype=int)+random.randint(0,len(model.facets))
+    #print(current_position)
+    # print(walks)
+    walker = np.vectorize(lambda a,b:neighbors[a][b])
+
+    starting_points = model.vertices[model.faces[current_position[:, 0]][:,0]]  # arbitrarily choosing vertex 0 to represent the position of the face
+
+    start = time.clock()
+    for t in range(0,t_f):
+        current_position[:,t+1] = walker(current_position[:,t], walks[:,t])
+
+    end = time.clock()
+    print("Time elapsed: %s" % (end-start))
+
+    ending_points = model.vertices[model.faces[current_position[:, -1]][:, 0]]
+    distance_travelled = np.linalg.norm(ending_points - starting_points)
+
+    print("Average distance from starting point: %s" % np.average(distance_travelled))
+
+
+    return current_position.flatten() #return a list of all the nodes that have been visited
