@@ -12,7 +12,7 @@ class Command(BaseCommand):
 		usermodels = UserModel.objects.all()
 		for model in usermodels:
 			self.stdout.write(model.file.url)
-			call(["blender", "--background","--python","api/management/commands/blenderObjToStl.py","--",model.file.url])
+			call(["blender", "--background","--python","api/management/commands/renderPreview.py","--",model.file.url])
 			filename = model.file.url.split('/')[-1]
 			name = filename.split('.')[0]
 			previewFileName = name+'.png'
