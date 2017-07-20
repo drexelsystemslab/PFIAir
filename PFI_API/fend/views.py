@@ -23,10 +23,10 @@ def upload(request):
     if request.method == "POST":
         form = UserModelForm(request.POST, request.FILES)
         if form.is_valid():
-            if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
-                pass
-            else:
-                return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
+            # if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
+            #     pass
+            # else:
+            #     return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
             newUserModel = form.save()
             # model = trimesh.load_mesh(newUserModel.file.url)
             # descriptor = ToolBox.angleHist(model)
@@ -37,6 +37,11 @@ def upload(request):
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
             return HttpResponseRedirect('/usermodels')
+        else:
+            errors = ""
+            for field in form:
+                errors += field.errors
+            return HttpResponseBadRequest(errors)
 
     else:
         form = UserModelForm()

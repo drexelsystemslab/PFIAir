@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 from django.db import models
 from django import forms
+from .validators import validate_file_extension
+import os
 
 
 class UserModel(models.Model):
     # implicate ID field
     name = models.TextField()
-    file = models.FileField(upload_to='models/')
+    file = models.FileField(upload_to='models/',validators=[validate_file_extension])
     indexed = models.BooleanField(default=False)
     descriptor = models.TextField(default="[]", null=True, blank=True)
     preview = models.ImageField(upload_to='static/previews/', default=None)

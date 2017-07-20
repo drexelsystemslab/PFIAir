@@ -29,17 +29,20 @@ def models(request):
     elif(request.method == "POST"):
         form = UserModelForm(request.POST, request.FILES)
         if form.is_valid():
-            if(request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
-                pass
-            else:
-                return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
+            # if(request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
+            #     pass
+            # else:
+            #     return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
 
             newUserModel = form.save()
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
             return JsonResponse({"success": True})
         else:
-            return HttpResponseBadRequest("Invalid Form")
+            errors = ""
+            for field in form:
+                errors += field.errors.as_json()
+            return HttpResponseBadRequest(errors)
     else:
         return HttpResponseBadRequest("Invalid Form")
 
