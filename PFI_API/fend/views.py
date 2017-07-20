@@ -13,27 +13,35 @@ from fend.forms import SearchForm
 from api.models import UserModelForm
 import tasks
 
+
 def getUserModels(request):
     userModels = serializers.serialize('python', UserModel.objects.all())
     return render(request, 'UserModelList.html', {"userModel_list": userModels})
 
+
 def upload(request):
-	if request.method == "POST":
-		form = UserModelForm(request.POST,request.FILES)
-		if form.is_valid():
-			newUserModel = form.save()
-			# model = trimesh.load_mesh(newUserModel.file.url)
-			# descriptor = ToolBox.angleHist(model)
-			# newUserModel.descriptor = json.dumps(descriptor)
-			# newUserModel.indexed = True
-			# newUserModel.save()
-			#tasks.generatePreview(newUserModel.pk)
-			tasks.generatePreview.delay(newUserModel.pk)#send the pk instead of the object to prevent race conditions
-			tasks.generateDescriptor.delay(newUserModel.pk)
-			return HttpResponseRedirect('/usermodels')
-	else:
-		form = UserModelForm()
-	return render(request, 'upload.html', {'form':form})
+    if request.method == "POST":
+        form = UserModelForm(request.POST, request.FILES)
+        if form.is_valid():
+            if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
+                pass
+            else:
+                return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
+            newUserModel = form.save()
+            # model = trimesh.load_mesh(newUserModel.file.url)
+            # descriptor = ToolBox.angleHist(model)
+            # newUserModel.descriptor = json.dumps(descriptor)
+            # newUserModel.indexed = True
+            # newUserModel.save()
+            # tasks.generatePreview(newUserModel.pk)
+            tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
+            tasks.generateDescriptor.delay(newUserModel.pk)
+            return HttpResponseRedirect('/usermodels')
+
+    else:
+        form = UserModelForm()
+        return render(request, 'upload.html', {'form': form})
+
 
 @csrf_exempt
 def search(request):
@@ -74,10 +82,11 @@ def search(request):
 
             return render(request, 'UserModelList.html', {"userModel_list": results})
         else:
-                return HttpResponseBadRequest()
+            return HttpResponseBadRequest()
     else:
         form = SearchForm()
         return render(request, 'Search.html', {'form': form})
+
 
 def handle_uploaded_file(f, form_id):
     with open("temp/" + form_id + '.stl', 'wb+') as destination:
