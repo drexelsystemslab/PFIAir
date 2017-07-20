@@ -11,7 +11,7 @@
 *.stl
 
 
-/PFI_API/temp/
+/PFI_API/temp/*.stl
 /PFI_API/uploads/
 *.sqlite3
 *.pyc
