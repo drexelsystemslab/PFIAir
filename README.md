@@ -42,6 +42,15 @@ source deactivate py2.7
 
 Check out [this page](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery) for instructions on installing Celery 4
 This project uses the RabbitMQ broker, so please use that part of the installation instructions
+For Mac: http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery
+If you have homebrew installed: use the 
+```
+brew install rabbitmq-server
+```
+Then paste path for rabbitmq (/usr/local/sbin) to /etc/paths:
+```
+vi /etc/paths
+```
 
 ### Blender
 
@@ -55,7 +64,16 @@ sudo mv blender /usr/lib/
 
 Then add `/usr/lib/blender` to your path.
 
-There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`. Blender will not initially create this directory. To have it created, open Blender and "Save startup file" (under File>Save Startup File).
+There is a startup.blend file in the repo to ensure that all preview images that are generated look the same. To install this copy the file from `PFIAir/PFI_Blender/` to `/home/<UserName>/.config/blender/2.78/config`. (Mac: `~/Library/Application Support/Blender/2.78/config`)
+
+Note: The absolute path to the Blender config file on Mac can vary. A good rule of thumb would be to look for the Application Support directory in the user level directories.
+
+For Mac: Paste path for blender.exe file to /etc/paths using:
+```
+vi /etc/paths
+```
+
+
 
 ### pfitoolbox
 
@@ -78,7 +96,10 @@ pip install -e .
 ## Running the server
 The server has two parts: a Celery worker to handle sycronous tasks, and a Django server to provide UI. To start the worker, change to the `PFIAir/PFI_API` directory and run the `startWorker.sh` script.
 
-Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time runnign the server, you will need to run the follwoing commands:
+Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time running the server, you will need to run the follwoing commands:
+
+For Mac, also run the command `rabbitmq-server`
+
 
 ```
 source activate py2.7
