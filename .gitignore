@@ -16,4 +16,5 @@
 *.sqlite3
 *.pyc
 /PFI_API/models/
+/PFI_Python/models/
 /PFI_API/static/previews/

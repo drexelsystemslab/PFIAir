@@ -2,7 +2,6 @@ import json
 import mimetypes
 import os
 import random
-
 import numpy as np
 import trimesh
 from django.core import serializers
@@ -30,6 +29,11 @@ def models(request):
     elif(request.method == "POST"):
         form = UserModelForm(request.POST, request.FILES)
         if form.is_valid():
+            if(request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
+                pass
+            else:
+                return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
+
             newUserModel = form.save()
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
@@ -37,8 +41,7 @@ def models(request):
         else:
             return HttpResponseBadRequest("Invalid Form")
     else:
-        return HttpResponseBadRequest()
-
+        return HttpResponseBadRequest("Invalid Form")
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -89,7 +92,7 @@ def search(request):
         return HttpResponseBadRequest()
 
 @csrf_exempt
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 def download(request, file_pk):
     usermodel = UserModel.objects.get(pk=file_pk)
     file_path = usermodel.file.url  # TODO: why is there an extra /uploads/
@@ -102,7 +105,6 @@ def download(request, file_pk):
     response['Content-Length'] = os.stat(file_path).st_size
     response['Content-Disposition'] = 'attachment; filename=%s' % file_name
     return response
-
 
 @csrf_exempt
 @require_http_methods(["DELETE"])
@@ -134,4 +136,3 @@ def models_to_json(models):
             "location": "/download/" + str(model['pk'])
         })
     return results
-
