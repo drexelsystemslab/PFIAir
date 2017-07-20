@@ -36,7 +36,7 @@
 			if(window.confirm("Are you sure you want to delete?")){
 			$.ajax({
 					type:"DELETE",
-					url:"/api/delete/"+pk,
+					url:"/api/models/"+pk,
 					success: function(msg) {
 						console.log("Deleted, ready to reload")
 						window.location.reload(false); 
@@ -89,8 +89,8 @@
 	                <div class="caption">
 	                    <h4 class="group inner list-group-item-heading">{{ userModel.fields.name }}</h4>
 	                    <h4></h4>
-	                    <p class="group inner list-group-item-text">Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+	                    <p class="group inner list-group-item-text">{%  if userModel.distance or userModel.distance == 0 %}Distance: {{ userModel.distance }}{%  else %}Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>{% endif %}
 	                    <div class="row">
 	                        <div class="col-xs-12 col-md-4">
 	                            <p>Indexed: {{ userModel.fields.indexed }}</p>

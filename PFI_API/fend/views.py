@@ -43,7 +43,7 @@ def search(request):
         form = SearchForm(request.POST, request.FILES)
         if (form.is_valid()):  # TODO: check for legal file types
             form_id = ''.join([random.choice('1234567890qwertyuiopasdfghjklzxcvbnm') for i in range(7)])
-            handle_uploaded_file(request.FILES['userModel'], form_id)
+            handle_uploaded_file(request.FILES['file'], form_id)
 
             # ok now the file is in temp/[form_id].um (stands for user model)
             # so let's generate it's descriptor
@@ -68,6 +68,8 @@ def search(request):
             print(topsix)
             for result in topsix:
                 matchedUserModels = serializers.serialize('python', UserModel.objects.filter(pk=result["pk"]))
+                matchedUserModels[0]["distance"] = result["distance"]
+                print(matchedUserModels)
                 results.append(matchedUserModels[0])
 
             return render(request, 'UserModelList.html', {"userModel_list": results})
