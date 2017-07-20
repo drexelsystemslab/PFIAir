@@ -34,7 +34,8 @@ def generatePreview(usermodelpk):
         previewFileName = name+'.png'
         with open('static/previews/'+previewFileName,'rb') as f:
             image_file = File(f)
-            userModel.preview.save(previewFileName,image_file,True)
+            userModel.preview.save(previewFileName, image_file, save=False)
+            userModel.save(update_fields=["preview"])
     except Exception as e:
         print(e.message)
 
@@ -107,5 +108,5 @@ def saveDescriptor(results,modelID):
     print(combined_descriptor)
     userModel.descriptor = json.dumps(combined_descriptor)
     userModel.indexed = True
-    userModel.save()
+    userModel.save(update_fields=["indexed", "descriptor"])
     return results
