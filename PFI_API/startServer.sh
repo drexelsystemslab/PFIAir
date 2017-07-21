@@ -1,2 +1,2 @@
-source activate py2.7
+source activate PFIAir
 python  manage.py runserver 0.0.0.0:8000
