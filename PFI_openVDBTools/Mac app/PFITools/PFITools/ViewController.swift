@@ -42,7 +42,9 @@ class ViewController: NSViewController {
     
     @IBAction func submit(_ sender: Any) {
         if let fileURL = fileURL {
-            manager.search(filepath: fileURL)
+            manager.search(filepath: fileURL) { mod in
+                print(mod!)
+            }
         }
     }
 
