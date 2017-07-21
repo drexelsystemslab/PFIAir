@@ -50,6 +50,7 @@
 		}
 		function thumbError(self) {
 			self.src = "/static/error.png";
+			self.onerror = ""//so it only runs once
 		}
 	</script>
 </head>
@@ -84,16 +85,16 @@
 			<div id="UserModel {{ userModel.pk }}"class="item  col-xs-4 col-lg-4">
 	            <div class="thumbnail">
 	                <div class="col-xs-12 col-md-12" id="preview2" style="background-color: #FFFFFF;">
-	                	<img style="width: 100%;" src="/{{userModel.fields.preview}}" onerror="thumbError(this)">
+	                	<img style="width: 100%;" src="/{{userModel.preview}}" onerror="thumbError(this)">
 	                </div>
 	                <div class="caption">
-	                    <h4 class="group inner list-group-item-heading">{{ userModel.fields.name }}</h4>
+	                    <h4 class="group inner list-group-item-heading">{{ userModel.name }}</h4>
 	                    <h4></h4>
 	                    <p class="group inner list-group-item-text">{%  if userModel.distance or userModel.distance == 0 %}Distance: {{ userModel.distance }}{%  else %}Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
 	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>{% endif %}
 	                    <div class="row">
 	                        <div class="col-xs-12 col-md-4">
-	                            <p>Indexed: {{ userModel.fields.indexed }}</p>
+	                            <p>Indexed: {{ userModel.indexed }}</p>
 	                        </div>
 	                        <div class="col-xs-12 col-md-8">
 	                            <a class="btn btn-success" href="api/download/{{userModel.pk}}" target="_blank" style="float:right;"">Download</a>
@@ -107,5 +108,20 @@
 	        </div>
 	    {% endfor %}
 		</div>
+        <div class="pagination">
+            <span class="step-links">
+                {% if userModel_list.has_previous %}
+                    <a href="?page={{ userModel_list.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ userModel_list.number }} of {{ userModel_list.paginator.num_pages }}.
+                </span>
+
+                {% if userModel_list.has_next %}
+                    <a href="?page={{ userModel_list.next_page_number }}">next</a>
+                {% endif %}
+        </span>
+        </div>
 	</div>
 </body>

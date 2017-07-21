@@ -8,6 +8,7 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from pfitoolbox import ToolBox
 
@@ -22,7 +23,18 @@ def models(request):
     if(request.method == "GET"):
         try:
             models = UserModel.objects.only('id', 'name', 'preview', 'file')
-            userModels = serializers.serialize('python', models)
+            paginator = Paginator(models, 15)  # Show 25 contacts per page
+
+            page = request.GET.get('page')
+            try:
+                userModels_subset = paginator.page(page)
+            except PageNotAnInteger:
+                # If page is not an integer, deliver first page.
+                userModels_subset = paginator.page(1)
+            except EmptyPage:
+                # If page is out of range (e.g. 9999), deliver last page of results.
+                userModels_subset = paginator.page(paginator.num_pages)
+            userModels = serializers.serialize('python', userModels_subset)
             return JsonResponse(models_to_json(userModels))
         except Exception as e:
             return HttpResponseServerError(str(e))

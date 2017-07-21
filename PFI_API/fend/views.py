@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseRedirect
 from fend.forms import SearchForm
 from django.core import serializers
@@ -14,9 +15,25 @@ from api.models import UserModelForm
 import tasks
 
 
+
 def getUserModels(request):
-    userModels = serializers.serialize('python', UserModel.objects.all())
-    return render(request, 'UserModelList.html', {"userModel_list": userModels})
+    userModels = UserModel.objects.all()
+    paginator = Paginator(userModels, 15)  # Show 25 contacts per page
+
+    page = request.GET.get('page')
+    try:
+        userModels_subset = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        userModels_subset = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        userModels_subset = paginator.page(paginator.num_pages)
+    #userModels_python = serializers.serialize('python', userModels_subset)
+    print(userModels_subset[0])
+    return render(request, 'UserModelList.html', {"userModel_list": userModels_subset})
+
+
 
 
 def upload(request):
