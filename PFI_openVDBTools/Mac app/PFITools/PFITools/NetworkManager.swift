@@ -14,7 +14,7 @@ class NetworkManger {
     private var port = ""
     private var suffix = ""
     
-    func search(filepath: URL) {
+    func search(filepath: URL, completion: @escaping (_ mod: [Model]?) -> ()) {
         let serverPath = "http://\(ip):\(port)\(suffix)"
         
         Alamofire.upload(
@@ -26,7 +26,8 @@ class NetworkManger {
                 switch encodingResult {
                 case .success(let upload, _, _):
                     upload.responseJSON { response in
-                        print(self.parseJSON(result: response.data!))
+                        let modelResults = self.parseJSON(result: response.data!)
+                        completion(modelResults)
                     }
                 case .failure(let encodingError):
                     print(encodingError)
