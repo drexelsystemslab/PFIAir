@@ -11,14 +11,15 @@ import Cocoa
 class ViewController: NSViewController {
 
     @IBOutlet weak var textfield: NSTextField!
-    var fileURL: URL?
     
-    let manager = NetworkManger(ip: "127.0.0.1", port: "8000", suffix: "/api/search/")
+    var fileURL: URL?
+    //var models: [Model]?
+    
+    let manager = NetworkManger(ip: "127.0.0.1", port: "8000")
+    let fmanager = FileIOManager(path: "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/Mac app/PFITools/DerivedData/sandbox/")
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
     }
     
     @IBAction func buttonPressed(_ sender: Any) {
@@ -43,8 +44,18 @@ class ViewController: NSViewController {
     @IBAction func submit(_ sender: Any) {
         if let fileURL = fileURL {
             manager.search(filepath: fileURL) { mod in
-                print(mod!)
+                if let models = mod {
+                    for m in models {
+                        self.downloadModel(mod: m)
+                    }
+                }
             }
+        }
+    }
+    
+    private func downloadModel(mod: Model) {
+        manager.download(id: mod.id) { data in
+            self.fmanager.saveFile(data: data, name: mod.name, extensionName: "stl")
         }
     }
 

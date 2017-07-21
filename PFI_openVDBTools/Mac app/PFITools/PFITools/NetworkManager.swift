@@ -9,13 +9,18 @@
 import Foundation
 import Alamofire
 
+struct Suffix {
+    static let search = "/api/search/"
+    static let download = "/api/download/"
+}
+
 class NetworkManger {
     private var ip = ""
     private var port = ""
-    private var suffix = ""
     
+    /// search server for similar 3D models based on a given 3D model
     func search(filepath: URL, completion: @escaping (_ mod: [Model]?) -> ()) {
-        let serverPath = "http://\(ip):\(port)\(suffix)"
+        let serverPath = "http://\(ip):\(port)\(Suffix.search)"
         
         Alamofire.upload(
             multipartFormData: { multipartFormData in
@@ -35,6 +40,16 @@ class NetworkManger {
         })
     }
     
+    /// request .stl files on server based on ID
+    func download(id: Int, completion: @escaping (_ data: Data) -> ()) {
+        let serverPath = "http://\(ip):\(port)\(Suffix.download)\(id)"
+
+        Alamofire.request(serverPath, method: .post).responseData { response in
+            if let data = response.data {
+                completion(data)
+            }
+        }
+    }
     
     private func parseJSON(result: Data) -> [Model]?{
         do {
@@ -62,9 +77,8 @@ class NetworkManger {
         return nil
     }
     
-    init(ip: String, port: String, suffix: String) {
+    init(ip: String, port: String) {
         self.ip = ip
         self.port = port
-        self.suffix = suffix
     }
 }
