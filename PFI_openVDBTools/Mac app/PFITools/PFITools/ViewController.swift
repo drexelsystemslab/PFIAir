@@ -11,27 +11,51 @@ import Cocoa
 class ViewController: NSViewController {
 
     @IBOutlet weak var textfield: NSTextField!
+    @IBOutlet weak var filePathLabel: NSTextField!
     
     var fileURL: URL?
     //var models: [Model]?
     
     let manager = NetworkManger(ip: "127.0.0.1", port: "8000")
-    let fmanager = FileIOManager(path: "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/Mac app/PFITools/DerivedData/sandbox/")
+    let fmanager = FileIOManager(path: "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/Mac app/PFITools/DerivedData/sandbox")
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        filePathLabel.stringValue = fmanager.filePath
+    }
+    
+    @IBAction func selectSavePath(_ sender: Any) {
+        let dialog = NSOpenPanel();
+        
+        dialog.title = "Choose a directory to save model files"
+        dialog.showsResizeIndicator = true
+        dialog.showsHiddenFiles = false
+        dialog.canChooseFiles = false
+        dialog.canChooseDirectories = true
+        dialog.canCreateDirectories = true
+        dialog.allowsMultipleSelection = false
+        dialog.allowedFileTypes = ["stl"]
+        
+        if (dialog.runModal() == NSModalResponseOK) {
+            if let result = dialog.url {
+                filePathLabel.stringValue = result.path
+                fmanager.filePath = result.path
+            }
+        }
+        
     }
     
     @IBAction func buttonPressed(_ sender: Any) {
         let dialog = NSOpenPanel();
         
-        dialog.title = "Choose a .stl file";
-        dialog.showsResizeIndicator = true;
-        dialog.showsHiddenFiles = false;
-        dialog.canChooseDirectories = false;
-        dialog.canCreateDirectories = true;
-        dialog.allowsMultipleSelection = false;
-        dialog.allowedFileTypes = ["stl"];
+        dialog.title = "Choose a .stl file"
+        dialog.showsResizeIndicator = true
+        dialog.showsHiddenFiles = false
+        dialog.canChooseDirectories = false
+        dialog.canCreateDirectories = true
+        dialog.allowsMultipleSelection = false
+        dialog.allowedFileTypes = ["stl"]
         
         if (dialog.runModal() == NSModalResponseOK) {
             if let result = dialog.url {

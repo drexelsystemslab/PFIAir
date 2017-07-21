@@ -12,7 +12,7 @@ class FileIOManager {
     var filePath = ""
     
     func saveFile(data:Data, name: String, extensionName: String) {
-        let fileURL = URL(fileURLWithPath: "\(filePath)\(name).\(extensionName)")
+        let fileURL = URL(fileURLWithPath: "\(filePath)/\(name).\(extensionName)")
         
         do {
             try data.write(to: fileURL, options: .atomic)

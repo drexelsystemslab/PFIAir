@@ -687,7 +687,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HMf-1t-fOz">
-                                <rect key="frame" x="20" y="124" width="311" height="22"/>
+                                <rect key="frame" x="20" y="124" width="280" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="QgP-pU-PcH">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -695,7 +695,7 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="VNp-YT-Avs">
-                                <rect key="frame" x="355" y="118" width="111" height="32"/>
+                                <rect key="frame" x="324" y="118" width="142" height="32"/>
                                 <buttonCell key="cell" type="push" title="Choose File" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Vnr-Vz-g5F">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -714,18 +714,43 @@
                                     <action selector="submit:" target="XfG-lQ-9wD" id="z4t-U9-FJP"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yvN-Jd-EL2">
+                                <rect key="frame" x="324" y="202" width="142" height="32"/>
+                                <buttonCell key="cell" type="push" title="Select Save Path" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="fkL-OV-E1a">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <connections>
+                                        <action selector="selectSavePath:" target="XfG-lQ-9wD" id="7qd-5l-adE"/>
+                                    </connections>
+                                </buttonCell>
+                            </button>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UIC-E5-eqX">
+                                <rect key="frame" x="18" y="213" width="284" height="17"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Default Path " id="UUj-RX-s3v">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="UIC-E5-eqX" firstAttribute="top" secondItem="yvN-Jd-EL2" secondAttribute="top" id="4eN-rz-B5L"/>
                             <constraint firstItem="VNp-YT-Avs" firstAttribute="leading" secondItem="HMf-1t-fOz" secondAttribute="trailing" constant="30" id="8pp-Vj-lSi"/>
+                            <constraint firstItem="yvN-Jd-EL2" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="40" id="GG5-dM-qGX"/>
                             <constraint firstItem="hcR-o7-9qg" firstAttribute="top" secondItem="HMf-1t-fOz" secondAttribute="bottom" constant="24" id="KBk-qF-3nF"/>
                             <constraint firstAttribute="trailing" secondItem="VNp-YT-Avs" secondAttribute="trailing" constant="20" id="NhX-HC-6cg"/>
+                            <constraint firstItem="UIC-E5-eqX" firstAttribute="trailing" secondItem="HMf-1t-fOz" secondAttribute="trailing" id="RrT-7P-wgJ"/>
+                            <constraint firstItem="yvN-Jd-EL2" firstAttribute="trailing" secondItem="VNp-YT-Avs" secondAttribute="trailing" id="aB6-2G-mi6"/>
                             <constraint firstItem="HMf-1t-fOz" firstAttribute="centerY" secondItem="m2S-Jp-Qdl" secondAttribute="centerY" id="cbY-yA-FII"/>
+                            <constraint firstItem="UIC-E5-eqX" firstAttribute="leading" secondItem="HMf-1t-fOz" secondAttribute="leading" id="czg-8N-5Oe"/>
                             <constraint firstItem="VNp-YT-Avs" firstAttribute="centerY" secondItem="m2S-Jp-Qdl" secondAttribute="centerY" id="j9A-sC-OgP"/>
                             <constraint firstItem="HMf-1t-fOz" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="lAY-Hm-ZuZ"/>
+                            <constraint firstItem="yvN-Jd-EL2" firstAttribute="leading" secondItem="VNp-YT-Avs" secondAttribute="leading" id="o7j-16-f7M"/>
                             <constraint firstItem="hcR-o7-9qg" firstAttribute="centerX" secondItem="m2S-Jp-Qdl" secondAttribute="centerX" id="vFV-uU-ZrT"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="filePathLabel" destination="UIC-E5-eqX" id="cOw-h0-zRH"/>
                         <outlet property="textfield" destination="HMf-1t-fOz" id="Znb-iN-OjG"/>
                     </connections>
                 </viewController>
