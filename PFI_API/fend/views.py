@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseRedirect
 from fend.forms import SearchForm
 from django.core import serializers
@@ -14,19 +15,35 @@ from api.models import UserModelForm
 import tasks
 
 
+
 def getUserModels(request):
-    userModels = serializers.serialize('python', UserModel.objects.all())
-    return render(request, 'UserModelList.html', {"userModel_list": userModels})
+    userModels = UserModel.objects.all()
+    paginator = Paginator(userModels, 15)  # Show 25 contacts per page
+
+    page = request.GET.get('page')
+    try:
+        userModels_subset = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        userModels_subset = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        userModels_subset = paginator.page(paginator.num_pages)
+    #userModels_python = serializers.serialize('python', userModels_subset)
+    print(userModels_subset[0])
+    return render(request, 'UserModelList.html', {"userModel_list": userModels_subset})
+
+
 
 
 def upload(request):
     if request.method == "POST":
         form = UserModelForm(request.POST, request.FILES)
         if form.is_valid():
-            if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
-                pass
-            else:
-                return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
+            # if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
+            #     pass
+            # else:
+            #     return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
             newUserModel = form.save()
             # model = trimesh.load_mesh(newUserModel.file.url)
             # descriptor = ToolBox.angleHist(model)
@@ -37,6 +54,11 @@ def upload(request):
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
             return HttpResponseRedirect('/usermodels')
+        else:
+            errors = ""
+            for field in form:
+                errors += field.errors
+            return HttpResponseBadRequest(errors)
 
     else:
         form = UserModelForm()
