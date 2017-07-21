@@ -37,11 +37,6 @@ class ViewController: NSViewController {
                 fileURL = result
                 textfield.stringValue = result.path
             }
-            
-//            if (result != nil) {
-//                let path = result!.path
-//                textfield.stringValue = path
-//            }
         }
     }
     
@@ -50,13 +45,6 @@ class ViewController: NSViewController {
             manager.search(filepath: fileURL)
         }
     }
-
-    override var representedObject: Any? {
-        didSet {
-        // Update the view, if already loaded.
-        }
-    }
-
 
 }
 

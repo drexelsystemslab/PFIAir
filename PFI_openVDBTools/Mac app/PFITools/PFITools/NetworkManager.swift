@@ -14,7 +14,7 @@ class NetworkManger {
     private var port = ""
     private var suffix = ""
     
-    func search(filepath: URL) {        
+    func search(filepath: URL) {
         let serverPath = "http://\(ip):\(port)\(suffix)"
         
         Alamofire.upload(
@@ -32,7 +32,6 @@ class NetworkManger {
                     print(encodingError)
                 }
         })
-
     }
     
     init(ip: String, port: String, suffix: String) {
