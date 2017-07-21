@@ -14,27 +14,28 @@ class NetworkManger {
     private var port = ""
     private var suffix = ""
     
-    func search(filepath: String) {
-        let parameters: Parameters = ["file": filepath]
-        
+    func search(filepath: URL) {        
         let serverPath = "http://\(ip):\(port)\(suffix)"
         
-        let fileURL = URL(fileURLWithPath: filepath, isDirectory: true)
-        print(fileURL)
-        
-        Alamofire.upload(fileURL, to: serverPath).responseJSON { response in
-            debugPrint(response)
-        }
-        
-//        Alamofire.request(serverPath, method: .post, parameters: parameters).responseJSON { response in
-//            debugPrint(response)
-//            if let json = response.result.value {
-//                print("JSON: \(json)")
-//            }
-//        }
+        Alamofire.upload(
+            multipartFormData: { multipartFormData in
+            multipartFormData.append(filepath, withName: "file")
+        },
+            to: serverPath,
+            encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    upload.responseJSON { response in
+                        debugPrint(response)
+                    }
+                case .failure(let encodingError):
+                    print(encodingError)
+                }
+        })
+
     }
     
-    init(ip: String, port: String,suffix: String) {
+    init(ip: String, port: String, suffix: String) {
         self.ip = ip
         self.port = port
         self.suffix = suffix

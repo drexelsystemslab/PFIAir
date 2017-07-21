@@ -11,6 +11,7 @@ import Cocoa
 class ViewController: NSViewController {
 
     @IBOutlet weak var textfield: NSTextField!
+    var fileURL: URL?
     
     let manager = NetworkManger(ip: "127.0.0.1", port: "8000", suffix: "/api/search/")
     
@@ -32,17 +33,22 @@ class ViewController: NSViewController {
         dialog.allowedFileTypes = ["stl"];
         
         if (dialog.runModal() == NSModalResponseOK) {
-            let result = dialog.url // Pathname of the file
-            
-            if (result != nil) {
-                let path = result!.path
-                textfield.stringValue = path
+            if let result = dialog.url {
+                fileURL = result
+                textfield.stringValue = result.path
             }
+            
+//            if (result != nil) {
+//                let path = result!.path
+//                textfield.stringValue = path
+//            }
         }
     }
     
     @IBAction func submit(_ sender: Any) {
-        manager.search(filepath: textfield.stringValue)
+        if let fileURL = fileURL {
+            manager.search(filepath: fileURL)
+        }
     }
 
     override var representedObject: Any? {
