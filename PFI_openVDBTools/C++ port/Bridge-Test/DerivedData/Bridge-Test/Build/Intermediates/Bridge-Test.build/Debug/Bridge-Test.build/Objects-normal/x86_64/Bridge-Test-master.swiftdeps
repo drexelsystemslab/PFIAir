@@ -1,6 +1,0 @@
-version: "Apple Swift version 3.1 (swiftlang-802.0.53 clang-802.0.42)"
-options: "d01321fc76a48ba558b7b85c79a646f1"
-build_time: [554399423, 8909000]
-inputs:
-  "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/C++ port/Bridge-Test/Bridge-Test/ViewController.swift": [554399420, 0]
-  "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/C++ port/Bridge-Test/Bridge-Test/AppDelegate.swift": [554399420, 0]

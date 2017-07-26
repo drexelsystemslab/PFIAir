@@ -1,5 +1,0 @@
-version: "Apple Swift version 3.1 (swiftlang-802.0.53 clang-802.0.42)"
-options: "20a135e0dc9f54e5869f74a39ddd4b8a"
-build_time: [554233031, 562028000]
-inputs:
-  "/Users/Hollis/Developer/PFIAir/PFIAir/PFI_openVDBTools/C++ port/VDBCLib/VDBTests/VDBTests.swift": !dirty [554232963, 0]

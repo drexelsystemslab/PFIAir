@@ -1,2 +1,2 @@
-source activate PFIAir
-python /Users/Hollis/PFIAir/bin/celery -A PFIAir worker
+source activate py2.7
+python ~/anaconda3/bin/celery -A PFIAir worker

@@ -1,5 +1,0 @@
-13:36:03.211 Xcode[3514:461175] Beginning test session VDBTests-8804008E-8E18-482D-9A60-E42DB94DA968 at 2017-07-24 13:36:03.211 with Xcode 8E3004b on target <DVTLocalComputer: 0x7fc3ff62ab60 (My Mac | x86_64h)> (10.12.6 (16G29))
-13:36:03.211 Xcode[3514:461175] Launching with Xcode.DebuggerFoundation.Launcher.LLDB
-13:36:03.213 Xcode[3514:495492] Waiting for connection to unix domain socket at /tmp/XCTest-1ONJSj.
-13:36:09.938 Xcode[3514:461175] Test operation failure: Test operation was canceled.
-13:36:09.938 Xcode[3514:461175] _finishWithError:Error Domain=IDETestOperationsObserverErrorDomain Code=4 "Test operation was canceled." UserInfo={NSLocalizedDescription=Test operation was canceled.} didCancel: 1
