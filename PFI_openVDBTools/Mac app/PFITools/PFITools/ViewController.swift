@@ -71,6 +71,7 @@ class ViewController: NSViewController {
                 if let models = mod {
                     for m in models {
                         self.downloadModel(mod: m)
+                        print(m)
                     }
                 }
             }
