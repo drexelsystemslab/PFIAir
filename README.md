@@ -108,14 +108,14 @@ pip install -e .
 ## Running the server
 The server has two parts: a Celery worker to handle sycronous tasks, and a Django server to provide UI. To start the worker, change to the `PFIAir/PFI_API` directory and run the `startWorker.sh` script.
 
-Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time running the server, you will need to run the follwoing commands:
-
-For Mac, also run the command `rabbitmq-server`
+Once that has started, open a second command window, change to the `PFIAir/PFI_API` directory, and run the `startServer.sh` script. If this is your first time running the server, you will need to run the following commands:
 
 
 ```
 source activate py2.7
 python manage.py migrate
 ```
+
+For Mac, also run the command `rabbitmq-server`
 
 At this point you should be able to browse to `127.0.0.1:8000` and see that the server is running.
