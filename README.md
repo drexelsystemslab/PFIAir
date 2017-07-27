@@ -73,6 +73,18 @@ For Mac: Paste path for blender.exe file to /etc/paths using:
 vi /etc/paths
 ```
 
+For Ubuntu Server:
+
+You may see the error `libGLU.so.1: cannot open shared object file`. To fix this run the command:
+```
+sudo apt-get install libglu1-mesa
+```
+
+You may see the error `libXrender.so.1: cannot open shared object file`. to fix this run the command:
+```
+sudo apt install libxrender1
+```
+
 
 
 ### pfitoolbox
