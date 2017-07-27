@@ -107,7 +107,7 @@ def search(request):
         return HttpResponseBadRequest()
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def download(request, file_pk):
     usermodel = UserModel.objects.get(pk=file_pk)
     file_path = usermodel.file.url  # TODO: why is there an extra /uploads/
