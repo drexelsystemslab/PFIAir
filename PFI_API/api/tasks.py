@@ -26,7 +26,7 @@ def generatePreview(usermodelpk):
         call(["blender",
               "--background",
               "--python",
-              "api/management/commands/blenderObjToStl.py",
+              "api/management/commands/renderPreview.py",
               "--",
               userModel.file.url,
               target_url])
