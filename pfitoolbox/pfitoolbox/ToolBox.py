@@ -5,11 +5,13 @@ import time
 import pickle
 #from stl import mesh
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import sys
 import trimesh
 import networkx as nx
 from trimesh import sample,grouping,geometry
 import random
+import scipy
 
 
 
@@ -155,3 +157,45 @@ def randomWalker(model):
 
 
     return current_position.flatten() #return a list of all the nodes that have been visited
+
+def centroid_finder(verts):
+    return np.array([(verts[0]+verts[3]+verts[6])/3,(verts[1]+verts[4]+verts[7])/3,(verts[2]+verts[5]+verts[8])/3])
+
+def distance_map(model):
+    face_verts = np.hstack((model.vertices[model.faces[:, 0]], model.vertices[model.faces[:, 1]], model.vertices[model.faces[:, 2]]))
+    face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
+    dists = scipy.spatial.distance.pdist(face_centers, 'euclidean')
+    dists = scipy.spatial.distance.squareform(dists)
+    return dists
+
+def svd_feature_decomp(model):
+    dists = distance_map(model)
+    plt.imshow(dists, interpolation='nearest', cmap=cm.gist_rainbow)
+    plt.figure()
+
+    U, s, V = np.linalg.svd(dists, full_matrices=True)
+    first_order_s = np.zeros_like(dists)
+    print(first_order_s.shape)
+    first_order_s[0,0] = s[0]
+    first_order_dists = np.dot(U,np.dot(first_order_s,V))
+    first_order_diffs = np.absolute(first_order_dists-dists)
+    plt.imshow(first_order_diffs, interpolation='nearest', cmap=cm.gist_rainbow)
+    plt.figure()
+
+    second_order_s = np.zeros_like(dists)
+    second_order_s[1,1] = s[1]
+    second_order_dists = np.dot(U, np.dot(second_order_s, V))
+    second_order_diffs = np.absolute(second_order_dists-dists)
+    plt.imshow(second_order_diffs, interpolation='nearest', cmap=cm.gist_rainbow)
+    plt.figure()
+
+    closest = np.less(first_order_diffs,second_order_diffs)
+    plt.imshow(closest, interpolation='nearest', cmap=cm.tab20)
+
+
+    plt.show()
+
+    return [np.where(closest[:,0]),np.where(closest[:,0])]
+
+
+
