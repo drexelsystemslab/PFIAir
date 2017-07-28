@@ -81,7 +81,7 @@
 		</nav>
 		<div id="preview"></div>
 		<div id="usermodels" class="row list-group">
-		{% for userModel in userModel_list %}
+		{% for userModel,distance in userModel_list %}
 			<div id="UserModel {{ userModel.pk }}"class="item  col-xs-4 col-lg-4">
 	            <div class="thumbnail">
 	                <div class="col-xs-12 col-md-12" id="preview2" style="background-color: #FFFFFF;">
@@ -90,8 +90,7 @@
 	                <div class="caption">
 	                    <h4 class="group inner list-group-item-heading">{{ userModel.name }}</h4>
 	                    <h4></h4>
-	                    <p class="group inner list-group-item-text">Product description... Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-	                        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
+	                    <p class="group inner list-group-item-text">Distance: {{ distance }}</p>
 	                    <div class="row">
 	                        <div class="col-xs-12 col-md-4">
 	                            <p>Indexed: {{ userModel.indexed }}</p>
