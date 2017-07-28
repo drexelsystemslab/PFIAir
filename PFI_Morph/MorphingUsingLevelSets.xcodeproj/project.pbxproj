@@ -1,0 +1,279 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		481902241F14AB2E008B7B81 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 481902231F14AB2E008B7B81 /* main.cpp */; };
+		481902571F16D556008B7B81 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 481902561F16D556008B7B81 /* libtbb.dylib */; };
+		481902611F1EAE21008B7B81 /* libHalf.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 481902601F1EAE21008B7B81 /* libHalf.12.dylib */; };
+		481902651F22448B008B7B81 /* libopenvdb.4.0.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 481902641F22448B008B7B81 /* libopenvdb.4.0.2.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4819021E1F14AB2E008B7B81 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		481902201F14AB2E008B7B81 /* MorphingUsingLevelSets */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MorphingUsingLevelSets; sourceTree = BUILT_PRODUCTS_DIR; };
+		481902231F14AB2E008B7B81 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		481902561F16D556008B7B81 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../../../usr/local/Cellar/tbb/2017_U7/lib/libtbb.dylib; sourceTree = "<group>"; };
+		4819025A1F16D56B008B7B81 /* libtbbmalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbbmalloc.dylib; path = ../../../../../usr/local/Cellar/tbb/2017_U7/lib/libtbbmalloc.dylib; sourceTree = "<group>"; };
+		481902601F1EAE21008B7B81 /* libHalf.12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libHalf.12.dylib; path = ../../../../../usr/local/Cellar/ilmbase/2.2.0/lib/libHalf.12.dylib; sourceTree = "<group>"; };
+		481902641F22448B008B7B81 /* libopenvdb.4.0.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopenvdb.4.0.2.dylib; path = ../../../../../usr/local/lib/libopenvdb.4.0.2.dylib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4819021D1F14AB2E008B7B81 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				481902571F16D556008B7B81 /* libtbb.dylib in Frameworks */,
+				481902611F1EAE21008B7B81 /* libHalf.12.dylib in Frameworks */,
+				481902651F22448B008B7B81 /* libopenvdb.4.0.2.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		481902171F14AB2E008B7B81 = {
+			isa = PBXGroup;
+			children = (
+				481902641F22448B008B7B81 /* libopenvdb.4.0.2.dylib */,
+				481902601F1EAE21008B7B81 /* libHalf.12.dylib */,
+				4819025A1F16D56B008B7B81 /* libtbbmalloc.dylib */,
+				481902561F16D556008B7B81 /* libtbb.dylib */,
+				481902221F14AB2E008B7B81 /* MorphingUsingLevelSets */,
+				481902211F14AB2E008B7B81 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		481902211F14AB2E008B7B81 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				481902201F14AB2E008B7B81 /* MorphingUsingLevelSets */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		481902221F14AB2E008B7B81 /* MorphingUsingLevelSets */ = {
+			isa = PBXGroup;
+			children = (
+				481902231F14AB2E008B7B81 /* main.cpp */,
+			);
+			path = MorphingUsingLevelSets;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4819021F1F14AB2E008B7B81 /* MorphingUsingLevelSets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 481902271F14AB2E008B7B81 /* Build configuration list for PBXNativeTarget "MorphingUsingLevelSets" */;
+			buildPhases = (
+				4819021C1F14AB2E008B7B81 /* Sources */,
+				4819021D1F14AB2E008B7B81 /* Frameworks */,
+				4819021E1F14AB2E008B7B81 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MorphingUsingLevelSets;
+			productName = MorphingUsingLevelSets;
+			productReference = 481902201F14AB2E008B7B81 /* MorphingUsingLevelSets */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		481902181F14AB2E008B7B81 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = Jeshuran;
+				TargetAttributes = {
+					4819021F1F14AB2E008B7B81 = {
+						CreatedOnToolsVersion = 7.3;
+					};
+				};
+			};
+			buildConfigurationList = 4819021B1F14AB2E008B7B81 /* Build configuration list for PBXProject "MorphingUsingLevelSets" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 481902171F14AB2E008B7B81;
+			productRefGroup = 481902211F14AB2E008B7B81 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4819021F1F14AB2E008B7B81 /* MorphingUsingLevelSets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4819021C1F14AB2E008B7B81 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				481902241F14AB2E008B7B81 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		481902251F14AB2E008B7B81 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		481902261F14AB2E008B7B81 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		481902281F14AB2E008B7B81 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				GCC_VERSION = "";
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					/usr/local/Cellar/tbb/2017_U7/lib,
+					/usr/local/Cellar/ilmbase/2.2.0/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		481902291F14AB2E008B7B81 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				GCC_VERSION = "";
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					/usr/local/Cellar/tbb/2017_U7/lib,
+					/usr/local/Cellar/ilmbase/2.2.0/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4819021B1F14AB2E008B7B81 /* Build configuration list for PBXProject "MorphingUsingLevelSets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				481902251F14AB2E008B7B81 /* Debug */,
+				481902261F14AB2E008B7B81 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		481902271F14AB2E008B7B81 /* Build configuration list for PBXNativeTarget "MorphingUsingLevelSets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				481902281F14AB2E008B7B81 /* Debug */,
+				481902291F14AB2E008B7B81 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 481902181F14AB2E008B7B81 /* Project object */;
+}
