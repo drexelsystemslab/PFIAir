@@ -110,7 +110,7 @@ def search(request):
 @require_http_methods(["GET"])
 def download(request, file_pk):
     usermodel = UserModel.objects.get(pk=file_pk)
-    file_path = usermodel.file.url  # TODO: why is there an extra /uploads/
+    file_path = usermodel.file.url
     file_name = usermodel.file.url.split('/')[-1]
     print(file_path)
     file_wrapper = open(file_path, 'rb')
