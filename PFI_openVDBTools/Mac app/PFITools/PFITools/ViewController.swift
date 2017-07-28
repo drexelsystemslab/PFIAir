@@ -70,6 +70,7 @@ class ViewController: NSViewController {
             manager.search(filepath: fileURL) { mod in
                 if let models = mod {
                     for m in models {
+                        print(m)
                         self.downloadModel(mod: m)
                     }
                 }
