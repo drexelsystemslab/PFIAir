@@ -170,32 +170,26 @@ def distance_map(model):
 
 def svd_feature_decomp(model):
     dists = distance_map(model)
-    plt.imshow(dists, interpolation='nearest', cmap=cm.gist_rainbow)
-    plt.figure()
-
+    print("dists")
+    print(dists.shape)
     U, s, V = np.linalg.svd(dists, full_matrices=True)
+    print("svd")
     first_order_s = np.zeros_like(dists)
-    print(first_order_s.shape)
     first_order_s[0,0] = s[0]
+    print("s mat")
     first_order_dists = np.dot(U,np.dot(first_order_s,V))
+    print("dists1")
     first_order_diffs = np.absolute(first_order_dists-dists)
-    plt.imshow(first_order_diffs, interpolation='nearest', cmap=cm.gist_rainbow)
-    plt.figure()
+    print("first order")
 
     second_order_s = np.zeros_like(dists)
     second_order_s[1,1] = s[1]
     second_order_dists = np.dot(U, np.dot(second_order_s, V))
     second_order_diffs = np.absolute(second_order_dists-dists)
-    plt.imshow(second_order_diffs, interpolation='nearest', cmap=cm.gist_rainbow)
-    plt.figure()
+    print("second order")
 
     closest = np.less(first_order_diffs,second_order_diffs)
-    plt.imshow(closest, interpolation='nearest', cmap=cm.tab20)
-
-
-    plt.show()
-
-    return [np.where(closest[:,0]),np.where(closest[:,0])]
+    return [np.where(closest[:,1]),np.where(closest[:,1])]
 
 
 

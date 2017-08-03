@@ -11,7 +11,7 @@ import Demos
 
 from mpl_toolkits import mplot3d
 
-name = 'chair'
+name = 'philips2'
 
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
