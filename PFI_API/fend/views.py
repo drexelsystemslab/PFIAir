@@ -96,12 +96,11 @@ def search(request):
             results = []
             print(topsix)
             for result in topsix:
-                matchedUserModels = serializers.serialize('python', UserModel.objects.filter(pk=result["pk"]))
-                matchedUserModels[0]["distance"] = result["distance"]
-                print(matchedUserModels)
-                results.append(matchedUserModels[0])
-
-            return render(request, 'UserModelList.html', {"userModel_list": results})
+                matchedUserModel = UserModel.objects.get(pk=result["pk"])
+                #print(matchedUserModels)
+                results.append((matchedUserModel,result["distance"]))
+            print(results)
+            return render(request, 'SearchResults.html', {"userModel_list": results})
         else:
             return HttpResponseBadRequest()
     else:
