@@ -96,7 +96,7 @@
 	                            <p>Indexed: {{ userModel.indexed }}</p>
 	                        </div>
 	                        <div class="col-xs-12 col-md-8">
-	                            <a class="btn btn-success" href="api/download/{{userModel.pk}}" target="_blank" style="float:right;"">Download</a>
+	                            <a class="btn btn-success" href="../api/download/{{userModel.pk}}" target="_blank" style="float:right;"">Download</a>
 	                            <form onsubmit="return deleter({{userModel.pk}})" style="float:right;margin-right: 10px;">
 	                            	<input class="btn btn-danger" type="submit" value="Delete">
 	                            </form>
