@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB2C8F7A1F2BC47000E5F714 /* IOManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB2C8F781F2BC47000E5F714 /* IOManager.cpp */; };
 		CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB6B4DFD1F2BAF6300F9878B /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CB2C8F781F2BC47000E5F714 /* IOManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IOManager.cpp; sourceTree = "<group>"; };
+		CB2C8F791F2BC47000E5F714 /* IOManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = IOManager.hpp; sourceTree = "<group>"; };
 		CB6B4DFA1F2BAF6300F9878B /* vdbTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vdbTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CB6B4DFD1F2BAF6300F9878B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +61,8 @@
 			isa = PBXGroup;
 			children = (
 				CB6B4DFD1F2BAF6300F9878B /* main.cpp */,
+				CB2C8F781F2BC47000E5F714 /* IOManager.cpp */,
+				CB2C8F791F2BC47000E5F714 /* IOManager.hpp */,
 			);
 			path = vdbTest;
 			sourceTree = "<group>";
@@ -121,6 +126,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */,
+				CB2C8F7A1F2BC47000E5F714 /* IOManager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,7 +247,11 @@
 				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = NO;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				OTHER_LDFLAGS = "-lopenvdb";
+				OTHER_LDFLAGS = (
+					"-lopenvdb",
+					"-ltbb",
+					"-lhalf",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
 				SYSTEM_HEADER_SEARCH_PATHS = "";
@@ -261,7 +271,11 @@
 				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = NO;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				OTHER_LDFLAGS = "-lopenvdb";
+				OTHER_LDFLAGS = (
+					"-lopenvdb",
+					"-ltbb",
+					"-lhalf",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
 				SYSTEM_HEADER_SEARCH_PATHS = "";

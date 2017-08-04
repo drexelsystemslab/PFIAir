@@ -7,21 +7,11 @@
 //
 
 #include <iostream>
-#include <openvdb/openvdb.h>
-#include <openvdb/tools/LevelSetMorph.h>
-#include <openvdb/tools/LevelSetMeasure.h>
-#include <openvdb/tools/LevelSetSphere.h>
-#include <openvdb/tools/LevelSetPlatonic.h>
-#include <openvdb/tools/GridTransformer.h>
-#include <openvdb/math/Maps.h>
-#include <openvdb/math/Operators.h>
-#include <openvdb/math/FiniteDifference.h>
-#include <openvdb/util/NullInterrupter.h>
-#include <vector>
-#include <map>
+#include "IOManager.hpp"
 
 int main(int argc, const char * argv[]) {
-    openvdb::initialize();
+    IOManager manager = IOManager();
     
+    manager.import_stl("cube_new.stl");
     return 0;
 }

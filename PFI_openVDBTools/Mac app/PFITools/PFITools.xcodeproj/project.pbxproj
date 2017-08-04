@@ -13,6 +13,7 @@
 		CB0D9E491F22411700CA702E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0D9E471F22411700CA702E /* ViewController.swift */; };
 		CB0D9E4A1F22411700CA702E /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0D9E481F22411700CA702E /* NetworkManager.swift */; };
 		CB130D201F22A1D90021B3BE /* FileIOManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB130D1F1F22A1D90021B3BE /* FileIOManager.swift */; };
+		CB2098D61F2BC20500C8D407 /* VDBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2098D51F2BC20500C8D407 /* VDBManager.swift */; };
 		CB7D09E51F2267BC001CEBD2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7D09E41F2267BC001CEBD2 /* Model.swift */; };
 		CBD122EB1F22454800423B65 /* Alamofire.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBD122E91F22454100423B65 /* Alamofire.framework */; };
 		CBD122EC1F22454800423B65 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CBD122E91F22454100423B65 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -41,6 +42,7 @@
 		CB0D9E471F22411700CA702E /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		CB0D9E481F22411700CA702E /* NetworkManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		CB130D1F1F22A1D90021B3BE /* FileIOManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileIOManager.swift; sourceTree = "<group>"; };
+		CB2098D51F2BC20500C8D407 /* VDBManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VDBManager.swift; sourceTree = "<group>"; };
 		CB7D09E41F2267BC001CEBD2 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		CBD122E91F22454100423B65 /* Alamofire.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Alamofire.framework; path = Carthage/Build/Mac/Alamofire.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,6 +82,7 @@
 				CB0D9E361F2240BB00CA702E /* AppDelegate.swift */,
 				CB0D9E471F22411700CA702E /* ViewController.swift */,
 				CB0D9E481F22411700CA702E /* NetworkManager.swift */,
+				CB2098D51F2BC20500C8D407 /* VDBManager.swift */,
 				CB130D1F1F22A1D90021B3BE /* FileIOManager.swift */,
 				CB7D09E41F2267BC001CEBD2 /* Model.swift */,
 				CB0D9E451F2240F300CA702E /* Main.storyboard */,
@@ -162,6 +165,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB2098D61F2BC20500C8D407 /* VDBManager.swift in Sources */,
 				CB130D201F22A1D90021B3BE /* FileIOManager.swift in Sources */,
 				CB0D9E4A1F22411700CA702E /* NetworkManager.swift in Sources */,
 				CB0D9E491F22411700CA702E /* ViewController.swift in Sources */,
