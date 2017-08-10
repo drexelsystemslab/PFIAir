@@ -24,7 +24,6 @@ urlpatterns = [
     #url(r'^admin/', admin.site.urls),
     url(r'^$', fend_views.getUserModels, name='User Models'),
     url(r'^upload/$', fend_views.upload, name='upload'),
-    url(r'^usermodels/$', fend_views.getUserModels, name='getUserModel'),
     url(r'^search/$', fend_views.search, name='apiSearch'),
     url(r'^api/models/$', api_views.models, name='apiGetUserModel'),
     url(r'^api/search/$', api_views.search, name='search'),

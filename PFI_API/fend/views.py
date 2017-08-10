@@ -52,7 +52,7 @@ def upload(request):
             # tasks.generatePreview(newUserModel.pk)
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
-            return HttpResponseRedirect('/usermodels')
+            return HttpResponseRedirect('/')
         else:
             errors = ""
             for field in form:
