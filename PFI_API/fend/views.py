@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
+from django.db import IntegrityError
+from django.forms import ValidationError
 from fend.forms import SearchForm
 from django.core import serializers
 from api.models import UserModel
+from api.models import File
 from django.views.decorators.csrf import csrf_exempt
 import random
 import numpy as np
@@ -11,7 +14,7 @@ import trimesh
 import json
 from pfitoolbox import ToolBox
 from fend.forms import SearchForm
-from api.models import UserModelForm
+from fend.forms import UploadForm
 import tasks
 
 
@@ -37,30 +40,31 @@ def getUserModels(request):
 
 def upload(request):
     if request.method == "POST":
-        form = UserModelForm(request.POST, request.FILES)
-        if form.is_valid():
-            # if (request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
-            #     pass
-            # else:
-            #     return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
-            newUserModel = form.save()
-            # model = trimesh.load_mesh(newUserModel.file.url)
-            # descriptor = ToolBox.angleHist(model)
-            # newUserModel.descriptor = json.dumps(descriptor)
-            # newUserModel.indexed = True
-            # newUserModel.save()
-            # tasks.generatePreview(newUserModel.pk)
-            tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
-            tasks.generateDescriptor.delay(newUserModel.pk)
-            return HttpResponseRedirect('/usermodels')
-        else:
-            errors = ""
-            for field in form:
-                errors += field.errors
-            return HttpResponseBadRequest(errors)
+        form = UploadForm(request.POST,request.FILES)
+        try:
+            if form.is_valid():
+                newUserModel = UserModel(name=form.cleaned_data['name'])
+                newUserModel.save()
+                file = File(file=request.FILES['file'],model=newUserModel)
+                file.save()
+
+                tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
+                tasks.generateDescriptor.delay(newUserModel.pk)
+                return HttpResponseRedirect('/usermodels')
+
+
+        except ValidationError:
+            error_messages = ""
+            for (field, errors) in form.errors.as_data().iteritems():
+                for error in errors:
+                    error_messages += "%s: %s\n" % (field, error.message)
+            return HttpResponseBadRequest(error_messages)
+        except Exception as e:
+            return HttpResponseServerError(str(e))
 
     else:
-        form = UserModelForm()
+        form = UploadForm()
+        print(form)
         return render(request, 'upload.html', {'form': form})
 
 

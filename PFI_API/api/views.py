@@ -16,6 +16,7 @@ import tasks
 from fend.forms import SearchForm
 from api.models import UserModel
 from api.models import UserModelForm
+from api.models import File
 
 @csrf_exempt
 @require_http_methods(["GET","POST"])
@@ -39,14 +40,17 @@ def models(request):
         except Exception as e:
             return HttpResponseServerError(str(e))
     elif(request.method == "POST"):
-        form = UserModelForm(request.POST, request.FILES)
-        if form.is_valid():
+        form = UserModelForm(request.POST)
+        file = File(request.FILES)
+        if form.is_valid() and file.is_valid():
             # if(request.FILES["file"].content_type == 'application/vnd.ms-pki.stl'):
             #     pass
             # else:
             #     return HttpResponseBadRequest("Invalid File Format %s" % request.FILES["file"].content_type)
 
             newUserModel = form.save()
+            newUserModel.file = file
+            newUserModel.save()
             tasks.generatePreview.delay(newUserModel.pk)  # send the pk instead of the object to prevent race conditions
             tasks.generateDescriptor.delay(newUserModel.pk)
             return JsonResponse({"success": True})

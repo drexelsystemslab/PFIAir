@@ -19,7 +19,7 @@ def generatePreview(usermodelpk):
     try:
         print("Generating preview for usermodel: " + str(usermodelpk))
         userModel = UserModel.objects.get(pk=usermodelpk)
-        print(userModel.file.url)
+        print(userModel.file_set.filter(type="stl"))
         filename = userModel.file.url.split('/')[-1]
         name = filename.split('.')[0]
         target_url = os.path.abspath(filename).rsplit("/",1)[0]+"/static/previews/"+name+".png"
