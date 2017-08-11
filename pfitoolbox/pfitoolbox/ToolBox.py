@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 import sys
 import trimesh
 import networkx as nx
-from trimesh import sample,grouping,geometry
+from trimesh import sample,grouping,geometry,util
 import random
 import scipy
 from sklearn.preprocessing import StandardScaler
@@ -166,59 +166,6 @@ def distance_map(model):
     face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
     dists = scipy.spatial.distance.pdist(face_centers, 'euclidean')
     dists = scipy.spatial.distance.squareform(dists)
-    return dists
-
-def svd_feature_decomp(model):
-    dists = distance_map(model)
-    print("dists")
-    print(dists.shape)
-    U, s, V = np.linalg.svd(dists, full_matrices=True)
-    print("svd")
-    first_order_s = np.zeros_like(dists)
-    first_order_s[0,0] = s[0]
-    print("s mat")
-    first_order_dists = np.dot(U,np.dot(first_order_s,V))
-    print("dists1")
-    first_order_diffs = np.absolute(first_order_dists-dists)
-    print("first order")
-
-    second_order_s = np.zeros_like(dists)
-    second_order_s[1,1] = s[1]
-    second_order_dists = np.dot(U, np.dot(second_order_s, V))
-    second_order_diffs = np.absolute(second_order_dists-dists)
-    print("second order")
-
-    closest = np.less(first_order_diffs,second_order_diffs)
-    return [np.where(closest[:,1]),np.where(closest[:,1])]
-
-
-
-    return dists
-
-def svd_feature_decomp(model):
-    dists = distance_map(model)
-    print("dists")
-    print(dists.shape)
-    U, s, V = np.linalg.svd(dists, full_matrices=True)
-    print("svd")
-    first_order_s = np.zeros_like(dists)
-    first_order_s[0,0] = s[0]
-    print("s mat")
-    first_order_dists = np.dot(U,np.dot(first_order_s,V))
-    print("dists1")
-    first_order_diffs = np.absolute(first_order_dists-dists)
-    print("first order")
-
-    second_order_s = np.zeros_like(dists)
-    second_order_s[1,1] = s[1]
-    second_order_dists = np.dot(U, np.dot(second_order_s, V))
-    second_order_diffs = np.absolute(second_order_dists-dists)
-    print("second order")
-
-    closest = np.less(first_order_diffs,second_order_diffs)
-    return [np.where(closest[:,1]),np.where(closest[:,1])]
-
-
 
     dist_std = StandardScaler().fit_transform(dists)
     return dist_std
@@ -245,6 +192,8 @@ def svd_feature_decomp(model):
 
     closest = np.less(first_order_diffs,second_order_diffs)
     return [np.where(closest[:,1]),np.where(closest[:,1])]
+
+
 
 
 
