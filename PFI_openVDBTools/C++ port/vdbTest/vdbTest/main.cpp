@@ -7,11 +7,19 @@
 //
 
 #include <iostream>
-#include "IOManager.hpp"
+#include "Container.hpp"
+#include "Algorithm.hpp"
 
 int main(int argc, const char * argv[]) {
-    IOManager manager = IOManager();
+    using namespace openvdb;
     
-    manager.import_stl("cube_new.stl");
+    PFIAir::Container manager = PFIAir::Container(Vec3d(0.1,0.1,0.1));
+    
+    manager.loadMeshModel("altcube.obj");
+    auto cube = manager.getWaterTightLevelSet();
+    manager.exportModel("new_cube_obj_1.vdb", cube);
+    
+    //PFIAir::algorithme::printValues(cube);
+    
     return 0;
 }

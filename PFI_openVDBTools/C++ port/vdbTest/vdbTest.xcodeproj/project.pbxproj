@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CB2C8F7A1F2BC47000E5F714 /* IOManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB2C8F781F2BC47000E5F714 /* IOManager.cpp */; };
+		CB23E7F21F3E3DA10071CBFE /* Algorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */; };
+		CB2C8F7A1F2BC47000E5F714 /* Container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB2C8F781F2BC47000E5F714 /* Container.cpp */; };
 		CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB6B4DFD1F2BAF6300F9878B /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -24,8 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CB2C8F781F2BC47000E5F714 /* IOManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IOManager.cpp; sourceTree = "<group>"; };
-		CB2C8F791F2BC47000E5F714 /* IOManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = IOManager.hpp; sourceTree = "<group>"; };
+		CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Algorithm.cpp; sourceTree = "<group>"; };
+		CB23E7F11F3E3DA10071CBFE /* Algorithm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Algorithm.hpp; sourceTree = "<group>"; };
+		CB2C8F781F2BC47000E5F714 /* Container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Container.cpp; sourceTree = "<group>"; };
+		CB2C8F791F2BC47000E5F714 /* Container.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Container.hpp; sourceTree = "<group>"; };
 		CB6B4DFA1F2BAF6300F9878B /* vdbTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vdbTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CB6B4DFD1F2BAF6300F9878B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -60,9 +63,11 @@
 		CB6B4DFC1F2BAF6300F9878B /* vdbTest */ = {
 			isa = PBXGroup;
 			children = (
+				CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */,
+				CB23E7F11F3E3DA10071CBFE /* Algorithm.hpp */,
 				CB6B4DFD1F2BAF6300F9878B /* main.cpp */,
-				CB2C8F781F2BC47000E5F714 /* IOManager.cpp */,
-				CB2C8F791F2BC47000E5F714 /* IOManager.hpp */,
+				CB2C8F781F2BC47000E5F714 /* Container.cpp */,
+				CB2C8F791F2BC47000E5F714 /* Container.hpp */,
 			);
 			path = vdbTest;
 			sourceTree = "<group>";
@@ -126,7 +131,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */,
-				CB2C8F7A1F2BC47000E5F714 /* IOManager.cpp in Sources */,
+				CB23E7F21F3E3DA10071CBFE /* Algorithm.cpp in Sources */,
+				CB2C8F7A1F2BC47000E5F714 /* Container.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
