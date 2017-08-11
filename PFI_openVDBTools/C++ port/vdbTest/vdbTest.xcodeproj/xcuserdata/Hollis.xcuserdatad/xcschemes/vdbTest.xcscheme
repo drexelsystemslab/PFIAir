@@ -65,7 +65,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = ""
+            argument = "altcube.obj com_cube_0.vdb"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

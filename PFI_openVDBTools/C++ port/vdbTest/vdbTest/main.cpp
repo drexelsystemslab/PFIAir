@@ -14,10 +14,10 @@ int main(int argc, const char * argv[]) {
     using namespace openvdb;
     
     PFIAir::Container manager = PFIAir::Container(Vec3d(0.1,0.1,0.1));
-    
-    manager.loadMeshModel("altcube.obj");
+
+    manager.loadMeshModel(argv[1]);
     auto cube = manager.getWaterTightLevelSet();
-    manager.exportModel("new_cube_obj_1.vdb", cube);
+    manager.exportModel(argv[2], cube);
     
     //PFIAir::algorithme::printValues(cube);
     
