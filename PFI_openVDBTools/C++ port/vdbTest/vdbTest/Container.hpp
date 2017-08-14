@@ -39,7 +39,8 @@ namespace PFIAir {
         
         // conversion
         FloatGrid::Ptr getWaterTightLevelSet();
-        FloatGrid::Ptr getOpenDistanceField(float bandwidth);
+        FloatGrid::Ptr getWaterTightLevelSetWithBandWidth(float w);
+        FloatGrid::Ptr getUnsignedDistanceField(float bandwidth);
     };
 }
 

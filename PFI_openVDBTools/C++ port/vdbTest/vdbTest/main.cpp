@@ -16,10 +16,21 @@ int main(int argc, const char * argv[]) {
     PFIAir::Container manager = PFIAir::Container(Vec3d(0.1,0.1,0.1));
 
     manager.loadMeshModel(argv[1]);
-    auto cube = manager.getWaterTightLevelSet();
-    manager.exportModel(argv[2], cube);
     
+    auto cube = manager.getWaterTightLevelSetWithBandWidth(12);
+    
+    PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
+    
+    manager.exportModel(argv[2], cube);
     //PFIAir::algorithme::printValues(cube);
     
     return 0;
 }
+
+// Unsigned:
+// all voxels: 323520
+// on voxels: 7472
+
+// Signed:
+// all voxels: 323520
+// on voxels: 7472

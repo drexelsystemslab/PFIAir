@@ -19,6 +19,7 @@ namespace PFIAir {
         using namespace openvdb;
         
         bool inflate(const float offset, FloatGrid::Ptr);
+        void changeActiveVoxelValues(FloatGrid::Ptr p, float offset);
         
         // debug
         void printValues(FloatGrid::Ptr);

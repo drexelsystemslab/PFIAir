@@ -78,7 +78,11 @@ namespace PFIAir {
         return tools::meshToLevelSet<FloatGrid>(_scale, _points, _indicesTri, _indicesQuad);
     }
     
-    FloatGrid::Ptr Container::getOpenDistanceField(float bandwidth) {
+    FloatGrid::Ptr Container::getWaterTightLevelSetWithBandWidth(float w) {
+        return tools::meshToLevelSet<FloatGrid>(_scale, _points, _indicesTri, _indicesQuad, w);
+    }
+    
+    FloatGrid::Ptr Container::getUnsignedDistanceField(float bandwidth) {
         return tools::meshToUnsignedDistanceField<FloatGrid>(_scale, _points, _indicesTri, _indicesQuad, bandwidth);
     }
     
