@@ -36,8 +36,8 @@ def findNeighbors(model):
     N = adjacents.shape
     neighbors = np.zeros((N[0], N[1] + 1))  # increase size of neighbors array from (n,2) to (n,3)
     neighbors[:, :-1] = adjacents  # add the adjacents to this new array
-    neighbors[:,
-    2] = angles  # add the angle such that for each set of neighbors, neighbors = (neighbor1,neighbor2,angle)
+    neighbors[:,2] = angles  # add the angle such that for each set of neighbors, neighbors = (neighbor1,neighbor2,angle)
+    print(neighbors)
     return neighbors
 
 
@@ -161,6 +161,16 @@ def randomWalker(model):
 def centroid_finder(verts):
     return np.array([(verts[0]+verts[3]+verts[6])/3,(verts[1]+verts[4]+verts[7])/3,(verts[2]+verts[5]+verts[8])/3])
 
+
+
+
+def angle_distance_map(model):
+    dists = scipy.spatial.distance.pdist(model.face_normals, lambda u,v:np.arccos(np.clip(np.dot(u,v)/np.linalg.norm(u)/np.linalg.norm(v), -1, 1)))
+    dists = scipy.spatial.distance.squareform(dists)
+
+    dists_std = StandardScaler().fit_transform(dists)
+    return dists_std
+
 def distance_map(model):
     face_verts = np.hstack((model.vertices[model.faces[:, 0]], model.vertices[model.faces[:, 1]], model.vertices[model.faces[:, 2]]))
     face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
@@ -174,7 +184,7 @@ def svd_feature_decomp(model):
     dists = distance_map(model)
     print("dists")
     print(dists.shape)
-    U, s, V = np.linalg.svd(dists, full_matrices=True)
+    U, s, V = np.linalg.svd(dists, full_matrices=False)
     print("svd")
     first_order_s = np.zeros_like(dists)
     first_order_s[0,0] = s[0]
@@ -191,7 +201,24 @@ def svd_feature_decomp(model):
     print("second order")
 
     closest = np.less(first_order_diffs,second_order_diffs)
-    return [np.where(closest[:,1]),np.where(closest[:,1])]
+    farthest = np.greater_equal(first_order_diffs, second_order_diffs)
+    return [np.where(closest[:,0]),np.where(farthest[:,0])]
+
+def graph_builder(model):
+
+    G = nx.Graph()
+
+
+def build_graph(parent,model):
+    model1,model2 = svd_splitter(model)
+    parent.add_node({"faces": model.faces, "descriptor": angleHist(model)})
+
+def svd_splitter(model):
+    part1,part2 = svd_feature_decomp(model)
+    model1 = model.submesh(part1)
+    model2 = model.submesh(part2)
+    return [model1,model2]
+
 
 
 

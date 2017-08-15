@@ -18,6 +18,7 @@ def distance_map(model):
 def svd(model):
     m_n = ToolBox.svd_feature_decomp(model)
     model.visual.face_colors[m_n[0]] = [252, 154, 7, 255]
+    #model.visual.face_colors[m_n[1]] = [66, 134, 244, 255]
     model.show()
 
 def svd_with_distance_maps(model):
