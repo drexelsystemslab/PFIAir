@@ -215,10 +215,9 @@ def build_graph(parent,model):
 
 def svd_splitter(model):
     part1,part2 = svd_feature_decomp(model)
-    model1 = model.submesh(part1)
-    model2 = model.submesh(part2)
+    model1 = model.submesh(part1)[0]
+    model2 = model.submesh(part2)[0]
     return [model1,model2]
-
 
 
 
