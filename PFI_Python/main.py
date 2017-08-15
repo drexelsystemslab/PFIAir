@@ -10,7 +10,7 @@ import numpy as np
 
 from mpl_toolkits import mplot3d
 
-name = 'gradienttest'
+name = 'philips'
 
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
@@ -21,7 +21,7 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-Demos.svd(model)
+ToolBox.split_stl(model,name)
 
 
 
