@@ -69,7 +69,8 @@ def generateGraph(usermodelpk):
 
         for section in sections:
             section_descriptor  = list(np.array(ToolBox.angleHist(model,section)['angleHist'])[:,1])
-            node = UserModelNode(parent=userModel,faces=section,descriptor=section_descriptor)
+            section_model = model.submesh((section,))[0]
+            node = UserModelNode(parent=userModel,model=trimesh.io.export.export_json(section_model),descriptor=section_descriptor)
             node.save()
             print(node.pk)
             graph.add_node(node.pk)

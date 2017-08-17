@@ -30,5 +30,5 @@ class UserModelForm(forms.ModelForm):
 
 class UserModelNode(models.Model):
     parent = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    faces = models.TextField(default="[]", null=True, blank=True)
+    model = JSONField(default={'metadata': [],'faces': [],'face_normals': [],'vertices': []})
     descriptor = ArrayField(models.FloatField(),blank=True)
