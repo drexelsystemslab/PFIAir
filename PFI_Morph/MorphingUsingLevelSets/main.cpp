@@ -25,10 +25,11 @@ void writeToFile(const std::string, openvdb::FloatGrid::Ptr);
 
 
 double measureGrid(const openvdb::FloatGrid::Ptr);
-void adjustScale(const openvdb::FloatGrid::Ptr&, const openvdb::FloatGrid::Ptr&, const float);
+void adjustScale(const openvdb::FloatGrid::Ptr&, const openvdb::FloatGrid::Ptr&);
 void calcCentroid(const openvdb::FloatGrid::Ptr&);
 void orientGrid(const openvdb::FloatGrid::Ptr&, const std::vector<openvdb::Vec3d>, openvdb::Vec3d);
 double morphModels(openvdb::FloatGrid::Ptr&, openvdb::FloatGrid::Ptr&);
+bool checkIfSurface(openvdb::FloatGrid::ValueOnIter, const openvdb::FloatGrid::Ptr);
 void computeMeanCurvature(const openvdb::math::Transform, const openvdb::FloatGrid::Ptr, std::map<openvdb::Coord, double>&);
 double computeMeanSumOfCurvatureDifferences(std::map<openvdb::Coord, double>&, std::map<openvdb::Coord, double>&);
 
@@ -48,48 +49,73 @@ struct MatMul {
     }
 };
 
+void writeOnlySurface(const openvdb::FloatGrid::Ptr grid_pointer) {
+    double bg = grid_pointer->background();
+    int surface = 0, non_surface = 0;
+    std::cout << grid_pointer->activeVoxelCount() << std::endl;
+    for (openvdb::FloatGrid::ValueOnIter iter = grid_pointer->beginValueOn(); iter; ++iter) {
+        if(iter.getValue() < 0) {
+            if(!checkIfSurface(iter, grid_pointer)) {
+                ++non_surface;
+                iter.setValue(bg);
+            }
+            else ++surface;
+        }
+    }
+    std::cout << surface << std::endl;
+    std::cout << non_surface << std::endl;
+    writeToFile("only_surface.vdb", grid_pointer);
+}
 
 int main()
 {
     openvdb::initialize();
     
-    
-    //apparently, the greater the value of LEVEL_SET_HALF_WIDTH, the more its possible to scale
-    static const openvdb::Real LEVEL_SET_HALF_WIDTH = 5.0;
-    openvdb::FloatGrid::Ptr source_grid = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
-    openvdb::FloatGrid::Ptr target_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
+    //    openvdb::FloatGrid::Ptr target_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
     
     //    openvdb::FloatGrid::Ptr source_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
     //    openvdb::FloatGrid::Ptr target_grid = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
     
-    //    openvdb::FloatGrid::Ptr source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("cube.vdb"));
-    //    openvdb::FloatGrid::Ptr target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("sphere.vdb"));
+    //    openvdb::FloatGrid::Ptr source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("openvdb_cube.vdb"));
+    //    openvdb::FloatGrid::Ptr target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("openvdb_sphere.vdb"));
     
     //    openvdb::FloatGrid::Ptr source_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
     //    openvdb::FloatGrid::Ptr target_grid = openvdb::tools::createLevelSetIcosahedron<openvdb::FloatGrid>(1.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
     
-    //    openvdb::FloatGrid::Ptr test_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("sphere.vdb"));
+    //    openvdb::FloatGrid::Ptr test_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("openvdb_sphere.vdb"));
     
     //    openvdb::FloatGrid::Ptr source_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(20.0f), 0.3f);
     //    openvdb::FloatGrid::Ptr source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("dragon_scaled.vdb"));
     //    openvdb::FloatGrid::Ptr target_grid = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
     
     
-    //    openvdb::FloatGrid::Ptr test_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("dragon.vdb"));
+    //    openvdb::FloatGrid::Ptr test_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(readFile("openvdb_sphere.vdb"));
     //    testingOnOffVoxels(test_grid);
     
-    calcCentroid(target_grid);
-    return 0;
     
-    double total_energy1 = morphModels(source_grid, target_grid);
+    
+    //apparently, the greater the value of LEVEL_SET_HALF_WIDTH, the more its possible to scale
+    static const openvdb::Real LEVEL_SET_HALF_WIDTH = 3.0;
+    
+    //source should be narrow band level set
+    openvdb::FloatGrid::Ptr source_grid1 = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.1f);
+    //target should be full distance volume??
+    openvdb::FloatGrid::Ptr target_grid1 = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.1f, float(LEVEL_SET_HALF_WIDTH));
+    double total_energy1 = morphModels(source_grid1, target_grid1);
     display("Energy 1", total_energy1);
     
-    //    source_grid = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
-    //    target_grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
-    //    double total_energy2 = morphModels(source_grid, target_grid);
+    
+    //    //source should be narrow band level set
+    //    openvdb::FloatGrid::Ptr source_grid2 = openvdb::tools::createLevelSetCube<openvdb::FloatGrid>(10.0f, openvdb::Vec3f(0.0f), 0.3f, float(LEVEL_SET_HALF_WIDTH));
+    //    //target should be full distance volume??
+    //    openvdb::FloatGrid::Ptr target_grid2 = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(5.0f, openvdb::Vec3f(0.0f), 0.3f);
+    //    double total_energy2 = morphModels(source_grid2, target_grid2);
+    
+    
+    //    display("Energy 1", total_energy1);
     //    display("Energy 2", total_energy2);
-    //
     //    display("Mean energy", (total_energy1 + total_energy2) / 2);
+    
     return 0;
 }
 
@@ -130,7 +156,7 @@ double measureGrid(const openvdb::FloatGrid::Ptr grid_pointer) {
 }
 
 
-void adjustScale(const openvdb::FloatGrid::Ptr& source_pointer, const openvdb::FloatGrid::Ptr& target_pointer, const float voxel_size = 0.3f) {
+void adjustScale(const openvdb::FloatGrid::Ptr& source_pointer, const openvdb::FloatGrid::Ptr& target_pointer) {
     //openvdb::FloatGrid::Ptr scaled_source_grid;
     double  source_area, target_area, area_ratio, source_scale_sum = 0, target_scale_sum = 0;
     int count = 0;
@@ -140,25 +166,27 @@ void adjustScale(const openvdb::FloatGrid::Ptr& source_pointer, const openvdb::F
     area_ratio =  source_area / target_area;
     
     while(!(area_ratio >= 0.95 && area_ratio <= 1.05)) {           //greater than +/- 5%
-        if(++count == 3)
+        if(++count == 3) {
+            if(!(area_ratio >= 0.95 && area_ratio <= 1.05)) std::cout << "scaling not under 5%" << std::endl;
             break;
+        }
         
         //sclaing up
         if(source_area < target_area) {
             //use deep copy instead later on
             source_scale_sum += target_area / source_area;
-            source_pointer->setTransform(openvdb::math::Transform::createLinearTransform(voxel_size));
+            source_pointer->setTransform(openvdb::math::Transform::createLinearTransform(source_pointer->voxelSize()[0]));
             source_pointer->transform().postScale(source_scale_sum);
             source_pointer->pruneGrid();
-            writeToFile("scaled_souce.vdb", source_pointer);
+            //writeToFile("scaled_souce.vdb", source_pointer);
         }
         else {
             //use deep copy instead later on
             target_scale_sum += source_area / target_area;
-            target_pointer->setTransform(openvdb::math::Transform::createLinearTransform(voxel_size));
+            target_pointer->setTransform(openvdb::math::Transform::createLinearTransform(target_pointer->voxelSize()[0]));
             target_pointer->transform().postScale(target_scale_sum);
             target_pointer->pruneGrid();
-            writeToFile("scaled_target.vdb", target_pointer);
+            //writeToFile("scaled_target.vdb", target_pointer);
         }
         
         source_area = measureGrid(source_pointer);
@@ -217,36 +245,18 @@ void orientGrid(const openvdb::FloatGrid::Ptr& grid_pointer, std::vector<openvdb
     
     switch(max_index) {
         case 0:
-            if(real_vals[1] < real_vals[2]) {
-                min_index = 1;
-                mid_index = 2;
-            }
-            else {
-                min_index = 2;
-                mid_index = 1;
-            }
+            if(real_vals[1] < real_vals[2]) { min_index = 1; mid_index = 2; }
+            else { min_index = 2; mid_index = 1; }
             break;
             
         case 1:
-            if(real_vals[0] < real_vals[2]) {
-                min_index = 0;
-                mid_index = 2;
-            }
-            else {
-                min_index = 2;
-                mid_index = 0;
-            }
+            if(real_vals[0] < real_vals[2]) { min_index = 0; mid_index = 2; }
+            else { min_index = 2; mid_index = 0; }
             break;
             
         case 2:
-            if(real_vals[0] < real_vals[1]) {
-                min_index = 0;
-                mid_index = 1;
-            }
-            else {
-                min_index = 1;
-                mid_index = 0;
-            }
+            if(real_vals[0] < real_vals[1]) { min_index = 0; mid_index = 1; }
+            else { min_index = 1; mid_index = 0; }
             break;
     }
     
@@ -308,7 +318,7 @@ void orientGrid(const openvdb::FloatGrid::Ptr& grid_pointer, std::vector<openvdb
     //    openvdb::tools::foreach(grid_pointer->beginValueOn(), MatMul(rot_mat));
     //    writeToFile("rot.vdb", grid_pointer);
     
-    //    openvdb::Vec3SGrid::Ptr grid = openvdb::gridPtrCast<openvdb::Vec3SGrid>(readFile("cube.vdb"));
+    //    openvdb::Vec3SGrid::Ptr grid = openvdb::gridPtrCast<openvdb::Vec3SGrid>(readFile("openvdb_cube.vdb"));
     ////    // Construct the rotation matrix.
     //    openvdb::math::Mat3s rot45 =
     //    openvdb::math::rotation<openvdb::math::Mat3s>(openvdb::math::Y_AXIS, M_PI_4);
@@ -325,7 +335,22 @@ void orientGrid(const openvdb::FloatGrid::Ptr& grid_pointer, std::vector<openvdb
     
 }
 
-
+double checkStopMorph(const openvdb::FloatGrid::Ptr& source_grid, const openvdb::FloatGrid::Ptr& target_grid) {
+    double threshold = 0.02, max_diff = 0.0, curr_diff;
+    openvdb::Coord curr_coord;
+    openvdb::FloatGrid::Accessor target_acc = target_grid->getAccessor();
+    
+    for (openvdb::FloatGrid::ValueOnIter iter = source_grid->beginValueOn(); iter; ++iter) {
+        if(iter.getValue() < 0) {
+            if(checkIfSurface(iter, source_grid)) {
+                curr_diff = openvdb::math::Abs(iter.getValue() - target_acc.getValue(iter.getCoord()));
+                if(curr_diff > max_diff) max_diff = curr_diff;
+            }
+        }
+    }
+    std::cout << "Max diff: " << max_diff << std::endl;
+    return max_diff;
+}
 
 double morphModels(openvdb::FloatGrid::Ptr& source_grid, openvdb::FloatGrid::Ptr& target_grid) {
     adjustScale(source_grid, target_grid);
@@ -336,6 +361,7 @@ double morphModels(openvdb::FloatGrid::Ptr& source_grid, openvdb::FloatGrid::Ptr
     
     size_t CFL_count;
     double time = 0.0, time_inc = 1.0, energy_consumed = 0.0, total_energy = 0.0, threshold = 0.00001;
+    double prev_max = 0, curr_max = 0;
     std::string file_name = "";
     
     std::map<openvdb::Coord, double> source_coord_meancurv, target_coord_meancurv;
@@ -349,9 +375,9 @@ double morphModels(openvdb::FloatGrid::Ptr& source_grid, openvdb::FloatGrid::Ptr
             
             //std::cout << "Energy diff: " << prev_energy - energy_consumed << std::endl;
             
-            if(openvdb::math::Abs(energy_consumed) < threshold)
-                break;
-            
+            //            if(openvdb::math::Abs(energy_consumed) < threshold)
+            //                break;
+            //
             //prev_energy = energy_consumed;
         }
         
@@ -362,40 +388,67 @@ double morphModels(openvdb::FloatGrid::Ptr& source_grid, openvdb::FloatGrid::Ptr
         computeMeanCurvature(source_trans_updt, source_grid, target_coord_meancurv);
         
         energy_consumed = computeMeanSumOfCurvatureDifferences(source_coord_meancurv, target_coord_meancurv);
+        std::cout << energy_consumed << std::endl;
         total_energy += energy_consumed;
         
         file_name = "advect_" + std::to_string((int)(time/time_inc)) + ".vdb";
         writeToFile(file_name, source_grid);
         
-        /*display("CFL iterations", CFL_count);
-         display("File created", file_name);
-         display("Energy", energy_consumed);
-         display("Total", total_energy);
-         std::cout << std::endl;*/
+        display("CFL iterations", CFL_count);
+        display("File created", file_name);
+        display("Energy", energy_consumed);
+        display("Total", total_energy);
+        std::cout << std::endl;
         
         time += time_inc;
+        
+        prev_max = curr_max;
+        curr_max = checkStopMorph(source_grid, target_grid);
+        if(prev_max == curr_max) break;
     }
     
     //display("Energy used", total_energy);
     return total_energy;
 }
 
+bool checkIfSurface(openvdb::FloatGrid::ValueOnIter iterator, const openvdb::FloatGrid::Ptr grid_pointer) {
+    bool found_positive = false;
+    openvdb::Coord coord = iterator.getCoord();
+    openvdb::Coord six_connected[6] = {
+        openvdb::Coord(coord.x() - 1, coord.y(), coord.z()),
+        openvdb::Coord(coord.x() + 1, coord.y(), coord.z()),
+        openvdb::Coord(coord.x(), coord.y() - 1, coord.z()),
+        openvdb::Coord(coord.x(), coord.y() + 1, coord.z()),
+        openvdb::Coord(coord.x(), coord.y(), coord.z() - 1),
+        openvdb::Coord(coord.x(), coord.y(), coord.z() + 1)
+    };
+    
+    openvdb::FloatGrid::Accessor accessor = grid_pointer->getAccessor();
+    
+    for(int i = 0; i < 6; i++) {
+        if(accessor.getValue(six_connected[i]) > 0) {
+            found_positive = true;
+            break;
+        }
+    }
+    return found_positive;
+}
 
 void computeMeanCurvature(const openvdb::math::Transform grid_transform, const openvdb::FloatGrid::Ptr grid_pointer, std::map<openvdb::Coord, double>& coord_meancurv) {
     double alpha, beta;
     openvdb::math::MeanCurvature<openvdb::math::MapBase, openvdb::math::DDScheme::CD_SECOND, openvdb::math::DScheme::CD_2ND> mc_obj;
     
     for (openvdb::FloatGrid::ValueOnIter iter = grid_pointer->beginValueOn(); iter; ++iter) {
-        //if inside, but not exactly on surface though
         if(iter.getValue() < 0) {
-            mc_obj.compute(*grid_transform.baseMap(), grid_pointer->getAccessor(), iter.getCoord(), alpha, beta);
-            
-            if(beta != 0.0)
-                coord_meancurv[iter.getCoord()] = openvdb::math::Abs(alpha / beta);
-            else
-                std::cout << "Found zero denominator (beta val)";
+            if(checkIfSurface(iter, grid_pointer)) {
+                mc_obj.compute(*grid_transform.baseMap(), grid_pointer->getAccessor(), iter.getCoord(), alpha, beta);
+                
+                if(beta != 0.0)
+                    coord_meancurv[iter.getCoord()] = alpha / beta;
+                else
+                    std::cout << "Found zero denominator (beta val)";
+            }
         }
-        
     }
 }
 
@@ -404,8 +457,8 @@ double computeMeanSumOfCurvatureDifferences(std::map<openvdb::Coord, double>& so
         double sum_of_differences = 0.0;
         
         for (std::map<openvdb::Coord, double>::iterator it = source_coord_meancurv.begin(); it != source_coord_meancurv.end(); ++it) {
-            //if check is not performed, target coords are increased to accomodate default value
-            sum_of_differences += (target_coord_meancurv.count(it->first) > 0 ? target_coord_meancurv[it->first] : 0) - source_coord_meancurv[it->first];
+            //if terniary operator is not performed, target coords count is increased to accomodate default value
+            sum_of_differences += openvdb::math::Abs((target_coord_meancurv.count(it->first) > 0 ? target_coord_meancurv[it->first] : 0) - source_coord_meancurv[it->first]);
         }
         return sum_of_differences / source_coord_meancurv.size();
     }
@@ -468,5 +521,5 @@ void testingOnOffVoxels(openvdb::FloatGrid::Ptr& grid_pointer) {
     display("less", less);
     display("more", more);
     
-    writeToFile("settoback.vdb", grid_pointer);
+    writeToFile("settobackround.vdb", grid_pointer);
 }
