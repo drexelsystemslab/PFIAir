@@ -4,6 +4,7 @@ from celery import group
 from celery import chord
 from django.core.files import File
 from api.models import UserModel
+from api.models import UserModelNode
 from subprocess import call
 import os
 from pfitoolbox import ToolBox
@@ -12,7 +13,8 @@ import math
 import json
 import time
 import trimesh
-
+import networkx as nx
+from networkx.readwrite import json_graph
 
 @shared_task
 def generatePreview(usermodelpk):
@@ -48,17 +50,40 @@ def generateDescriptor(usermodelpk):
     fileName = userModel.file.url.split('/')[-1]
     print("Generating descriptor for usermodel: " + fileName)
 
-    descriptorsChain = group([angleHistTask.s(usermodelpk),faceAreaHistTask.s(usermodelpk)])
-    
-    results = chord(descriptorsChain)(saveDescriptor.s(usermodelpk))
-    #print(results.get())
-    
-    #userModel.descriptor.save(toolbox.getDescriptor())
+    parentDescriptorsChord = chord([angleHistTask.s(usermodelpk),faceAreaHistTask.s(usermodelpk)],saveDescriptor.s(usermodelpk))
 
-    #generate = chain(*genDescriptorChain)
-    #generate.delay()
+    descriptorChain = chord([parentDescriptorsChord,generateGraph.s(usermodelpk)],mark_as_indexed.s(usermodelpk))
 
-    #TODO: need to make as indexed
+    
+    results = descriptorChain()
+
+@shared_task
+def generateGraph(usermodelpk):
+    userModel = UserModel.objects.get(pk=usermodelpk)
+    try:
+        model = trimesh.load_mesh(userModel.file.url)
+        sections = ToolBox.random_splitter(model)
+
+        graph = nx.DiGraph()
+        graph.add_node("-1")#parent node
+
+        for section in sections:
+            section_descriptor  = list(np.array(ToolBox.angleHist(model,section)['angleHist'])[:,1])
+            node = UserModelNode(parent=userModel,faces=section,descriptor=section_descriptor)
+            node.save()
+            print(node.pk)
+            graph.add_node(node.pk)
+            graph.add_edge("-1",node.pk)
+
+        userModel.tree = json_graph.tree_data(graph,"-1")
+        userModel.save(update_fields=["tree"])
+
+
+
+
+    except(OSError,IOError):
+        print("31: stl file missing")
+        return
 
 @shared_task
 def findNeighborsTask(usermodelpk):
@@ -110,3 +135,10 @@ def saveDescriptor(results,modelID):
     userModel.indexed = True
     userModel.save(update_fields=["indexed", "descriptor"])
     return results
+
+@shared_task
+def mark_as_indexed(results,modelID):
+    userModel = UserModel.objects.get(pk=modelID)
+    userModel.indexed = True
+    userModel.save(update_fields=["indexed"])
+

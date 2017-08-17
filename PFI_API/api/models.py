@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from django.db import models
 from django import forms
+from django.contrib.postgres.fields import ArrayField,JSONField
 from .validators import validate_file_extension
 import os
 
@@ -12,6 +13,7 @@ class UserModel(models.Model):
     indexed = models.BooleanField(default=False)
     descriptor = models.TextField(default="[]", null=True, blank=True)
     preview = models.ImageField(upload_to='static/previews/', default=None)
+    tree = JSONField(null=True)
 
     def filename(self):
         return os.path.basename(self.file.name)
@@ -26,6 +28,7 @@ class UserModelForm(forms.ModelForm):
         fields = ['name', 'file']
 
 
-class ModelIndex(models.Model):
-    usermodel = models.OneToOneField(UserModel, on_delete=models.CASCADE, primary_key=True)
-    tree = models.TextField()
+class UserModelNode(models.Model):
+    parent = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    faces = models.TextField(default="[]", null=True, blank=True)
+    descriptor = ArrayField(models.FloatField(),blank=True)

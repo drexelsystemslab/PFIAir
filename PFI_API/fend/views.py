@@ -12,7 +12,7 @@ import json
 from pfitoolbox import ToolBox
 from fend.forms import SearchForm
 from api.models import UserModelForm
-import tasks
+from api import tasks
 
 
 
