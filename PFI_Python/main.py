@@ -11,7 +11,7 @@ import Demos
 
 from mpl_toolkits import mplot3d
 
-name = 'sphere'
+name = 'hex2'
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
 print("Generating descriptor for usermodel: " + fileName)
@@ -21,8 +21,7 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-Demos.svd(model)
-#ToolBox.svd_splitter(model)
+Demos.random_splitter(model)
 
 
 

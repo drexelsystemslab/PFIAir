@@ -2,6 +2,7 @@ from pfitoolbox import ToolBox
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
+import trimesh
 
 def random_walker(model):
     facets = ToolBox.randomWalker(model)
@@ -46,3 +47,10 @@ def svd_with_distance_maps(model):
     plt.imshow(closest, interpolation='nearest', cmap=cm.tab20)
 
     plt.show()
+
+def random_splitter(model):
+    sections = ToolBox.random_splitter(model)
+    for section in sections:
+        model.visual.face_colors[section] = trimesh.visual.random_color()
+
+    model.show()

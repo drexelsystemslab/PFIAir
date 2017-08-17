@@ -15,11 +15,14 @@ import scipy
 from sklearn.preprocessing import StandardScaler
 
 
-def angleHist(model):
-    neighborsGraph = findNeighbors(model)
+def angleHist(model,faces=None):
+    if faces == None:
+        faces = model.faces
+    neighborsGraph = findNeighbors(model)#TODO: don't find neighbors for the entire graph
     angles = neighborsGraph[:, 2]
+    filtered_angles = angles[faces]# only bin angles from supplied faces
     # plot with degree lables
-    (hist, labels) = np.histogram(angles, bins=np.linspace(0, 2 * math.pi, 20), density=True)
+    (hist, labels) = np.histogram(filtered_angles, bins=np.linspace(0, 2 * math.pi, 20), density=True)
     labels = labels[1:20] * 180 / 3.14  # strip out the first label (==0) and convert from degrees to radians
     #print(hist.shape)
     descriptor = []  # append hist and lables such that [[labels[0],hist[0]]
@@ -204,21 +207,28 @@ def svd_feature_decomp(model):
     farthest = np.greater_equal(first_order_diffs, second_order_diffs)
     return [np.where(closest[:,0]),np.where(farthest[:,0])]
 
-def graph_builder(model):
-
-    G = nx.Graph()
-
-
-def build_graph(parent,model):
-    model1,model2 = svd_splitter(model)
-    parent.add_node({"faces": model.faces, "descriptor": angleHist(model)})
-
 def svd_splitter(model):
     part1,part2 = svd_feature_decomp(model)
     model1 = model.submesh(part1)[0]
     model2 = model.submesh(part2)[0]
     return [model1,model2]
 
+def random_splitter(model):
+    faces = randomWalker(model)
+    graph = nx.Graph()
+    graph.add_edges_from(model.face_adjacency)
+    for face in np.unique(faces):
+        graph.remove_node(face)
+
+    groups = nx.connected_components(graph)#break up the remain model y connectivity
+
+    results = []
+    for group in groups:
+        print(len(list(group)))
+        results.append(list(group))
+
+    results.append(faces)
+    return results
 
 
 
