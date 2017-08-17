@@ -135,7 +135,7 @@ def randomWalker(model):
     neighbors = np.array(graph.adjacency_list())
     num_of_particles = len(model.faces)/6
     print(num_of_particles)
-    t_f = num_of_particles/5 if(num_of_particles>100) else 2
+    t_f = num_of_particles/5 if(num_of_particles>100) else 10
     walks = np.random.randint(0,3,(num_of_particles,t_f))#each particle has a row of length equal to the number of time steps
     current_position = np.zeros((num_of_particles,t_f+1),dtype=int)+random.randint(0,len(model.facets))
     #print(current_position)
@@ -221,10 +221,9 @@ def split_stl(model,name):
     model1 = model.submesh((part1,))[0]#because of the algorithm, this will be a connected surface
     model2 = model.submesh((part2,))[0]#this may be more than one connected surface
     more_models = model2.split(only_watertight=False)#so let's split it up
-    np.append(more_models,part1)#the final list of surfaces
-
+    more_models = np.append(more_models,model1)#the final list of surfaces
     for i,surface in enumerate(more_models):
-        if(len(surface.faces)>10):
+        if(len(surface.faces)>5):
             with open("models/"+name+"_"+str(i)+".stl", "wb+") as file:
                     surface.export(file,"stl")
 

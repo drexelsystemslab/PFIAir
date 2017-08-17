@@ -10,7 +10,7 @@ import numpy as np
 
 from mpl_toolkits import mplot3d
 
-name = 'philips'
+name = 'm145002_7'
 
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
