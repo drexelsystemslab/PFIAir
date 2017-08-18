@@ -92,7 +92,7 @@ def search(request):
                                                                         1])  # because the data is [lable,value] we need to just subtract values
                 models.append({"pk": userModel.pk, "distance": distance})
 
-            topsix = sorted(models, key=lambda i: i["distance"])[0:6]
+            topsix = sorted(models, key=lambda i: i["distance"])[0:100]
             results = []
             print(topsix)
             for result in topsix:
