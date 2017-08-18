@@ -104,7 +104,10 @@ def search(request):
             response.status_code = 400
             return response
     else:
-        return HttpResponseBadRequest()
+        errors = ""
+        for field in form:
+            errors += field.errors.as_json()
+        return HttpResponseBadRequest(errors)
 
 @csrf_exempt
 @require_http_methods(["GET"])

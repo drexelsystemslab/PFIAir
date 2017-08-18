@@ -8,8 +8,47 @@ Installation instructions will be written for Ubuntu, and may differ on other pl
 - Blender 2.78
 - Celery 4.0.2
 - Anaconda 4.4.0 (python 2.7 version)
+- Postgres 9.5.7
 
 ## Installing dependencies
+### PostgreSQL
+
+(Install instructions from here: https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-django-application-on-ubuntu-14-04)
+
+Run the following commands
+
+```
+sudo apt-get update
+sudo apt-get install postgresql postgresql-contrib
+```
+
+You have now installed PostgreSQL. Let's set up a few things. To open the PostgreSQL prompt run
+
+```
+sudo su - postgres
+psql
+```
+
+Then set up the database with these SQL commands (be sure to change the password):
+
+```
+CREATE DATABASE pfiair;
+CREATE USER dev WITH PASSWORD '[enter password from project config here]';
+ALTER ROLE dev SET client_encoding TO 'utf8';
+ALTER ROLE dev SET default_transaction_isolation TO 'read committed';
+ALTER ROLE dev SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE pfiair TO dev;
+
+```
+
+Exit PostgreSQL with the following comands:
+
+```
+\q
+exit
+```
+
+
 ### Andaconda
 Download the proper version of Anaconda from [this page](https://www.continuum.io/downloads). Open the download directory and run the following command:
 
@@ -96,6 +135,7 @@ There are a few other libraries required by the project. To install them, run th
 source activate py2.7
 pip install django
 pip install trimesh
+pip install psycopg2
 ```
 
 Additionally, please installthe python library associated with this project. In the `PFIAir/pfitoolbox` directory run the following command:
