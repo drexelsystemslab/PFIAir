@@ -225,7 +225,7 @@ def split_stl(model,name):
     for i,surface in enumerate(more_models):
         if(len(surface.faces)>5):
             with open("models/"+name+"_"+str(i)+".stl", "wb+") as file:
-                    surface.export(file,"stl")
+                    surface.export(file,"stl_ascii")
 
 
 
