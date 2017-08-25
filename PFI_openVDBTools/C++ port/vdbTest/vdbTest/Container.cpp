@@ -94,56 +94,53 @@ namespace PFIAir {
         file.close();
     }
     
-    /*
-    bool Container::inflate(const float offset) {
-        //Busing namespace openvdb;
-        
-        
-        
-        //static const Real LEVEL_SET_HALF_WIDTH = 5.0;
-        
-        auto transform = math::Transform();
-        Vec3d scale_vec = Vec3d(0.1,0.1,0.1);
-        transform.preScale(scale_vec);
-        //
-        //    cout << transform.voxelSize() << endl;
-        //
-        //    return false;
-        
-        //
+    float Container::computeAverageEdgeLength() {
+        vector<float> tri_avg = vector<float>();
+        vector<float> quad_avg = vector<float>();
 
-        
-        // offset
-        //    for (FloatGrid::ValueAllIter iter = levelSet -> beginValueAll() ; iter; ++iter) {
-        //        float dist = iter.getValue();
-        //        iter.setValue(dist - DISTANCE_OFFSET);
-        //        //cout << iter.getValue() << endl;
-        //    }
-        //    auto box = uDistance_field -> evalActiveVoxelBoundingBox();
-        //
-        //    auto out = tools::createLevelSetBox<FloatGrid>(box, transform);
-        
-        //auto levelSet = tools::meshToUnsignedDistanceField<FloatGrid>(transform, points, indicesTri, indicesQuad, 2.0);
+        // average length for triangles
+        for (int i = 0; i < _indicesTri.size(); i++) {
+            Vec3s point1 = _points[_indicesTri[i].x()];
+            Vec3s point2 = _points[_indicesTri[i].y()];
+            Vec3s point3 = _points[_indicesTri[i].z()];
 
+            Vec3s edge1 = point1 - point2;
+            Vec3s edge2 = point1 - point3;
+            Vec3s edge3 = point2 - point3;
+            
+            float avg = (edge1.length() + edge2.length() + edge3.length()) / 3.0;
+            tri_avg.push_back(avg);
+        }
         
-        //    initialize();
-        //    // Create a FloatGrid and populate it with a narrow-band
-        //    // signed distance field of a sphere.
-        //    FloatGrid::Ptr grid =
+        // average length for quads
+        for (int i = 0; i < _indicesQuad.size(); i++) {
+            Vec3s point1 = _points[_indicesQuad[i].x()];
+            Vec3s point2 = _points[_indicesQuad[i].y()];
+            Vec3s point3 = _points[_indicesQuad[i].z()];
+            Vec3s point4 = _points[_indicesQuad[i].w()];
+            
+            Vec3s edge1 = point1 - point2;
+            Vec3s edge2 = point2 - point3;
+            Vec3s edge3 = point3 - point4;
+            Vec3s edge4 = point4 - point1;
 
-        //    // Associate some metadata with the grid.
-        //    grid->insertMeta("radius", FloatMetadata(50.0));
-        //    // Name the grid "LevelSetSphere".
-        //    grid->setName("LevelSetSphere");
-        //    // Create a VDB file object.
-        //    io::File file("mygrids.vdb");
-        //    // Add the grid pointer to a container.
-        //    GridPtrVec grids;
-        //    grids.push_back(grid);
-        //    // Write out the contents of the container.
-        //    file.write(grids);
-        //    file.close();
-        return true;
+            
+            float avg = (edge1.length() + edge2.length() + edge3.length() + edge4.length()) / 4.0;
+            quad_avg.push_back(avg);
+        }
+        
+        // compute overall average
+        float tri_sum = 0, quad_sum = 0;
+        for (int i = 0; i < tri_avg.size(); i++) {
+            tri_sum += tri_avg[i];
+        }
+        
+        for (int i = 0; i < quad_avg.size(); i++) {
+            quad_sum += quad_avg[i];
+        }
+        
+        float weighted = (tri_sum + quad_sum) / (tri_avg.size() + quad_avg.size());
+        
+        return weighted;
     }
-    */
 }

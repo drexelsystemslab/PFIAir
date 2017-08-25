@@ -13,16 +13,18 @@
 int main(int argc, const char * argv[]) {
     using namespace openvdb;
     
-    PFIAir::Container manager = PFIAir::Container(Vec3d(0.1,0.1,0.1));
+    PFIAir::Container model = PFIAir::Container(Vec3d(0.1,0.1,0.1));
 
-    manager.loadMeshModel(argv[1]);
+    model.loadMeshModel(argv[1]);
     
-    auto cube = manager.getWaterTightLevelSetWithBandWidth(12);
+    auto cube = model.getWaterTightLevelSetWithBandWidth(3);
     
-    PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
+    //PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
     
-    manager.exportModel(argv[2], cube);
+    //manager.exportModel(argv[2], cube);
     //PFIAir::algorithme::printValues(cube);
+    
+    std::cout << model.computeAverageEdgeLength() << std::endl;
     
     return 0;
 }
