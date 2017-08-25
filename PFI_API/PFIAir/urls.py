@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^api/models/$', api_views.models, name='apiGetUserModel'),
     url(r'^api/search/$', api_views.search, name='search'),
     url(r'^api/download/(?P<file_pk>.+)$',api_views.download,name='download'),
-    url(r'^api/models/(?P<file_pk>.+)$',api_views.delete,name='delete')
+    url(r'^api/delete/(?P<file_pk>.+)$',api_views.delete,name='delete')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # copied from the internet because it might be useful in the future

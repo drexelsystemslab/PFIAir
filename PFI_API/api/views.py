@@ -106,7 +106,7 @@ def search(request):
     else:
         errors = ""
         for field in form:
-            errors += field.errors.as_json()
+            errors += ": "+field.errors.as_json()
         return HttpResponseBadRequest(errors)
 
 @csrf_exempt
