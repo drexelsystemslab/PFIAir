@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		210C15DB1F571C1400C078D6 /* Orienter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 210C15D91F571C1400C078D6 /* Orienter.cpp */; };
 		CB23E7F21F3E3DA10071CBFE /* Algorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */; };
 		CB2C8F7A1F2BC47000E5F714 /* Container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB2C8F781F2BC47000E5F714 /* Container.cpp */; };
 		CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CB6B4DFD1F2BAF6300F9878B /* main.cpp */; };
@@ -25,6 +26,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		210C15D91F571C1400C078D6 /* Orienter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Orienter.cpp; sourceTree = "<group>"; };
+		210C15DA1F571C1400C078D6 /* Orienter.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Orienter.hpp; sourceTree = "<group>"; };
 		CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Algorithm.cpp; sourceTree = "<group>"; };
 		CB23E7F11F3E3DA10071CBFE /* Algorithm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Algorithm.hpp; sourceTree = "<group>"; };
 		CB2C8F781F2BC47000E5F714 /* Container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Container.cpp; sourceTree = "<group>"; };
@@ -66,6 +69,8 @@
 				CB23E7F01F3E3DA10071CBFE /* Algorithm.cpp */,
 				CB23E7F11F3E3DA10071CBFE /* Algorithm.hpp */,
 				CB6B4DFD1F2BAF6300F9878B /* main.cpp */,
+				210C15D91F571C1400C078D6 /* Orienter.cpp */,
+				210C15DA1F571C1400C078D6 /* Orienter.hpp */,
 				CB2C8F781F2BC47000E5F714 /* Container.cpp */,
 				CB2C8F791F2BC47000E5F714 /* Container.hpp */,
 			);
@@ -131,6 +136,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CB6B4DFE1F2BAF6300F9878B /* main.cpp in Sources */,
+				210C15DB1F571C1400C078D6 /* Orienter.cpp in Sources */,
 				CB23E7F21F3E3DA10071CBFE /* Algorithm.cpp in Sources */,
 				CB2C8F7A1F2BC47000E5F714 /* Container.cpp in Sources */,
 			);
@@ -257,6 +263,7 @@
 					"-lopenvdb",
 					"-ltbb",
 					"-lhalf",
+					"-lboost",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
@@ -281,6 +288,7 @@
 					"-lopenvdb",
 					"-ltbb",
 					"-lhalf",
+					"-lboost",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";

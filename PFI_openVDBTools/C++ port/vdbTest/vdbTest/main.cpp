@@ -13,18 +13,38 @@
 int main(int argc, const char * argv[]) {
     using namespace openvdb;
     
-    PFIAir::Container model = PFIAir::Container(Vec3d(0.1,0.1,0.1));
+    PFIAir::Container model = PFIAir::Container();
 
     model.loadMeshModel(argv[1]);
+    float edgeLen = model.computeAverageEdgeLength() / 10;
+
+    model.setScale(Vec3d(edgeLen,edgeLen,edgeLen));
     
-    auto cube = model.getWaterTightLevelSetWithBandWidth(3);
+    auto cube = model.getUnsignedDistanceField(3);
     
-    //PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
+    PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
     
-    //manager.exportModel(argv[2], cube);
+    //scale
+//    openvdb::math::Mat4d mat = openvdb::math::Mat4d::identity();
+//    openvdb::math::Transform::Ptr linearTransform =
+//    openvdb::math::Transform::createLinearTransform(mat);
+//
+//    float scaleLen = 1 / model.computeAverageEdgeLength();
+//    cube -> transform().postScale(Vec3d(scaleLen,scaleLen,scaleLen));
+//    linearTransform->preScale(Vec3d(scaleLen,scaleLen,scaleLen));
+//    
+//    cube->setTransform(linearTransform);
+    
+    
+    //end
+    
+    model.exportModel(argv[2], cube);
     //PFIAir::algorithme::printValues(cube);
     
-    std::cout << model.computeAverageEdgeLength() << std::endl;
+    //std::cout << model.computeAverageEdgeLength() << std::endl;
+    
+    //tools::LevelSetFilter<FloatGrid> tracker = tools::LevelSetFilter<FloatGrid>(cube);
+
     
     return 0;
 }

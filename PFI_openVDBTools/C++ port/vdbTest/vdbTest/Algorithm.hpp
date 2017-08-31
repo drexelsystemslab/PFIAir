@@ -21,6 +21,8 @@ namespace PFIAir {
         bool inflate(const float offset, FloatGrid::Ptr);
         void changeActiveVoxelValues(FloatGrid::Ptr p, float offset);
         
+        void skeletonization(FloatGrid::Ptr p);
+        
         // debug
         void printValues(FloatGrid::Ptr);
     }

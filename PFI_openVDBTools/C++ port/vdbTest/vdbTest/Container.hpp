@@ -29,7 +29,7 @@ namespace PFIAir {
         math::Transform _scale = math::Transform();
         
     public:
-        Container(Vec3d scale);
+        Container();
         
         string getModelName() {return _filename;}
         
@@ -43,7 +43,11 @@ namespace PFIAir {
         FloatGrid::Ptr getUnsignedDistanceField(float bandwidth);
         
         // scale
+        void setScale(Vec3d scale);
         float computeAverageEdgeLength();
+        
+        // center
+        void computeMeshCenter();
     };
 }
 
