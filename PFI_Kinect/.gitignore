@@ -1,0 +1,11 @@
+Kinect_mesh_grabber/Debug
+Kinect_mesh_grabber/Release
+Kinect_mesh_grabber/x64
+Kinect_mesh_grabber/.vs
+Kinect_mesh_grabber/ipch
+Kinect_mesh_grabber/Kinect_mesh_grabber/Debug
+Kinect_mesh_grabber/Kinect_mesh_grabber/Release
+Kinect_mesh_grabber/Kinect_mesh_grabber/x64
+*.pcd
+*.VC.db
+*.vcxprof.filters
