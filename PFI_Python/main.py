@@ -21,7 +21,10 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-Demos.random_splitter(model)
+#model1 = ToolBox.svd_splitter(model)
+# model1.show();
+Demos.svd(model)
+
 
 
 

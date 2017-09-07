@@ -17,10 +17,25 @@ def distance_map(model):
     plt.show()
 
 def svd(model):
-    m_n = ToolBox.svd_feature_decomp(model)
-    model.visual.face_colors[m_n[0]] = [252, 154, 7, 255]
-    #model.visual.face_colors[m_n[1]] = [66, 134, 244, 255]
-    model.show()
+    tree = ToolBox.svd_feature_decomp(model, 0)
+    print(tree)
+    empty = trimesh.creation.uv_sphere()
+    empty = walkthetree(tree,empty)
+    empty.show()
+
+
+def walkthetree(leaf,model):
+    if type(leaf) == trimesh.base.Trimesh:
+        print(leaf)
+        # color = trimesh.visual.random_color()
+        leaf.visual.face_colors = trimesh.visual.random_color()
+
+
+        return model + leaf
+    else:
+        for l in leaf:
+           model = model + walkthetree(l,model)
+        return model
 
 def svd_with_distance_maps(model):
     dists = distance_map(model)
