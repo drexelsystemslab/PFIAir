@@ -16,6 +16,9 @@ int main(int argc, const char * argv[]) {
     PFIAir::Container model = PFIAir::Container();
 
     model.loadMeshModel(argv[1]);
+    model.computeMeshCenter();
+    return EXIT_SUCCESS;
+    //
     float edgeLen = model.computeAverageEdgeLength() / 10;
 
     model.setScale(Vec3d(edgeLen,edgeLen,edgeLen));

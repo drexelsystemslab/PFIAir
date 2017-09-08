@@ -81,13 +81,13 @@ namespace PFIAir {
     void Container::computeMeshCenter() {
         using namespace boost;
         
-        typedef std::pair<Vec3s, Vec3s> Edge;
+        typedef std::pair<int, int> Edge;
         std::vector<Edge> edges;
         
         for (int i = 0; i < _indicesTri.size(); i++) {
-            Vec3s point1 = _points[_indicesTri[i].x()];
-            Vec3s point2 = _points[_indicesTri[i].y()];
-            Vec3s point3 = _points[_indicesTri[i].z()];
+            int point1 = _indicesTri[i].x();
+            int point2 = _indicesTri[i].y();
+            int point3 = _indicesTri[i].z();
             
             Edge edge1 = Edge(point1, point2);
             Edge edge2 = Edge(point1, point3);
@@ -99,10 +99,10 @@ namespace PFIAir {
         }
         
         for (int i = 0; i < _indicesQuad.size(); i++) {
-            Vec3s point1 = _points[_indicesQuad[i].x()];
-            Vec3s point2 = _points[_indicesQuad[i].y()];
-            Vec3s point3 = _points[_indicesQuad[i].z()];
-            Vec3s point4 = _points[_indicesQuad[i].w()];
+            int point1 = _indicesQuad[i].x();
+            int point2 = _indicesQuad[i].y();
+            int point3 = _indicesQuad[i].z();
+            int point4 = _indicesQuad[i].w();
             
             Edge edge1 = Edge(point1, point2);
             Edge edge2 = Edge(point2, point3);
@@ -115,15 +115,27 @@ namespace PFIAir {
             edges.push_back(edge4);
         }
         
-        typedef adjacency_list<Vec3s, Vec3s, bidirectionalS,
-        property<Vec3s, Vec3s>> Graph;
+        typedef adjacency_list<vecS, vecS, bidirectionalS
+        > Graph;
         
         Graph g(edges.begin(), edges.end(), edges.size());
-        
+
         shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
         centrality_map(num_vertices(g), get(boost::vertex_index, g));
-        
+
         brandes_betweenness_centrality(g, centrality_map);
+        
+        double max = 0;
+        int maxIndex = 0;
+        for (int i = 0; i < num_vertices(g); i++) {
+            if (centrality_map[i] > max) {
+                max = centrality_map[i];
+                maxIndex = i;
+            }
+        }
+        
+        cout << max << "    " << maxIndex << endl;
+        cout << _points[maxIndex] << endl;
     }
     
     FloatGrid::Ptr Container::getWaterTightLevelSet() {

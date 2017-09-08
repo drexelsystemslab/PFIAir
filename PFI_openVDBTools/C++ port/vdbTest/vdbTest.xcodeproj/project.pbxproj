@@ -263,7 +263,6 @@
 					"-lopenvdb",
 					"-ltbb",
 					"-lhalf",
-					"-lboost",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
@@ -288,7 +287,6 @@
 					"-lopenvdb",
 					"-ltbb",
 					"-lhalf",
-					"-lboost",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
