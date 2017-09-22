@@ -48,6 +48,8 @@ namespace PFIAir {
         
         // center
         void computeMeshCenter();
+        void OLDcomputeMeshCenter();
+
     };
 }
 

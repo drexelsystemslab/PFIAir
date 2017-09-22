@@ -65,7 +65,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "man.obj a_quad_mut_man_0.vdb"
+            argument = "floor.obj a_quad_mut_man_0.vdb"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

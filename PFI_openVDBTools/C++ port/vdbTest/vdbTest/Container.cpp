@@ -21,6 +21,9 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/betweenness_centrality.hpp>
+#include <tuple>
+#include <algorithm>
+#include <iterator>
 
 namespace PFIAir {
     using namespace openvdb;
@@ -78,24 +81,120 @@ namespace PFIAir {
         else cout << "Unable to open file" << endl;
     }
     
-    void Container::computeMeshCenter() {
+    void Container::OLDcomputeMeshCenter() {
         using namespace boost;
-        
+
         typedef std::pair<int, int> Edge;
         std::vector<Edge> edges;
+
+        for (int i = 0; i < _indicesTri.size(); i++) {
+            int point1 = _indicesTri[i].x();
+            int point2 = _indicesTri[i].y();
+            int point3 = _indicesTri[i].z();
+
+            Edge edge1 = Edge(point1, point2);
+            Edge edge2 = Edge(point1, point3);
+            Edge edge3 = Edge(point2, point3);
+
+            edges.push_back(edge1);
+            edges.push_back(edge2);
+            edges.push_back(edge3);
+        }
+
+        for (int i = 0; i < _indicesQuad.size(); i++) {
+            int point1 = _indicesQuad[i].x();
+            int point2 = _indicesQuad[i].y();
+            int point3 = _indicesQuad[i].z();
+            int point4 = _indicesQuad[i].w();
+
+            Edge edge1 = Edge(point1, point2);
+            Edge edge2 = Edge(point2, point3);
+            Edge edge3 = Edge(point3, point4);
+            Edge edge4 = Edge(point4, point1);
+
+            edges.push_back(edge1);
+            edges.push_back(edge2);
+            edges.push_back(edge3);
+            edges.push_back(edge4);
+        }
+
+        typedef adjacency_list<vecS, vecS, undirectedS
+        > Graph;
+
+        Graph g(edges.begin(), edges.end(), edges.size());
+
+
+                shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
+                centrality_map(num_vertices(g), get(boost::vertex_index, g));
+        
+                brandes_betweenness_centrality(g, centrality_map);
+
+
+       // cout << num_vertices(g) << endl;
+
+                double max = 0;
+                int maxIndex = 0;
+                for (int i = 0; i < num_vertices(g); i++) {
+                    if (centrality_map[i] > max) {
+                        max = centrality_map[i];
+                        maxIndex = i;
+                    }
+                }
+        
+                cout << max << "    " << maxIndex << endl;
+                cout << _points[maxIndex] << endl;
+    }
+    
+    typedef std::vector<std::pair<double,Vec3s>> Result;
+    
+    bool comp (std::pair<double,Vec3s> left, std::pair<double,Vec3s> right) {
+        return left.first > right.first;
+    }
+    void insert( Result &cont, std::pair<double,Vec3s> value ) {
+        Result::iterator it = std::lower_bound( cont.begin(), cont.end(), value, comp);
+        cont.insert( it, value );
+    }
+    
+    void Container::computeMeshCenter() {
+        using namespace boost;
+
+        typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
+        typedef adjacency_list<vecS, vecS, undirectedS,boost::no_property, EdgeWeightProperty
+        > Graph;
+        typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+        typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+
+        std::map<int, vertex_t> m;
+        std::vector<int> ver;
+        
+        Graph g;
         
         for (int i = 0; i < _indicesTri.size(); i++) {
             int point1 = _indicesTri[i].x();
             int point2 = _indicesTri[i].y();
             int point3 = _indicesTri[i].z();
             
-            Edge edge1 = Edge(point1, point2);
-            Edge edge2 = Edge(point1, point3);
-            Edge edge3 = Edge(point2, point3);
-            
-            edges.push_back(edge1);
-            edges.push_back(edge2);
-            edges.push_back(edge3);
+            if (m.find(point1) == m.end()) {
+                m[point1] = (vertex_t)add_vertex(g);
+                ver.push_back(point1);
+            }
+            if (m.find(point2) == m.end()) {
+                m[point2] = (vertex_t)add_vertex(g);
+                ver.push_back(point2);
+            }
+            if (m.find(point3) == m.end()) {
+                m[point3] = (vertex_t)add_vertex(g);
+                ver.push_back(point3);
+            }
+
+            vertex_t d1 = m.find(point1)->second;
+            vertex_t d2 = m.find(point2)->second;
+            vertex_t d3 = m.find(point3)->second;
+
+            //add_edge(d1,d2,EdgeWeightProperty(2),g);
+            add_edge(d1,d2,g);
+            add_edge(d1,d3,g);
+            add_edge(d2,d3,g);
         }
         
         for (int i = 0; i < _indicesQuad.size(); i++) {
@@ -104,38 +203,54 @@ namespace PFIAir {
             int point3 = _indicesQuad[i].z();
             int point4 = _indicesQuad[i].w();
             
-            Edge edge1 = Edge(point1, point2);
-            Edge edge2 = Edge(point2, point3);
-            Edge edge3 = Edge(point3, point4);
-            Edge edge4 = Edge(point4, point1);
+            if (m.find(point1) == m.end()) {
+                m[point1] = (vertex_t)add_vertex(g);
+                ver.push_back(point1);
+            }
+            if (m.find(point2) == m.end()) {
+                m[point2] = (vertex_t)add_vertex(g);
+                ver.push_back(point2);
+            }
+            if (m.find(point3) == m.end()) {
+                m[point3] = (vertex_t)add_vertex(g);
+                ver.push_back(point3);
+            }
             
-            edges.push_back(edge1);
-            edges.push_back(edge2);
-            edges.push_back(edge3);
-            edges.push_back(edge4);
+            if (m.find(point4) == m.end()) {
+                m[point4] = (vertex_t)add_vertex(g);
+                ver.push_back(point4);
+            }
+            
+            vertex_t d1 = m.find(point1)->second;
+            vertex_t d2 = m.find(point2)->second;
+            vertex_t d3 = m.find(point3)->second;
+            vertex_t d4 = m.find(point4)->second;
+            
+            add_edge(d1, d2, g);
+            add_edge(d2, d3, g);
+            add_edge(d3, d4, g);
+            add_edge(d4, d1, g);
         }
         
-        typedef adjacency_list<vecS, vecS, bidirectionalS
-        > Graph;
-        
-        Graph g(edges.begin(), edges.end(), edges.size());
-
         shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
         centrality_map(num_vertices(g), get(boost::vertex_index, g));
 
         brandes_betweenness_centrality(g, centrality_map);
-        
-        double max = 0;
-        int maxIndex = 0;
-        for (int i = 0; i < num_vertices(g); i++) {
-            if (centrality_map[i] > max) {
-                max = centrality_map[i];
-                maxIndex = i;
-            }
+
+        Result sorted_result;
+        map<int, vertex_t>::iterator it;
+        int c = 0;
+        for ( it = m.begin(); it != m.end(); it++ ) {
+
+            insert(sorted_result, std::pair<double, Vec3s>(centrality_map[c], _points[ver.at(c)]));
+
+           c++;
         }
         
-        cout << max << "    " << maxIndex << endl;
-        cout << _points[maxIndex] << endl;
+        for (int i = 0; i < sorted_result.size(); i++) {
+            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
+        }
+
     }
     
     FloatGrid::Ptr Container::getWaterTightLevelSet() {
