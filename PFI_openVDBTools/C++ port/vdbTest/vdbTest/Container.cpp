@@ -155,6 +155,15 @@ namespace PFIAir {
         cont.insert( it, value );
     }
     
+    bool edgeDup(std::vector<std::pair<int, int>> edges, int a, int b) {
+        for (int i = 0; i < edges.size(); i++) {
+            if ((edges[i].first == a && edges[i].second == b) || (edges[i].first == b && edges[i].second == a)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     void Container::computeMeshCenter() {
         using namespace boost;
 
@@ -168,6 +177,7 @@ namespace PFIAir {
         std::vector<int> ver;
         
         Graph g;
+        std::vector<std::pair<int, int>> edges;
         
         for (int i = 0; i < _indicesTri.size(); i++) {
             int point1 = _indicesTri[i].x();
@@ -192,9 +202,18 @@ namespace PFIAir {
             vertex_t d3 = m.find(point3)->second;
 
             //add_edge(d1,d2,EdgeWeightProperty(2),g);
-            add_edge(d1,d2,g);
-            add_edge(d1,d3,g);
-            add_edge(d2,d3,g);
+            if (edgeDup(edges, point1, point2)) {
+                add_edge(d1,d2,g);
+                edges.push_back(std::pair<int, int>(point1, point2));
+            }
+            if (edgeDup(edges, point1, point3)) {
+                add_edge(d1,d3,g);
+                edges.push_back(std::pair<int, int>(point1, point3));
+            }
+            if (edgeDup(edges, point2, point3)) {
+                add_edge(d2,d3,g);
+                edges.push_back(std::pair<int, int>(point2, point3));
+            }
         }
         
         for (int i = 0; i < _indicesQuad.size(); i++) {
@@ -226,10 +245,22 @@ namespace PFIAir {
             vertex_t d3 = m.find(point3)->second;
             vertex_t d4 = m.find(point4)->second;
             
-            add_edge(d1, d2, g);
-            add_edge(d2, d3, g);
-            add_edge(d3, d4, g);
-            add_edge(d4, d1, g);
+            if (edgeDup(edges, point1, point2)) {
+                add_edge(d1, d2, g);
+                edges.push_back(std::pair<int, int>(point1, point2));
+            }
+            if (edgeDup(edges, point2, point3)) {
+                add_edge(d2, d3, g);
+                edges.push_back(std::pair<int, int>(point2, point3));
+            }
+            if (edgeDup(edges, point3, point4)) {
+                add_edge(d3, d4, g);
+                edges.push_back(std::pair<int, int>(point3, point4));
+            }
+            if (edgeDup(edges, point4, point1)) {
+                add_edge(d4, d1, g);
+                edges.push_back(std::pair<int, int>(point4, point1));
+            }
         }
         
         shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
@@ -244,13 +275,14 @@ namespace PFIAir {
 
             insert(sorted_result, std::pair<double, Vec3s>(centrality_map[c], _points[ver.at(c)]));
 
-           c++;
+            c++;
         }
         
         for (int i = 0; i < sorted_result.size(); i++) {
             cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
         }
-
+        
+        cout << num_edges(g) << endl;
     }
     
     FloatGrid::Ptr Container::getWaterTightLevelSet() {
