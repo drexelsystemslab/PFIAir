@@ -161,22 +161,13 @@ def randomWalker(model):
 
     return current_position.flatten() #return a list of all the nodes that have been visited
 
-def centroid_finder(verts):
-    return np.array([(verts[0]+verts[3]+verts[6])/3,(verts[1]+verts[4]+verts[7])/3,(verts[2]+verts[5]+verts[8])/3])
-
-
-
-
-def angle_distance_map(model):
-    dists = scipy.spatial.distance.pdist(model.face_normals, lambda u,v:np.arccos(np.clip(np.dot(u,v)/np.linalg.norm(u)/np.linalg.norm(v), -1, 1)))
+def cosine_distance_map(model):
+    dists = scipy.spatial.distance.pdist(model.face_normals,'cosine')
     dists = scipy.spatial.distance.squareform(dists)
-
     dists_std = StandardScaler().fit_transform(dists)
     return dists_std
 
 def distance_map(model):
-    # face_verts = np.hstack((model.vertices[model.faces[:, 0]], model.vertices[model.faces[:, 1]], model.vertices[model.faces[:, 2]]))
-    # face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
     dists = scipy.spatial.distance.pdist(model.triangles_center, 'euclidean')
     dists = scipy.spatial.distance.squareform(dists)
 
@@ -184,7 +175,7 @@ def distance_map(model):
     return dist_std
 
 def svd_feature_decomp(model,m1):
-    dists = angle_distance_map(model)
+    dists = cosine_distance_map(model)
     print("dists")
     print(dists.shape)
     U, s, V = scipy.linalg.svd(dists, full_matrices=False)
