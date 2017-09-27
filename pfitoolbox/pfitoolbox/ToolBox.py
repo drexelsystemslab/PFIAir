@@ -175,43 +175,64 @@ def angle_distance_map(model):
     return dists_std
 
 def distance_map(model):
-    face_verts = np.hstack((model.vertices[model.faces[:, 0]], model.vertices[model.faces[:, 1]], model.vertices[model.faces[:, 2]]))
-    face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
-    dists = scipy.spatial.distance.pdist(face_centers, 'euclidean')
+    # face_verts = np.hstack((model.vertices[model.faces[:, 0]], model.vertices[model.faces[:, 1]], model.vertices[model.faces[:, 2]]))
+    # face_centers = np.apply_along_axis(centroid_finder, 1, face_verts)
+    dists = scipy.spatial.distance.pdist(model.triangles_center, 'euclidean')
     dists = scipy.spatial.distance.squareform(dists)
 
     dist_std = StandardScaler().fit_transform(dists)
     return dist_std
 
-def svd_feature_decomp(model):
-    dists = distance_map(model)
+def svd_feature_decomp(model,m1):
+    dists = angle_distance_map(model)
     print("dists")
     print(dists.shape)
-    U, s, V = np.linalg.svd(dists, full_matrices=False)
+    U, s, V = scipy.linalg.svd(dists, full_matrices=False)
     print("svd")
     first_order_s = np.zeros_like(dists)
     first_order_s[0,0] = s[0]
     print("s mat")
     first_order_dists = np.dot(U,np.dot(first_order_s,V))
     print("dists1")
-    first_order_diffs = np.absolute(first_order_dists-dists)
+    first_order_diffs = first_order_dists-dists
     print("first order")
 
     second_order_s = np.zeros_like(dists)
     second_order_s[1,1] = s[1]
     second_order_dists = np.dot(U, np.dot(second_order_s, V))
-    second_order_diffs = np.absolute(second_order_dists-dists)
-    print("second order")
+    second_order_diffs = second_order_dists-dists
 
-    closest = np.less(np.sum(first_order_diffs**2,0),np.sum(second_order_diffs**2,0))
-    farthest = np.greater_equal(np.sum(first_order_diffs**2,0),np.sum(second_order_diffs**2,0))
-    return [np.where(closest),np.where(farthest)]
+    closest = np.less(np.sum(first_order_diffs ** 2, 0), np.sum(second_order_diffs ** 2, 0))
+    farthest = np.greater_equal(np.sum(first_order_diffs ** 2, 0), np.sum(second_order_diffs ** 2, 0))
+    print(closest.shape)
+
+    m2 = np.abs(np.sum(first_order_diffs[closest])/np.sum(first_order_diffs))
+    m3 = np.abs(np.sum(second_order_diffs[farthest])/np.sum(second_order_diffs))
+    print(m1)
+    print(m2)
+    print(m3)
+    if np.any(closest) == False or np.any(farthest) == False:
+        print("NOTHING LEFT, NOT SPLITTING")
+        return model
+    elif(m2+m3 < m1):
+        print("NOT WORTH IT, NOT SPLITTING")
+        return model
+    else:
+        print("SPLITTING")
+        try:
+            model1 = model.submesh(np.where(closest))[0]
+            model2 = model.submesh(np.where(farthest))[0]
+            model1.show()
+            model2.show()
+            return [svd_feature_decomp(model1,m2), svd_feature_decomp(model2,m3)]
+        except Exception as e:
+            print(e)
+
 
 def svd_splitter(model):
-    part1,part2 = svd_feature_decomp(model)
-    model1 = model.submesh(part1)[0]
-    model2 = model.submesh(part2)[0]
-    return [model1,model2]
+    tree = svd_feature_decomp(model,0)
+    print(tree)
+    return tree
 
 def random_splitter(model):
     faces = randomWalker(model)
@@ -229,7 +250,5 @@ def random_splitter(model):
 
     results.append(faces)
     return results
-
-
 
 

@@ -11,7 +11,7 @@ import Demos
 
 from mpl_toolkits import mplot3d
 
-name = 'hex2'
+name = 'Coffee_cup'
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
 print("Generating descriptor for usermodel: " + fileName)
@@ -21,9 +21,7 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-model1, model2 = ToolBox.svd_splitter(model)
-
-model1.show()
+tree = ToolBox.svd_splitter(model)
 
 
 
