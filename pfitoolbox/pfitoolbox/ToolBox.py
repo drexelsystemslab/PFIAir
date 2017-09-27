@@ -203,9 +203,9 @@ def svd_feature_decomp(model):
     second_order_diffs = np.absolute(second_order_dists-dists)
     print("second order")
 
-    closest = np.less(first_order_diffs,second_order_diffs)
-    farthest = np.greater_equal(first_order_diffs, second_order_diffs)
-    return [np.where(closest[:,0]),np.where(farthest[:,0])]
+    closest = np.less(np.sum(first_order_diffs**2,0),np.sum(second_order_diffs**2,0))
+    farthest = np.greater_equal(np.sum(first_order_diffs**2,0),np.sum(second_order_diffs**2,0))
+    return [np.where(closest),np.where(farthest)]
 
 def svd_splitter(model):
     part1,part2 = svd_feature_decomp(model)
