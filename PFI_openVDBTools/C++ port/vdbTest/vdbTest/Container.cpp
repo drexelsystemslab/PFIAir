@@ -168,7 +168,9 @@ namespace PFIAir {
         using namespace boost;
 
         typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
-        typedef adjacency_list<vecS, vecS, undirectedS,boost::no_property, EdgeWeightProperty
+//        typedef adjacency_list<vecS, vecS, undirectedS,boost::no_property, EdgeWeightProperty
+//        > Graph;
+        typedef adjacency_list<vecS, vecS, bidirectionalS
         > Graph;
         typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
         typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
@@ -178,43 +180,6 @@ namespace PFIAir {
         
         Graph g;
         std::vector<std::pair<int, int>> edges;
-        
-        for (int i = 0; i < _indicesTri.size(); i++) {
-            int point1 = _indicesTri[i].x();
-            int point2 = _indicesTri[i].y();
-            int point3 = _indicesTri[i].z();
-            
-            if (m.find(point1) == m.end()) {
-                m[point1] = (vertex_t)add_vertex(g);
-                ver.push_back(point1);
-            }
-            if (m.find(point2) == m.end()) {
-                m[point2] = (vertex_t)add_vertex(g);
-                ver.push_back(point2);
-            }
-            if (m.find(point3) == m.end()) {
-                m[point3] = (vertex_t)add_vertex(g);
-                ver.push_back(point3);
-            }
-
-            vertex_t d1 = m.find(point1)->second;
-            vertex_t d2 = m.find(point2)->second;
-            vertex_t d3 = m.find(point3)->second;
-
-            //add_edge(d1,d2,EdgeWeightProperty(2),g);
-            if (edgeDup(edges, point1, point2)) {
-                add_edge(d1,d2,g);
-                edges.push_back(std::pair<int, int>(point1, point2));
-            }
-            if (edgeDup(edges, point1, point3)) {
-                add_edge(d1,d3,g);
-                edges.push_back(std::pair<int, int>(point1, point3));
-            }
-            if (edgeDup(edges, point2, point3)) {
-                add_edge(d2,d3,g);
-                edges.push_back(std::pair<int, int>(point2, point3));
-            }
-        }
         
         for (int i = 0; i < _indicesQuad.size(); i++) {
             int point1 = _indicesQuad[i].x();
@@ -263,6 +228,45 @@ namespace PFIAir {
             }
         }
         
+        for (int i = 0; i < _indicesTri.size(); i++) {
+            int point1 = _indicesTri[i].x();
+            int point2 = _indicesTri[i].y();
+            int point3 = _indicesTri[i].z();
+            
+            if (m.find(point1) == m.end()) {
+                m[point1] = (vertex_t)add_vertex(g);
+                ver.push_back(point1);
+            }
+            if (m.find(point2) == m.end()) {
+                m[point2] = (vertex_t)add_vertex(g);
+                ver.push_back(point2);
+            }
+            if (m.find(point3) == m.end()) {
+                m[point3] = (vertex_t)add_vertex(g);
+                ver.push_back(point3);
+            }
+
+            vertex_t d1 = m.find(point1)->second;
+            vertex_t d2 = m.find(point2)->second;
+            vertex_t d3 = m.find(point3)->second;
+
+            //add_edge(d1,d2,EdgeWeightProperty(2),g);
+            if (edgeDup(edges, point1, point2)) {
+                add_edge(d1,d2,g);
+                edges.push_back(std::pair<int, int>(point1, point2));
+            }
+            if (edgeDup(edges, point1, point3)) {
+                add_edge(d1,d3,g);
+                edges.push_back(std::pair<int, int>(point1, point3));
+            }
+            if (edgeDup(edges, point2, point3)) {
+                add_edge(d2,d3,g);
+                edges.push_back(std::pair<int, int>(point2, point3));
+            }
+        }
+        
+
+        
         shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
         centrality_map(num_vertices(g), get(boost::vertex_index, g));
 
@@ -282,7 +286,8 @@ namespace PFIAir {
             cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
         }
         
-        cout << num_edges(g) << endl;
+        cout << "\nvertices: " << num_vertices(g) << endl;
+        cout << "edges: " << num_edges(g) << endl;
     }
     
     FloatGrid::Ptr Container::getWaterTightLevelSet() {
