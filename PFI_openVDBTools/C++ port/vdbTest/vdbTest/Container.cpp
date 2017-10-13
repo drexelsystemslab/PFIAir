@@ -164,14 +164,23 @@ namespace PFIAir {
         return true;
     }
     
+    double Container::getEuclideanFromIndices(int p1, int p2){
+        using namespace openvdb;
+        Vec3s point1 = _points[p1];
+        Vec3s point2 = _points[p2];
+        
+        Vec3s diff = point1.sub(point2, point1);
+        
+        return (double)diff.length();
+    }
+    
     void Container::computeMeshCenter() {
         using namespace boost;
 
-        typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
+        typedef boost::property<boost::edge_weight_t, double> EdgeWeightProperty;
 //        typedef adjacency_list<vecS, vecS, undirectedS,boost::no_property, EdgeWeightProperty
 //        > Graph;
-        typedef adjacency_list<vecS, vecS, bidirectionalS
-        > Graph;
+        typedef adjacency_list<vecS, vecS, undirectedS, boost::no_property, EdgeWeightProperty> Graph;
         typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
         typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
@@ -211,19 +220,23 @@ namespace PFIAir {
             vertex_t d4 = m.find(point4)->second;
             
             if (edgeDup(edges, point1, point2)) {
-                add_edge(d1, d2, g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point1, point2);
+                add_edge(d1, d2, e, g);
                 edges.push_back(std::pair<int, int>(point1, point2));
             }
             if (edgeDup(edges, point2, point3)) {
-                add_edge(d2, d3, g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point2, point3);
+                add_edge(d2, d3, e, g);
                 edges.push_back(std::pair<int, int>(point2, point3));
             }
             if (edgeDup(edges, point3, point4)) {
-                add_edge(d3, d4, g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point3, point4);
+                add_edge(d3, d4, e, g);
                 edges.push_back(std::pair<int, int>(point3, point4));
             }
             if (edgeDup(edges, point4, point1)) {
-                add_edge(d4, d1, g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point4, point1);
+                add_edge(d4, d1, e, g);
                 edges.push_back(std::pair<int, int>(point4, point1));
             }
         }
@@ -252,25 +265,28 @@ namespace PFIAir {
 
             //add_edge(d1,d2,EdgeWeightProperty(2),g);
             if (edgeDup(edges, point1, point2)) {
-                add_edge(d1,d2,g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point1, point2);
+                add_edge(d1,d2,e,g);
                 edges.push_back(std::pair<int, int>(point1, point2));
             }
             if (edgeDup(edges, point1, point3)) {
-                add_edge(d1,d3,g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point1, point3);
+                add_edge(d1,d3,e,g);
                 edges.push_back(std::pair<int, int>(point1, point3));
             }
             if (edgeDup(edges, point2, point3)) {
-                add_edge(d2,d3,g);
+                EdgeWeightProperty e = getEuclideanFromIndices(point2, point3);
+                add_edge(d2,d3,e,g);
                 edges.push_back(std::pair<int, int>(point2, point3));
             }
         }
         
-
-        
         shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
         centrality_map(num_vertices(g), get(boost::vertex_index, g));
+        
+        property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
 
-        brandes_betweenness_centrality(g, centrality_map);
+        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
 
         Result sorted_result;
         map<int, vertex_t>::iterator it;

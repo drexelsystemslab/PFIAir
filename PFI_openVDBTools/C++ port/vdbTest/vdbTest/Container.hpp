@@ -28,6 +28,9 @@ namespace PFIAir {
         
         math::Transform _scale = math::Transform();
         
+    protected:
+        double getEuclideanFromIndices(int p1, int p2);
+        
     public:
         Container();
         
