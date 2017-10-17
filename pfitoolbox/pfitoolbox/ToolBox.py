@@ -10,6 +10,8 @@ import trimesh
 import networkx as nx
 from trimesh import sample,grouping,geometry
 import random
+import scipy
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -155,3 +157,42 @@ def randomWalker(model):
 
 
     return current_position.flatten() #return a list of all the nodes that have been visited
+
+def cosine_distance_map2(model):
+    dists = scipy.spatial.distance.pdist(model.face_normals,'cosine')
+    dists = scipy.spatial.distance.squareform(dists)
+    dists_std = StandardScaler().fit_transform(dists)
+    return dists_std
+
+def angle_splitter(model):
+    dists = cosine_distance_map2(model)
+    second_order_dists = np.gradient(dists,3)[0]
+    sums = np.sum(second_order_dists,1)
+    print(np.mean(sums))
+    closest = np.less(sums, np.mean(sums))
+    farthest = np.greater_equal(sums, np.mean(sums))
+    print(np.all(closest))
+
+    plt.imshow(dists, interpolation='nearest', cmap=plt.cm.gist_rainbow)
+    plt.figure()
+    plt.imshow(second_order_dists, interpolation='nearest', cmap=plt.cm.gist_rainbow)
+    plt.show()
+
+
+    try:
+        model1 = model.submesh(np.where(closest))[0]
+        model2 = model.submesh(np.where(farthest))[0]
+        model1.show()
+    except Exception as e:
+        print(e)
+
+    print(sums)
+
+
+def face_splitter(model):
+    max_edge = model.scale / 100
+    v, f = trimesh.remesh.subdivide_to_size(vertices=model.vertices,
+                                              faces=model.faces,
+                                              max_edge=max_edge)
+    ms = trimesh.Trimesh(vertices=v, faces=f)
+    return ms
