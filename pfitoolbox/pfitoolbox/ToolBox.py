@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 import sys
 import trimesh
 import networkx as nx
-from trimesh import sample,grouping,geometry,util
+from trimesh import sample,grouping,geometry,util,remesh
 import random
 import scipy
 from sklearn.preprocessing import StandardScaler
@@ -170,15 +170,17 @@ def cosine_distance_map(model):
 def distance_map(model):
     dists = scipy.spatial.distance.pdist(model.triangles_center, 'euclidean')
     dists = scipy.spatial.distance.squareform(dists)
-
     dist_std = StandardScaler().fit_transform(dists)
     return dist_std
 
 def svd_feature_decomp(model,m1):
-    dists = cosine_distance_map(model)
+    angle_dists = cosine_distance_map(model)
+    dists = distance_map(model)*0.5+angle_dists*0.5
     print("dists")
     print(dists.shape)
+    t = time.time()
     U, s, V = scipy.linalg.svd(dists, full_matrices=False)
+    print(time.time()-t)
     print("svd")
     first_order_s = np.zeros_like(dists)
     first_order_s[0,0] = s[0]
@@ -213,15 +215,25 @@ def svd_feature_decomp(model,m1):
         try:
             model1 = model.submesh(np.where(closest))[0]
             model2 = model.submesh(np.where(farthest))[0]
-            model1.show()
-            model2.show()
+            #model1.show()
+            #model2.show()
             return [svd_feature_decomp(model1,m2), svd_feature_decomp(model2,m3)]
         except Exception as e:
             print(e)
 
+def model_combiner(tree):
+    if isinstance(tree, trimesh.base.Trimesh):
+        color = trimesh.visual.random_color()
+        for facet in tree.facets:
+            tree.visual.face_colors[facet] = color
+        return tree
+    else:
+        return model_combiner(tree[0])+model_combiner(tree[1])
 
 def svd_splitter(model):
     tree = svd_feature_decomp(model,0)
+    combined = model_combiner(tree)
+    combined.show()
     print(tree)
     return tree
 
@@ -241,5 +253,6 @@ def random_splitter(model):
 
     results.append(faces)
     return results
+
 
 
