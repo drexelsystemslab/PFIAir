@@ -289,7 +289,7 @@ namespace PFIAir {
 //        shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
 //        centrality_map(num_vertices(g), get(boost::vertex_index, g));
 //        
-//        property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
+        property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
 //
 //        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
         
@@ -303,7 +303,7 @@ namespace PFIAir {
         DistanceMatrixMap dm(distances, g);
         ECCWeightMap wm(1);
         //floyd_warshall_all_pairs_shortest_paths(g, dm, w);
-        floyd_warshall_initialized_all_pairs_shortest_paths(g, dm, weight_map(wm));
+        floyd_warshall_all_pairs_shortest_paths(g, dm, weight_map(w));
         
         typedef boost::exterior_vertex_property<Graph, double> EccentricityProperty;
         typedef EccentricityProperty::container_type EccentricityContainer;
