@@ -23,13 +23,9 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-#ToolBox.faceDetector(model)
-#ToolBox.localNeighborhoods(model)
-facets = ToolBox.randomWalker(model)
-for facet in facets:
-    model.visual.face_colors[facet] = [252, 154, 7, 255]
+ToolBox.randomWalkerSegmentation(model)
 
-model.show()
+#model.show()
 
 
 

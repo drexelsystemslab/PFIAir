@@ -10,6 +10,7 @@ import trimesh
 import networkx as nx
 from trimesh import sample,grouping,geometry
 import random
+import scipy
 
 
 
@@ -155,3 +156,18 @@ def randomWalker(model):
 
 
     return current_position.flatten() #return a list of all the nodes that have been visited
+
+def randomWalkerSegmentation(model):
+    #find the farthest point from the centroid
+    centroid = model.centroid
+    s1 = np.argmax(scipy.spatial.distance.cdist(centroid[None,:],model.triangles_center))
+    print(s1)
+
+    #prep the edge graph
+    g = model.vertex_adjacency_graph
+    edge_weights = np.hstack((model.face_adjacency,model.face_adjacency_angles[:,None]))
+    g.add_weighted_edges_from(edge_weights)
+
+
+
+    return
