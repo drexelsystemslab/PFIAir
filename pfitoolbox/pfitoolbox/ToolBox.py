@@ -3,14 +3,15 @@ import numpy as np
 import math
 import time
 import pickle
-#from stl import mesh
+# from stl import mesh
 import matplotlib.pyplot as plt
 import sys
 import trimesh
 import networkx as nx
-from trimesh import sample,grouping,geometry
+from trimesh import sample, grouping, geometry
 import random
-
+import itertools
+from scipy import ndimage
 
 
 def angleHist(model):
@@ -19,7 +20,7 @@ def angleHist(model):
     # plot with degree lables
     (hist, labels) = np.histogram(angles, bins=np.linspace(0, 2 * math.pi, 20), density=True)
     labels = labels[1:20] * 180 / 3.14  # strip out the first label (==0) and convert from degrees to radians
-    #print(hist.shape)
+    # print(hist.shape)
     descriptor = []  # append hist and lables such that [[labels[0],hist[0]]
     for bin in range(0, len(hist)):
         descriptor.append([labels[bin], hist[bin]])
@@ -72,10 +73,10 @@ def faceDetector(model):
     for bin in range(0, len(hist)):
         descriptor.append([labels[bin], hist[bin]])
 
-    #draw the model with colorized faces
+    # draw the model with colorized faces
     for group in facets:
         color = trimesh.visual.random_color()
-        if(type(group) == np.int32):
+        if (type(group) == np.int32):
             model.visual.face_colors[group] = color
 
         else:
@@ -97,9 +98,9 @@ def faceAreaHist(model):
     largestBounds = model.extents[model.extents.argsort()[-2:]]
     (hist, labels) = np.histogram(facets_area[np.where(facets_area > largestBounds[0] * largestBounds[1] / 100)],
                                   bins=np.linspace(0, largestBounds[0] * largestBounds[1], 20))
-    #labels = labels / (largestBounds[0] * largestBounds[1])
-    #plt.bar(labels[:-1], hist, width=0.05)
-    #plt.show()
+    # labels = labels / (largestBounds[0] * largestBounds[1])
+    # plt.bar(labels[:-1], hist, width=0.05)
+    # plt.show()
     descriptor = []
     for bin in range(0, len(hist)):
         descriptor.append([labels[bin], hist[bin]])
@@ -108,15 +109,15 @@ def faceAreaHist(model):
 
 
 def localNeighborhoods(model):
-    start_point = sample.sample_surface(model,1)
+    start_point = sample.sample_surface(model, 1)
     print(start_point)
-    groups = grouping.clusters(model.vertices,0.1)
+    groups = grouping.clusters(model.vertices, 0.1)
     print(len(model.vertices))
     sum = 0
     for group in groups:
         sum += len(group)
         color = trimesh.visual.random_color()
-        if(type(group) == np.int32):
+        if (type(group) == np.int32):
             model.visual.vertex_colors[group] = color
 
         else:
@@ -166,24 +167,24 @@ def three_d_hog(model):
     transformation, extents = trimesh.bounds.oriented_bounds(temp_model)
     temp_model.apply_transform(transformation)
     temp_model.apply_scale(scale / np.max(extents))  # scale such that the longest side is 10
-    print((temp_model.bounds[0] * -1.0)-cell_size)
-    temp_model.apply_translation((temp_model.bounds[0] * -1.0)+cell_size)
-    bounds = np.array(temp_model.bounds)#bounds returns by reference, so make a copy
+    print((temp_model.bounds[0] * -1.0) - cell_size)
+    temp_model.apply_translation((temp_model.bounds[0] * -1.0) + cell_size)
+    bounds = np.array(temp_model.bounds)  # bounds returns by reference, so make a copy
     print(bounds)
     print('test')
-    bounds[0,:] = np.subtract(bounds[0,:], 2*cell_size)+(bounds[0,:]%cell_size)
-    bounds[1,:] = np.add(bounds[1,:], 2*cell_size)-(bounds[1,:]%cell_size)
+    bounds[0, :] = np.subtract(bounds[0, :], 2 * cell_size) + (bounds[0, :] % cell_size)
+    bounds[1, :] = np.add(bounds[1, :], 2 * cell_size) - (bounds[1, :] % cell_size)
     bounds = bounds.astype('int')
     print(temp_model.bounds)
     print(bounds)
 
-    shape = (bounds[1,:]-bounds[0,:])
+    shape = (bounds[1, :] - bounds[0, :])
     print(shape)
 
     indicies = []
-    for i in np.arange(bounds[0,0], bounds[1,0]):
-        for j in np.arange(bounds[0,1], bounds[1,1]):
-            for k in np.arange(bounds[0,2], bounds[1,2]):
+    for i in np.arange(bounds[0, 0], bounds[1, 0]):
+        for j in np.arange(bounds[0, 1], bounds[1, 1]):
+            for k in np.arange(bounds[0, 2], bounds[1, 2]):
                 indicies.append((i, j, k))
 
     distances = trimesh.proximity.signed_distance(temp_model, indicies)
@@ -197,7 +198,7 @@ def three_d_hog(model):
     filtered_array_indicies = array_indicies[np.ravel(np.abs(distances)) <= cell_size]
     filtered_distances = distances[np.abs(distances) <= cell_size]
     ax.scatter(filtered_array_indicies[:, 0], filtered_array_indicies[:, 1], filtered_array_indicies[:, 2],
-               c=filtered_distances/np.max(filtered_distances),
+               c=filtered_distances / np.max(filtered_distances),
                s=100)
     ax.scatter(temp_model.vertices[:, 0], temp_model.vertices[:, 1], temp_model.vertices[:, 2],
                c=[0, 0, 0], s=100)
@@ -256,31 +257,33 @@ def three_d_hog(model):
 
     bins = 3
 
-    cell_start = int(math.floor(cell_size/2))
-    cell_end = int(math.ceil(cell_size/2))
+    cell_start = int(math.floor(cell_size / 2))
+    cell_end = int(math.ceil(cell_size / 2))
 
     phihistograms = []
     thetahistograms = []
     for index in array_indicies:
-        phihistograms.append(np.histogram(dphi[index[0]-cell_start:index[0]+cell_end,
-                                            index[1] - cell_start:index[1] + cell_end,
-                                                index[2] - cell_start:index[2] + cell_end], bins, (-180, 180), density=True)[0])
-        thetahistograms.append(np.histogram(dtheta[index[0] - cell_start:index[0] + cell_end,
+        phihistograms.append(np.histogram(dphi[index[0] - cell_start:index[0] + cell_end,
                                           index[1] - cell_start:index[1] + cell_end,
-                                          index[2] - cell_start:index[2] + cell_end], bins, (0, 180), density=True)[
+                                          index[2] - cell_start:index[2] + cell_end], bins, (-180, 180), density=True)[
                                  0])
+        thetahistograms.append(np.histogram(dtheta[index[0] - cell_start:index[0] + cell_end,
+                                            index[1] - cell_start:index[1] + cell_end,
+                                            index[2] - cell_start:index[2] + cell_end], bins, (0, 180), density=True)[
+                                   0])
 
     phihistograms = np.array(phihistograms)
     thetahistograms = np.array(thetahistograms)
     filtered_array_indicies = array_indicies[np.ravel(np.abs(distances)) <= cell_size]
     filtered_phihistograms = phihistograms[np.ravel(np.abs(distances)) <= cell_size]
     filtered_thetahistograms = thetahistograms[np.ravel(np.abs(distances)) <= cell_size]
-    #print(indicies)
-    #filtered_indicies = indicies[phihistograms[:,0] == np.nan]
+    # print(indicies)
+    # filtered_indicies = indicies[phihistograms[:,0] == np.nan]
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(filtered_array_indicies[:, 0], filtered_array_indicies[:, 1], filtered_array_indicies[:, 2],
-               c=(filtered_phihistograms+np.nanmin(phihistograms))/(np.nanmax(phihistograms)-np.nanmin(phihistograms)),
+               c=(filtered_phihistograms + np.nanmin(phihistograms)) / (
+               np.nanmax(phihistograms) - np.nanmin(phihistograms)),
                s=100)
     ax.scatter(temp_model.vertices[:, 0], temp_model.vertices[:, 1], temp_model.vertices[:, 2],
                c=[0, 0, 0], s=100)
@@ -289,7 +292,7 @@ def three_d_hog(model):
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(filtered_array_indicies[:, 0], filtered_array_indicies[:, 1], filtered_array_indicies[:, 2],
                c=(filtered_thetahistograms + np.nanmin(thetahistograms)) / (
-               np.nanmax(thetahistograms) - np.nanmin(thetahistograms)),
+                   np.nanmax(thetahistograms) - np.nanmin(thetahistograms)),
                s=100)
     ax.scatter(temp_model.vertices[:, 0], temp_model.vertices[:, 1], temp_model.vertices[:, 2],
                c=[0, 0, 0], s=100)
