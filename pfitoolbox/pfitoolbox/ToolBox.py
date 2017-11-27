@@ -158,16 +158,101 @@ def randomWalker(model):
     return current_position.flatten() #return a list of all the nodes that have been visited
 
 def randomWalkerSegmentation(model):
-    #find the farthest point from the centroid
-    centroid = model.centroid
-    s1 = np.argmax(scipy.spatial.distance.cdist(centroid[None,:],model.triangles_center))
-    print(s1)
-
     #prep the edge graph
     g = model.vertex_adjacency_graph
-    edge_weights = np.hstack((model.face_adjacency,model.face_adjacency_angles[:,None]))
+    pairs = model.face_adjacency
+    face_normal_pairs = model.face_normals[pairs]
+    weights = np.linalg.norm(face_normal_pairs[:,0]-face_normal_pairs[:,1],axis=1)
+    edge_weights = np.hstack((pairs,weights[:,None]))
     g.add_weighted_edges_from(edge_weights)
+
+    # find the farthest point from the centroid
+    centroid = model.centroid
+    s1 = np.argmax(scipy.spatial.distance.cdist(centroid[None, :], model.triangles_center))
+    s = [s1]
+    # find the rest of s iteratively
+    D_n_minus_1 = 0#start with zero to ensure it runs at least twice
+    d_D_n_minus_1 = 0
+    while (True):
+        paths = np.zeros((len(model.faces),1))
+        for s_i in s:
+            path_length_dict = nx.single_source_dijkstra_path_length(g,s_i)
+            temp = np.zeros((len(path_length_dict),1))
+            for face, path_length in path_length_dict.iteritems():
+                paths[int(face),-1]=path_length
+            paths = np.hstack((paths,np.zeros((len(model.faces),1))))
+        min_1_n_D = np.argmin(paths[:,:-1],axis=1)
+        arg_max = np.argmax(np.min(paths[:,:-1],axis=1))
+        f_k_D = paths[arg_max,min_1_n_D[arg_max]]
+        print(f_k_D)
+        if(D_n_minus_1 != 0):
+            print(((f_k_D - D_n_minus_1)-d_D_n_minus_1)/(d_D_n_minus_1))
+        if(D_n_minus_1 != 0 and ((f_k_D - D_n_minus_1)-d_D_n_minus_1)/(d_D_n_minus_1) < -50):#if there was a significant decrease in D over D_n-1
+            break
+        else:
+            d_D_n_minus_1 = D_n_minus_1-f_k_D
+            D_n_minus_1 = f_k_D
+            s.append(arg_max)
+            print(arg_max)
+
+    for facet in s:
+        model.visual.face_colors[facet] = trimesh.visual.random_color()
+    model.show()
+
+    adjancency = nx.adjacency_matrix(g).todense()
+    normalized_adanceny = adjancency/adjancency.sum(axis=1)
+
+    print(normalized_adanceny)
+    print("test")
+    first_crossing = fmpt(normalized_adanceny)
+
+    print(s)
+
+    #print(first_crossing[:,s])
+    max_p = np.argmin(np.abs(first_crossing[:,s]),axis=1)
+    print(max_p)
+    print(np.where(max_p == 1))
+    for group in range(0,len(s)):
+        color = trimesh.visual.random_color()
+        print(len(np.where(max_p == group)[0]))
+        for facet in np.where(max_p == group)[0]:
+            model.visual.face_colors[facet] = color
+    model.show()
+
+    #print(first_crossing)
+    #print(np.sum(normalized_adanceny,axis=1))
+
 
 
 
     return
+
+def steady_state(P):
+    # https://github.com/jmmcd/GPDistance/blob/master/python/RandomWalks/ergodic.py
+
+    v,d=np.linalg.eig(np.transpose(P))
+
+    # for a regular P maximum eigenvalue will be 1
+    mv=max(v)
+    # find its position
+    i=v.tolist().index(mv)
+
+    # normalize eigenvector corresponding to the eigenvalue 1
+    return d[:,i]/sum(d[:,i])
+
+
+def fmpt(P):
+    #https://github.com/jmmcd/GPDistance/blob/master/python/RandomWalks/ergodic.py
+    A = np.zeros_like(P)
+    ss = steady_state(P)
+    k = ss.shape[0]
+    for i in range(k):
+        A[:, i] = ss
+    A = A.transpose()
+    I = np.identity(k)
+    Z = np.linalg.inv(I - P + A)
+    E = np.ones_like(Z)
+    D = np.diag(1. / np.diag(A))
+    Zdg = np.diag(np.diag(Z))
+    M = (I - Z + E * Zdg) * D
+    return M
