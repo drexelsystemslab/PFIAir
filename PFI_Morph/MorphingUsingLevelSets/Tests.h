@@ -109,7 +109,7 @@ namespace Tests {
         int faces_arr[5] = {4, 6, 8, 12, 20};
         double sphere_radius = 1.0;
         double source_half_width = 3.0, target_half_width = 40.0;
-        std::string table = "";
+        std::string table = "", path = "";
         
         for(int k = 0; k < sizeof(dt_array)/sizeof(dt_array[0]); k++) {                     //dt
             for(int j = 0; j < sizeof(voxel_size_arr)/sizeof(voxel_size_arr[0]); j++) {     //voxel size
@@ -144,12 +144,8 @@ namespace Tests {
                     //                setDefaultBackgroundValue(source_grid1);
                     //                setDefaultBackgroundValue(target_grid1);
                     
-                    double total_energy1 = MorphOperations::morphModels(source_grid1, target_grid1, dt_array[k],
-                                                                           "Sphere to " + std::to_string(faces_arr[i]) + " faces",
-                                                                           "s" + std::to_string(faces_arr[i]),
-                                                                           voxel_size_str_arr[j],
-                                                                           dt_arr_str[k],
-                                                                           table);
+                    path = "output/r1sx/dt" + dt_arr_str[k] + "/" + voxel_size_str_arr[j] + "/s" + std::to_string(faces_arr[i]) + "";
+                    double total_energy1 = MorphOperations::morphModels(source_grid1, target_grid1, dt_array[k], path, table);
                     
                     table += "<td></td></tr>";
                     
@@ -159,12 +155,8 @@ namespace Tests {
                     //                setDefaultBackgroundValue(source_grid2);
                     //                setDefaultBackgroundValue(target_grid2);
                     
-                    double total_energy2 = MorphOperations::morphModels(source_grid2, target_grid2, dt_array[k],
-                                                                           std::to_string(faces_arr[i]) + " faces to Sphere",
-                                                                           std::to_string(faces_arr[i]) + "s",
-                                                                           voxel_size_str_arr[j],
-                                                                           dt_arr_str[k],
-                                                                           table);
+                    path = "output/r1sx/dt" + dt_arr_str[k] + "/" + voxel_size_str_arr[j] + "/" + std::to_string(faces_arr[i]) + "s";
+                    double total_energy2 = MorphOperations::morphModels(source_grid2, target_grid2, dt_array[k], path, table);
                     
                     file.open ("log.txt", std::ios_base::app);
                     file << "Mean energy - " << (total_energy1 + total_energy2) / 2 << "\n\n\n\n";
@@ -200,6 +192,7 @@ namespace Tests {
         int grid_face[6] = {0, 4, 6, 8, 12, 20};
         std::string labels[6] = {"Sphere", "Tetrahedron", "Cube", "Octahedron", "Dodecahedron", "Icosohedron"};
         
+        std::string path = "";
         //    int grid_face[2] = {8, 12};
         //    std::string labels[2] = {"Octahedron", "Dodecahedron"};
         
@@ -241,21 +234,13 @@ namespace Tests {
                 
                 table += "<tr><td colspan='6'>" + std::to_string(grid_face[i]) + " to " + std::to_string(grid_face[j]) + " faces</td></tr>";
                 
-                double total_energy1 = MorphOperations::morphModels(source_grid1, target_grid1, dt,
-                                                                    std::to_string(grid_face[i]) + " to " + std::to_string(grid_face[j]) + " faces",
-                                                                    std::to_string(grid_face[i]) + "_" + std::to_string(grid_face[j]),//dir
-                                                                    voxel_size_str,
-                                                                    dt_str,
-                                                                    table);
+                path = "output/r1sx/dt" + dt_str + "/" + voxel_size_str + "/" + std::to_string(grid_face[i]) + "_" + std::to_string(grid_face[j]) + "";
+                double total_energy1 = MorphOperations::morphModels(source_grid1, target_grid1, dt, path, table);
                 
                 table += "<td></td></tr>";
                 
-                double total_energy2 = MorphOperations::morphModels(source_grid2, target_grid2, dt,
-                                                                    std::to_string(grid_face[j]) + " to " + std::to_string(grid_face[i]) + " faces",
-                                                                    std::to_string(grid_face[j]) + "_" + std::to_string(grid_face[i]),//dir
-                                                                    voxel_size_str,
-                                                                    dt_str,
-                                                                    table);
+                path = "output/r1sx/dt" + dt_str + "/" + voxel_size_str + "/" + std::to_string(grid_face[j]) + "_" + std::to_string(grid_face[i]) + "";
+                double total_energy2 = MorphOperations::morphModels(source_grid2, target_grid2, dt, path, table);
                 
                 table += "<td>" + std::to_string((total_energy1 + total_energy2) / 2) + "</td></tr>";
                 

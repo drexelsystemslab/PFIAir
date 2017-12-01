@@ -52,6 +52,42 @@ namespace CommonOperations {
         split(s, delim, std::back_inserter(elems));
         return elems;
     }
+    
+    std::string getFileNameWithoutExtension(std::string file_name, std::string ext) {
+        if(ext == "") ext = ".";
+        std::size_t index = file_name.find(ext);
+        file_name = file_name.substr(0, index);
+        return file_name;
+    }
+    
+    double calc3dDistance(openvdb::Vec3d pt1, openvdb::Vec3d pt2) {
+        
+        double sq_sum = openvdb::math::Pow(pt1.x() - pt2.x(), 2) +
+                        openvdb::math::Pow(pt1.y() - pt2.y(), 2) +
+                        openvdb::math::Pow(pt1.z() - pt2.z(), 2);
+        
+        return openvdb::math::Sqrt(sq_sum);
+    }
+    
+    std::string intNumberFormatCommas(std::string format_str) {
+        std::string str = CommonOperations::prep_do_split(format_str, '.')[0];
+        int str_length = (int)str.length() - 1,
+        arr_length = str_length + (int)(str_length / 3);
+        
+        if(str_length < 3) return str;
+        
+        char char_arr[arr_length];
+        
+        for(int i = 0, j = 0; i <= str_length; i++, j++) {
+            char_arr[j] = str[i];
+            if((str_length - i) % 3 == 0 && i != str_length) {
+                char_arr[++j] = ',';
+            }
+        }
+        
+        std::string return_str(char_arr);
+        return return_str;
+    }
 }
 
 #endif

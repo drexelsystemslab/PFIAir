@@ -1,66 +1,141 @@
 #include <openvdb/openvdb.h>
-//#include "Tests.h"
 
+//#include "Tests.h"
+#include "MorphOperations.h"
 #include "MeshOperations.h"
+#include "Container.hpp"
+
+#include "CommonOperations.h"
 
 
 int main()
 {
     openvdb::initialize();
     
-//    openvdb::FloatGrid::Ptr source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile("sphere.vdb"));
-//    GridOperations::writeToFile("read_sphere.vdb", source_grid);
+//    openvdb::FloatGrid::Ptr source_grid1 = CommonOperations::getSphereVolume(1.5, 0.025, 3);
+//    openvdb::FloatGrid::Ptr target_grid1 = CommonOperations:: getPlatonicVolume(6, 3, 0.025, 10);
+//    std::string table1 = "";
     
+//    MorphOperations::morphModels(source_grid1, target_grid1, 0.1, "test", table1);
+//    return 0;
     
-//    Tests::performMorphPermutation();
+    //MeshOperations::doAllMeshOperations("original_objs/nail-3.stl.obj", "original_objs/nail-2.stl.obj");
+    //return 0;
+
     
-    std::string filepath1 = "/Users/jpt54/Documents/Projects/MorphingUsingLevelSets/DerivedData/MorphingUsingLevelSets/Build/Products/Debug/hand.obj";
-    std::string filepath2 = "/Users/jpt54/Documents/Projects/MorphingUsingLevelSets/DerivedData/MorphingUsingLevelSets/Build/Products/Debug/tool.obj";
+    DIR *dir;
+    struct dirent *ent;
+    std::string file_name = "", table = "", morph_path = "";
+    std::string curr_obj = "cylinder.stl.obj",
+                curr_name = "cylinder.vdb",
+                curr_name_wo_ext = "cylinder",
+                curr_path = "morphs/cylinder/",
+                obj_path = "original_objs/",
+                vdb_path = "vdbs/";
     
-    std::vector<std::vector<std::string>> v_list;
-    std::vector<std::vector<std::string>> vn_list;
-    std::vector<std::vector<std::string>> f_list1, f_list2;
-    std::vector<Eigen::Matrix<double, 1, 4>> vertices1, vertices2;
-    Eigen::Matrix4d rot_mat1, rot_mat2;
-    std::vector<double> axis_lengths1, axis_lengths2;
+    CommonOperations::makeDirs(curr_path.c_str());
+    CommonOperations::makeDirs(obj_path.c_str());
+    CommonOperations::makeDirs(vdb_path.c_str());
     
-    MeshOperations::readOBJ(filepath1, v_list, vn_list, f_list1);
-    MeshOperations::performPCA(v_list, vertices1, rot_mat1);
+    openvdb::FloatGrid::Ptr source_grid;
+    openvdb::FloatGrid::Ptr target_grid;
+    std::ofstream file;
+    std::string ignore_arr[40] = {
+        curr_obj,
+        "beast.stl.obj",
+        "bird.stl.obj",
+        "claw.stl.obj",
+        "container.stl.obj",
+        "cylinder.stl.obj",
+        "duck.stl.obj",
+        "flower.stl.obj",
+        "fork.stl.obj",
+        "hand.stl.obj",
+        "iron-board.stl.obj",
+        "man-gun.stl.obj",
+        "mask.stl.obj",
+        "modular-hand.stl.obj",
+        "mushroom-1.stl.obj",
+        "mushroom-2.stl.obj",
+        "mushroom-3.stl.obj",
+        "mushroom-4.stl.obj",
+//        "mushroom-5.stl.obj",
+        "nail-1.stl.obj",
+        "nail-2.stl.obj",
+        "nail-3.stl.obj",
+        "pebble.stl.obj",
+        "pendulum.stl.obj",
+        "spaceship.stl.obj",
+        "spoon.stl.obj",
+        "spring.stl.obj",
+        "stand.stl.obj",
+        "swan.stl.obj",
+        "tool.stl.obj",
+        "tusk.stl.obj",
+        "vase.stl.obj",
+        "winding-wheel.stl.obj",
+        ".DS_Store"
+    };
+    bool ignore = false;
+    double energy1 = 0, energy2 = 0, mean = 0;
+    if ((dir = opendir ("original_objs")) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            ignore = false;
+            for(int j = 0; j < sizeof(ignore_arr)/sizeof(ignore_arr[0]); j++)
+                if(ignore_arr[j] == ent->d_name) ignore = true;
+            if(ignore) continue;
+            
+            if(ent->d_type == DT_REG) {
+                
+                source_grid = nullptr;
+                target_grid = nullptr;
+                
+                file_name = CommonOperations::getFileNameWithoutExtension(std::string(ent->d_name), ".stl");
+                std::cout << file_name << std::endl;
+                
+                MeshOperations::doAllMeshOperations(obj_path + curr_obj, obj_path + ent->d_name);
+                MeshOperations::convertMeshToVolume("srt1.obj", curr_name, vdb_path, 3, 0.01);
+                MeshOperations::convertMeshToVolume("srt2.obj", file_name + ".vdb", vdb_path, 30, 0.01);
+                
+                source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(vdb_path + curr_name));
+                target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(vdb_path + file_name + ".vdb"));
+                
+                GridOperations::writeToFile("target.vdb", target_grid);
+                
+                morph_path = curr_path + curr_name_wo_ext + "-" + file_name;
+                
+                table += "<tr><td colspan='3'><img src='" + file_name + ".png' /></td><td colspan='3'></td></tr>";
+                table += "<tr><td colspan=6>" + curr_name_wo_ext + "-" + file_name + "</td></tr>";
+                energy1 = MorphOperations::morphModels(source_grid, target_grid, 0.25, morph_path, table);
+                table += "<td></td></tr>";
+                
+                source_grid = nullptr;
+                target_grid = nullptr;
+                
+                source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(vdb_path + file_name + ".vdb"));
+                target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(vdb_path + curr_name));
+                
+                morph_path = curr_path + file_name + "-" + curr_name_wo_ext;
+                
+                table += "<tr><td colspan=6>" + file_name + "-" + curr_name_wo_ext + "</td></tr>";
+                energy2 = MorphOperations::morphModels(source_grid, target_grid, 0.25, morph_path, table);
+                mean = (energy1 + energy2) / 2;
+                table += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(mean)) + "</td></tr>";
+                
+                std::cout << table << std::endl;
+                file.open("table.txt");
+                file << table;
+                file.close();
+            }
+        }
+        closedir (dir);
+    } else {
+        /* could not open directory */
+        perror ("");
+        return EXIT_FAILURE;
+    }
     
-    for(int i = 0; i < vertices1.size(); i++)
-        vertices1[i] *= rot_mat1;
-    
-    
-    MeshOperations::calcBoundingBox(vertices1, axis_lengths1);
-    
-    v_list.clear();
-    vn_list.clear();
-    
-    
-    MeshOperations::readOBJ(filepath2, v_list, vn_list, f_list2);
-    MeshOperations::performPCA(v_list, vertices2, rot_mat2);
-    
-    for(int i = 0; i < vertices2.size(); i++)
-        vertices2[i] *= rot_mat2;
-    
-    
-    MeshOperations::calcBoundingBox(vertices2, axis_lengths2);
-    
-    MeshOperations::adjustScale(vertices1, vertices2, axis_lengths1[2], axis_lengths2[2]);
-    
-    axis_lengths1.clear();
-    axis_lengths2.clear();
-    MeshOperations::calcBoundingBox(vertices1, axis_lengths1);
-    MeshOperations::calcBoundingBox(vertices2, axis_lengths2);
-    
-    MeshOperations::translateCentroidToOrigin(vertices1, vertices2);
-    
-    MeshOperations::writeOBJ("rotate1.obj", vertices1, f_list1);
-    MeshOperations::writeOBJ("rotate2.obj", vertices2, f_list2);
-    
+    //Tests::performMorphPermutation();
     return 0;
 }
-
-
-
-
