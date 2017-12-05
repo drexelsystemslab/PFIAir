@@ -146,8 +146,6 @@ namespace PFIAir {
                     }
                 }
         
-                cout << max << "    " << maxIndex << endl;
-                cout << _points[maxIndex] << endl;
     }
     
     typedef std::vector<std::pair<double,Vec3s>> Result;
@@ -322,11 +320,6 @@ namespace PFIAir {
             insert(sorted_result, std::pair<double, Vec3s>(em[c], _points[ver.at(c)]));
             
             c++;
-        }
-        
-
-        for (int i = 0; i < sorted_result.size(); i++) {
-            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
         }
         
         return;
