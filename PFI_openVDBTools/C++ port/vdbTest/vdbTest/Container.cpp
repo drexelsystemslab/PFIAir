@@ -25,6 +25,11 @@
 #include <algorithm>
 #include <iterator>
 
+#include <boost/graph/undirected_graph.hpp>
+#include <boost/graph/exterior_property.hpp>
+#include <boost/graph/floyd_warshall_shortest.hpp>
+#include <boost/graph/eccentricity.hpp>
+
 namespace PFIAir {
     using namespace openvdb;
     using namespace std;
@@ -281,23 +286,62 @@ namespace PFIAir {
             }
         }
         
-        shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
-        centrality_map(num_vertices(g), get(boost::vertex_index, g));
-        
+//        shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
+//        centrality_map(num_vertices(g), get(boost::vertex_index, g));
+//        
         property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
-
-        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
-
+//
+//        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
+        
+        typedef graph_traits<Graph>::edge_descriptor Edge;
+        typedef exterior_vertex_property<Graph, double> DistanceProperty;
+        typedef DistanceProperty::matrix_type DistanceMatrix;
+        typedef DistanceProperty::matrix_map_type DistanceMatrixMap;
+        typedef constant_property_map<Edge, double> ECCWeightMap;
+        
+        DistanceMatrix distances(num_vertices(g));
+        DistanceMatrixMap dm(distances, g);
+        ECCWeightMap wm(1);
+        //floyd_warshall_all_pairs_shortest_paths(g, dm, w);
+        floyd_warshall_all_pairs_shortest_paths(g, dm, weight_map(w));
+        
+        typedef boost::exterior_vertex_property<Graph, double> EccentricityProperty;
+        typedef EccentricityProperty::container_type EccentricityContainer;
+        typedef EccentricityProperty::map_type EccentricityMap;
+        
+        int r, d;
+        EccentricityContainer eccs(num_vertices(g));
+        EccentricityMap em(eccs, g);
+        boost::tie(r, d) = all_eccentricities(g, dm, em);
+        
         Result sorted_result;
         map<int, vertex_t>::iterator it;
         int c = 0;
         for ( it = m.begin(); it != m.end(); it++ ) {
-
-            insert(sorted_result, std::pair<double, Vec3s>(centrality_map[c], _points[ver.at(c)]));
-
+            
+            insert(sorted_result, std::pair<double, Vec3s>(em[c], _points[ver.at(c)]));
+            
             c++;
         }
         
+
+        for (int i = 0; i < sorted_result.size(); i++) {
+            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
+        }
+        
+        return;
+        
+
+//        Result sorted_result;
+//        map<int, vertex_t>::iterator it;
+//        int c = 0;
+//        for ( it = m.begin(); it != m.end(); it++ ) {
+//
+//            insert(sorted_result, std::pair<double, Vec3s>(centrality_map[c], _points[ver.at(c)]));
+//
+//            c++;
+//        }
+//        
 //        for (int i = 0; i < sorted_result.size(); i++) {
 //            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
 //        }
