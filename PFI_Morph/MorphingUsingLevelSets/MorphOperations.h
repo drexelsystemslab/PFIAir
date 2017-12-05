@@ -161,6 +161,7 @@ namespace MorphOperations {
             
             time += time_inc;
             
+            if((int)(time/time_inc) > 2000) break;
             if(energy_consumed < 10) break;
             if(checkStopMorph(source_grid, target_grid)) break;
         }

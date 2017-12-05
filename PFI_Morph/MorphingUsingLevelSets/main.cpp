@@ -19,8 +19,8 @@ int main()
 //    MorphOperations::morphModels(source_grid1, target_grid1, 0.1, "test", table1);
 //    return 0;
     
-    //MeshOperations::doAllMeshOperations("original_objs/nail-3.stl.obj", "original_objs/nail-2.stl.obj");
-    //return 0;
+//    MeshOperations::doAllMeshOperations("original_objs/bird.stl.obj", "original_objs/duck.stl.obj");
+//    return 0;
 
     
     DIR *dir;
@@ -42,38 +42,38 @@ int main()
     std::ofstream file;
     std::string ignore_arr[40] = {
         curr_obj,
-        "beast.stl.obj",
-        "bird.stl.obj",
-        "claw.stl.obj",
-        "container.stl.obj",
+//        "beast.stl.obj",
+//        "bird.stl.obj",
+//        "claw.stl.obj",
+//        "container.stl.obj",
         "cylinder.stl.obj",
-        "duck.stl.obj",
-        "flower.stl.obj",
-        "fork.stl.obj",
-        "hand.stl.obj",
-        "iron-board.stl.obj",
-        "man-gun.stl.obj",
-        "mask.stl.obj",
-        "modular-hand.stl.obj",
-        "mushroom-1.stl.obj",
-        "mushroom-2.stl.obj",
-        "mushroom-3.stl.obj",
-        "mushroom-4.stl.obj",
+//        "duck.stl.obj",
+//        "flower.stl.obj",
+//        "fork.stl.obj",
+//        "hand.stl.obj",
+//        "iron-board.stl.obj",
+//        "man-gun.stl.obj",
+//        "mask.stl.obj",
+//        "modular-hand.stl.obj",
+//        "mushroom-1.stl.obj",
+//        "mushroom-2.stl.obj",
+//        "mushroom-3.stl.obj",
+//        "mushroom-4.stl.obj",
 //        "mushroom-5.stl.obj",
-        "nail-1.stl.obj",
-        "nail-2.stl.obj",
-        "nail-3.stl.obj",
-        "pebble.stl.obj",
-        "pendulum.stl.obj",
-        "spaceship.stl.obj",
-        "spoon.stl.obj",
-        "spring.stl.obj",
-        "stand.stl.obj",
-        "swan.stl.obj",
-        "tool.stl.obj",
-        "tusk.stl.obj",
-        "vase.stl.obj",
-        "winding-wheel.stl.obj",
+//        "nail-1.stl.obj",
+//        "nail-2.stl.obj",
+//        "nail-3.stl.obj",
+//        "pebble.stl.obj",
+//        "pendulum.stl.obj",
+//        "spaceship.stl.obj",
+//        "spoon.stl.obj",
+//        "spring.stl.obj",
+//        "stand.stl.obj",
+//        "swan.stl.obj",
+//        "tool.stl.obj",
+//        "tusk.stl.obj",
+//        "vase.stl.obj",
+//        "winding-wheel.stl.obj",
         ".DS_Store"
     };
     bool ignore = false;
