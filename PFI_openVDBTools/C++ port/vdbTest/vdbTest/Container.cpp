@@ -298,12 +298,12 @@ namespace PFIAir {
             c++;
         }
         
-        for (int i = 0; i < sorted_result.size(); i++) {
-            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
-        }
-        
-        cout << "\nvertices: " << num_vertices(g) << endl;
-        cout << "edges: " << num_edges(g) << endl;
+//        for (int i = 0; i < sorted_result.size(); i++) {
+//            cout << sorted_result[i].first << " " << sorted_result[i].second << endl;
+//        }
+//        
+//        cout << "\nvertices: " << num_vertices(g) << endl;
+//        cout << "edges: " << num_edges(g) << endl;
     }
     
     FloatGrid::Ptr Container::getWaterTightLevelSet() {
