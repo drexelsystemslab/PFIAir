@@ -155,3 +155,52 @@ def randomWalker(model):
 
 
     return current_position.flatten() #return a list of all the nodes that have been visited
+
+def flood_segmentation(model):
+    # print(len(model.faces))
+    # print(len(model.face_adjacency_projections))
+    graph = nx.from_edgelist(model.face_adjacency)
+
+
+    # print(model.face_adjacency_projections[:,None].shape)
+    # print(model.face_adjacency.shape)
+    #
+    for i,edge in enumerate(model.face_adjacency):
+        graph.add_edge(edge[0],edge[1],weight=model.face_adjacency_projections[i])
+
+    groups = {}
+    for i in range(0,100000):
+        starting_face = random.choice(list(graph.nodes))
+        print(starting_face)
+        # subgraph_faces = [starting_face]
+        # subgraph_edges = []
+        for edge in nx.bfs_edges(graph, starting_face):
+            print(graph.edges[edge[0],edge[1]]['weight'])
+            if(graph.edges[edge[0],edge[1]]['weight']<1):
+                graph.nodes[edge[1]]['color'] = starting_face
+                #graph.edges[edge[0], edge[1]]['color'] = starting_face
+            else:
+                print("break")
+                break
+            graph.edges[edge[0], edge[1]]['weight'] = 0
+        # groups.append(subgraph_faces)
+        break
+    for node in graph.nodes(data='color', default=None):
+        if(node[1] != None):
+            try:
+                groups[node[1]].append(node[0])
+            except KeyError:
+                groups[node[1]] = [node[0]]
+                pass
+
+    return groups
+        # print(nx.get_edge_attributes(graph, edge))
+    #
+    # for edge in nx.bfs_edges(graph,0):
+    #     print(type(edge))
+
+    #
+    # combined_array = np.hstack((model.face_adjacency,model.face_adjacency_projections[:,None].astype('int')))
+    # tuples = tuple([tuple(row) for row in combined_array])
+    # print(tuples)
+    # graph = nx.Graph(tuples)

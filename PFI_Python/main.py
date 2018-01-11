@@ -23,11 +23,14 @@ except(OSError,IOError,ValueError):
     print("31: stl file missing")
     raise IOError
 
-#ToolBox.faceDetector(model)
-#ToolBox.localNeighborhoods(model)
-facets = ToolBox.randomWalker(model)
+facets = ToolBox.flood_segmentation(model)
+# temp = model.submesh([facets])
+# temp[0].show()
+print facets
 for facet in facets:
-    model.visual.face_colors[facet] = [252, 154, 7, 255]
+    color = trimesh.visual.random_color()
+    for face in facets[facet]:
+        model.visual.face_colors[facet] = color
 
 model.show()
 
