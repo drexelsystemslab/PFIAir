@@ -12,7 +12,7 @@ from mpl_toolkits import mplot3d
 
 
 name = 'chair'
-name = '20000_polygon_sphere_100mm'
+name = '300_polygon_sphere_100mm'
 
 url = 'models/'+name+'.stl'
 fileName = url.split('/')[-1]
@@ -25,11 +25,11 @@ except(OSError,IOError,ValueError):
 
 #ToolBox.faceDetector(model)
 #ToolBox.localNeighborhoods(model)
-facets = ToolBox.randomWalker(model)
-for facet in facets:
-    model.visual.face_colors[facet] = [252, 154, 7, 255]
-
-model.show()
+facets = ToolBox.faceClustering(model)
+# for facet in facets:
+#     model.visual.face_colors[facet] = [252, 154, 7, 255]
+#
+# model.show()
 
 
 

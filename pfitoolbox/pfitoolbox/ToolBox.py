@@ -155,3 +155,19 @@ def randomWalker(model):
 
 
     return current_position.flatten() #return a list of all the nodes that have been visited
+
+def fitPlane(verts):
+    A = np.c_[verts[:, 0], verts[:, 1], np.ones(data.shape[0])]
+    C, _, _, _ = scipy.linalg.lstsq(A, data[:, 2])  # coefficient
+
+def faceClustering(model):
+    centers = model.triangles_center
+    normals = model.face_normals
+    P = normals#intially the plane of best fit is equal to the normal for the face
+    print(np.cross(normals[0],normals[0].T).shape)
+    R = np.hstack((np.dot(normals,normals.T),-normals,1))
+    print(R)
+    print(model.face_adjacency)
+    #graph = nx.from_edgelist(model.face_adjacency) #initial dual graph
+    #for i, edge in enumerate(model.face_adjacency):
+    #    graph.add_edge(edge[0], edge[1], weight=model.face_adjacency_projections[i])
