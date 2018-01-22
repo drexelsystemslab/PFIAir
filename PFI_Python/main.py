@@ -26,6 +26,7 @@ except(OSError,IOError,ValueError):
 #ToolBox.faceDetector(model)
 #ToolBox.localNeighborhoods(model)
 facets = ToolBox.faceClustering(model)
+print(facets)
 # for facet in facets:
 #     model.visual.face_colors[facet] = [252, 154, 7, 255]
 #

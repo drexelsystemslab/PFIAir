@@ -127,47 +127,90 @@ def localNeighborhoods(model):
 
     return "test"
 
+
 def randomWalker(model):
     graph = nx.Graph()
     graph.add_edges_from(model.face_adjacency)
     neighbors = np.array(graph.adjacency_list())
     num_of_particles = 1000
     t_f = 100
-    walks = np.random.randint(0,3,(num_of_particles,t_f))#each particle has a row of length equal to the number of time steps
-    current_position = np.zeros((num_of_particles,t_f+1),dtype=int)+random.randint(0,len(model.facets))
-    #print(current_position)
+    walks = np.random.randint(0, 3, (
+    num_of_particles, t_f))  # each particle has a row of length equal to the number of time steps
+    current_position = np.zeros((num_of_particles, t_f + 1), dtype=int) + random.randint(0, len(model.facets))
+    # print(current_position)
     # print(walks)
-    walker = np.vectorize(lambda a,b:neighbors[a][b])
+    walker = np.vectorize(lambda a, b: neighbors[a][b])
 
-    starting_points = model.vertices[model.faces[current_position[:, 0]][:,0]]  # arbitrarily choosing vertex 0 to represent the position of the face
+    starting_points = model.vertices[model.faces[current_position[:, 0]][:,
+                                     0]]  # arbitrarily choosing vertex 0 to represent the position of the face
 
     start = time.clock()
-    for t in range(0,t_f):
-        current_position[:,t+1] = walker(current_position[:,t], walks[:,t])
+    for t in range(0, t_f):
+        current_position[:, t + 1] = walker(current_position[:, t], walks[:, t])
 
     end = time.clock()
-    print("Time elapsed: %s" % (end-start))
+    print("Time elapsed: %s" % (end - start))
 
     ending_points = model.vertices[model.faces[current_position[:, -1]][:, 0]]
     distance_travelled = np.linalg.norm(ending_points - starting_points)
 
     print("Average distance from starting point: %s" % np.average(distance_travelled))
 
+    return current_position.flatten()  # return a list of all the nodes that have been visited
 
-    return current_position.flatten() #return a list of all the nodes that have been visited
 
 def fitPlane(verts):
     A = np.c_[verts[:, 0], verts[:, 1], np.ones(data.shape[0])]
     C, _, _, _ = scipy.linalg.lstsq(A, data[:, 2])  # coefficient
 
+
+def P_face(verts):
+    P_0 = np.array([np.outer(verts[0], verts[0].T), verts[0], 1])
+    P_1 = np.array([np.outer(verts[1], verts[1].T), verts[1], 1])
+    P_2 = np.array([np.outer(verts[2], verts[2].T), verts[2], 1])
+    return np.sum((P_0, P_1, P_2), 0)
+
+
+def R_face(normal):
+    return np.array([np.outer(normal, normal.T), -normal, 1])
+
+
+def P_n_d(P, n, d):
+    return np.dot(np.dot(n.T, P[0]), n) + 2 * d * np.dot(P[1][:, None].T, n) + P[2] * d ** 2
+
+
+# def Z_dual_edge(P_dual_node_0,P_dual_node_1):
+#
+#     return P_e[0]-(np.outer(P_e[1],P_e[1].T)/P_e[2])
+
 def faceClustering(model):
-    centers = model.triangles_center
-    normals = model.face_normals
-    P = normals#intially the plane of best fit is equal to the normal for the face
-    print(np.cross(normals[0],normals[0].T).shape)
-    R = np.hstack((np.dot(normals,normals.T),-normals,1))
-    print(R)
-    print(model.face_adjacency)
-    #graph = nx.from_edgelist(model.face_adjacency) #initial dual graph
-    #for i, edge in enumerate(model.face_adjacency):
-    #    graph.add_edge(edge[0], edge[1], weight=model.face_adjacency_projections[i])
+    p_array = []
+    r_array = []
+    for i in range(0, len(model.faces)):
+        p_array.append(P_face(model.vertices[model.faces[i]]))
+        r_array.append(R_face(model.face_normals[i]))
+
+    dual_edges = []
+    for adjacents in model.face_adjacency:
+        P_e = np.sum((p_array[adjacents[0]], p_array[adjacents[1]]), 0)
+        Z = P_e[0] - (np.outer(P_e[1], P_e[1].T) / P_e[2])
+        eigenValues, eigenVectors = np.linalg.eig(Z)
+        n = eigenVectors[np.argmin(eigenValues)][:, None]
+        d = np.dot(n.T, P_e[1][:, None]) / P_e[2]
+
+        E_fit = P_n_d(P_e, n, d) / P_e[2]
+        print(E_fit)
+        print("test")
+        dual_edges.append([adjacents, ])
+    # print(p_array)
+    return []
+    # centers = model.triangles_center
+    # normals = model.face_normals
+    # P = normals#intially the plane of best fit is equal to the normal for the face
+    # print(np.cross(normals[0],normals[0].T).shape)
+    # R = np.hstack((np.dot(normals,normals.T),-normals,1))
+    # print(R)
+    # print(model.face_adjacency)
+    # #graph = nx.from_edgelist(model.face_adjacency) #initial dual graph
+    # #for i, edge in enumerate(model.face_adjacency):
+    # #    graph.add_edge(edge[0], edge[1], weight=model.face_adjacency_projections[i])
