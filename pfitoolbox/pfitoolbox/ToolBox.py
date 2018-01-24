@@ -179,19 +179,9 @@ def P_n_d(P, n, d):
     return np.dot(np.dot(n.T, P[0]), n) + 2 * d * np.dot(P[1][:, None].T, n) + P[2] * d ** 2
 
 
-# def Z_dual_edge(P_dual_node_0,P_dual_node_1):
-#
-#     return P_e[0]-(np.outer(P_e[1],P_e[1].T)/P_e[2])
-
-def faceClustering(model):
-    p_array = []
-    r_array = []
-    for i in range(0, len(model.faces)):
-        p_array.append(P_face(model.vertices[model.faces[i]]))
-        r_array.append(R_face(model.face_normals[i]))
-
-    dual_edges = []
-    for adjacents in model.face_adjacency:
+def E_fit(p_array, face_adjacency):
+    E_fits = []
+    for adjacents in face_adjacency:
         P_e = np.sum((p_array[adjacents[0]], p_array[adjacents[1]]), 0)
         Z = P_e[0] - (np.outer(P_e[1], P_e[1].T) / P_e[2])
         eigenValues, eigenVectors = np.linalg.eig(Z)
@@ -199,18 +189,18 @@ def faceClustering(model):
         d = np.dot(n.T, P_e[1][:, None]) / P_e[2]
 
         E_fit = P_n_d(P_e, n, d) / P_e[2]
-        print(E_fit)
-        print("test")
-        dual_edges.append([adjacents, ])
-    # print(p_array)
+        E_fits.append(E_fit)
+    return E_fits
+
+
+def faceClustering(model):
+    graph = nx.Graph()  # keep record of graph to guide later edge contraction
+    graph.add_edges_from(model.face_adjacency)
+    p_array = []
+    r_array = []
+    for i in range(0, len(model.faces)):
+        p_array.append(P_face(model.vertices[model.faces[i]]))
+        r_array.append(R_face(model.face_normals[i]))
+
+    E_fit_array = E_fit(p_array, model.face_adjacency)
     return []
-    # centers = model.triangles_center
-    # normals = model.face_normals
-    # P = normals#intially the plane of best fit is equal to the normal for the face
-    # print(np.cross(normals[0],normals[0].T).shape)
-    # R = np.hstack((np.dot(normals,normals.T),-normals,1))
-    # print(R)
-    # print(model.face_adjacency)
-    # #graph = nx.from_edgelist(model.face_adjacency) #initial dual graph
-    # #for i, edge in enumerate(model.face_adjacency):
-    # #    graph.add_edge(edge[0], edge[1], weight=model.face_adjacency_projections[i])
