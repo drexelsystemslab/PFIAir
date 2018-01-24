@@ -3,14 +3,14 @@ import numpy as np
 import math
 import time
 import pickle
-#from stl import mesh
+# from stl import mesh
 import matplotlib.pyplot as plt
 import sys
 import trimesh
 import networkx as nx
-from trimesh import sample,grouping,geometry
+from trimesh import sample, grouping, geometry
 import random
-
+from itertools import chain
 
 
 def angleHist(model):
@@ -159,11 +159,6 @@ def randomWalker(model):
     return current_position.flatten()  # return a list of all the nodes that have been visited
 
 
-def fitPlane(verts):
-    A = np.c_[verts[:, 0], verts[:, 1], np.ones(data.shape[0])]
-    C, _, _, _ = scipy.linalg.lstsq(A, data[:, 2])  # coefficient
-
-
 def P_face(verts):
     P_0 = np.array([np.outer(verts[0], verts[0].T), verts[0], 1])
     P_1 = np.array([np.outer(verts[1], verts[1].T), verts[1], 1])
@@ -189,18 +184,74 @@ def E_fit(p_array, face_adjacency):
         d = np.dot(n.T, P_e[1][:, None]) / P_e[2]
 
         E_fit = P_n_d(P_e, n, d) / P_e[2]
-        E_fits.append(E_fit)
+        E_fits.append(E_fit[0])
     return E_fits
 
 
 def faceClustering(model):
-    graph = nx.Graph()  # keep record of graph to guide later edge contraction
-    graph.add_edges_from(model.face_adjacency)
     p_array = []
     r_array = []
+    face_area_array = model.area_faces
+
     for i in range(0, len(model.faces)):
         p_array.append(P_face(model.vertices[model.faces[i]]))
         r_array.append(R_face(model.face_normals[i]))
 
     E_fit_array = E_fit(p_array, model.face_adjacency)
+
+    dual_graph = nx.Graph()  # keep record of graph to guide later edge contraction
+    dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
+
+    print(model.face_adjacency)
+    print(len(face_area_array))
+
+    contraction_graph = nx.DiGraph()
+    contraction_graph.add_nodes_from(model.faces)
+
+    counter = 0
+    while (dual_graph.number_of_nodes() > 1):
+        edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2][
+            'weight'])  # find edge to contract, which connects face a to face b
+
+        a = edge_to_contract[0]
+        b = edge_to_contract[1]
+
+        p_prime = p_array[a] + p_array[b]
+        r_prime = (face_area_array[a] * r_array[a] + face_area_array[b] * r_array[b]) / (
+                    face_area_array[a] + face_area_array[b])
+
+        p_array[a] = p_prime
+        p_array[b] = p_prime
+        r_array[a] = r_prime
+        r_array[b] = r_prime
+        face_area_array[a] = face_area_array[a] + face_area_array[b]
+
+        faces = []
+        for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
+            faces.append(neighbor)
+        for neighbor in dual_graph.edges(
+                b):  # find all edges where one of the verticies is b and concat with previous list
+            faces.append(neighbor)
+
+        e_fit_prime = E_fit(p_array, faces)
+        dual_graph.add_edges_from(faces, weight=e_fit_prime)
+
+        dual_graph = nx.contracted_edge(dual_graph, (a, b))
+
+        # model.visual.face_colors[facet] = [252, 154, 7, 255]
+
+        # model.visual.face_colors[[a,b]] = [66, 134, 244, 255]
+        # model.visual.face_colors[b] = [89, 244, 66, 255]
+        model.visual.face_colors[[a, b]] = trimesh.visual.random_color()
+
+        print(dual_graph.number_of_nodes())
+        print(a)
+        print(b)
+
+        counter = counter + 1
+    model.show(smooth=False)
+
+    # while(graph.number_of_nodes() > 1):
+    #     next_to_merge = min(graph.)
+
     return []
