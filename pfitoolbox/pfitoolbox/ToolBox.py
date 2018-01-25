@@ -200,18 +200,21 @@ def faceClustering(model):
     E_fit_array = E_fit(p_array, model.face_adjacency)
 
     dual_graph = nx.Graph()  # keep record of graph to guide later edge contraction
+    print(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
     dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
 
     print(model.face_adjacency)
     print(len(face_area_array))
 
     contraction_graph = nx.DiGraph()
-    contraction_graph.add_nodes_from(model.faces)
+    print(model.faces)
+    contraction_graph.add_nodes_from(range(0,len(model.faces)))
 
     counter = 0
     while (dual_graph.number_of_nodes() > 1):
-        edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2][
-            'weight'])  # find edge to contract, which connects face a to face b
+    # while (counter < 5):
+        print(counter)
+        edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2]['weight'])  # find edge to contract, which connects face a to face b
 
         a = edge_to_contract[0]
         b = edge_to_contract[1]
@@ -228,28 +231,29 @@ def faceClustering(model):
 
         faces = []
         for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
-            faces.append(neighbor)
-        for neighbor in dual_graph.edges(
-                b):  # find all edges where one of the verticies is b and concat with previous list
+            faces.append(neighbor)#don't need to check if a==b because we are preventing the creation of self loops when we contract
+        for neighbor in dual_graph.edges(b):  # find all edges where one of the verticies is b and concat with previous list
             faces.append(neighbor)
 
         e_fit_prime = E_fit(p_array, faces)
-        dual_graph.add_edges_from(faces, weight=e_fit_prime)
+        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime)))
+        # print(np.hstack((faces, e_fit_prime)))
 
-        dual_graph = nx.contracted_edge(dual_graph, (a, b))
 
-        # model.visual.face_colors[facet] = [252, 154, 7, 255]
+        contraction_graph.add_edge(a,b)
+        dual_graph = nx.contracted_nodes(dual_graph, a, b,self_loops=False)
 
-        # model.visual.face_colors[[a,b]] = [66, 134, 244, 255]
-        # model.visual.face_colors[b] = [89, 244, 66, 255]
-        model.visual.face_colors[[a, b]] = trimesh.visual.random_color()
+        # model.visual.face_colors[list(nx.descendants(contraction_graph,a))] = trimesh.visual.random_color()
 
-        print(dual_graph.number_of_nodes())
-        print(a)
-        print(b)
-
+        # print(dual_graph.number_of_nodes())
+        # print(a)
+        # print(b)
+        # model.show(smooth=False)
         counter = counter + 1
-    model.show(smooth=False)
+    nx.draw(contraction_graph)
+    plt.show()
+    # model.show(smooth=False)
+
 
     # while(graph.number_of_nodes() > 1):
     #     next_to_merge = min(graph.)
