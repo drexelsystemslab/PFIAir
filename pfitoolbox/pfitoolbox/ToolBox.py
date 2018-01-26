@@ -191,7 +191,7 @@ def E_fit(p_array, face_adjacency):
 def faceClustering(model):
     p_array = []
     r_array = []
-    face_area_array = model.area_faces
+    face_area_array = list(model.area_faces)
 
     for i in range(0, len(model.faces)):
         p_array.append(P_face(model.vertices[model.faces[i]]))
@@ -223,34 +223,52 @@ def faceClustering(model):
         r_prime = (face_area_array[a] * r_array[a] + face_area_array[b] * r_array[b]) / (
                     face_area_array[a] + face_area_array[b])
 
-        p_array[a] = p_prime
-        p_array[b] = p_prime
-        r_array[a] = r_prime
-        r_array[b] = r_prime
-        face_area_array[a] = face_area_array[a] + face_area_array[b]
+        p_array.append(p_prime)
+        r_array.append(r_prime)
+        face_area_array.append(face_area_array[a] + face_area_array[b])
+
+        face_prime = len(p_array)-1#all three arrays should be the same length, so it shouldn't matter which one we choose
+        print(type(face_prime))
+        dual_graph.add_node(face_prime)
+        contraction_graph.add_node(face_prime)
+
 
         faces = []
         for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
-            faces.append(neighbor)#don't need to check if a==b because we are preventing the creation of self loops when we contract
+            if(neighbor[1] != b):
+                print(face_prime,neighbor)
+                faces.append((face_prime,neighbor[1]))#don't need to check if a==b because we are preventing the creation of self loops when we contract
         for neighbor in dual_graph.edges(b):  # find all edges where one of the verticies is b and concat with previous list
-            faces.append(neighbor)
+            if (neighbor[1] != a):
+                faces.append((face_prime, neighbor[1]))
+        faces = np.array(faces).astype("object")
+        print(faces)
+
 
         e_fit_prime = E_fit(p_array, faces)
-        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime)))
-        # print(np.hstack((faces, e_fit_prime)))
 
 
-        contraction_graph.add_edge(a,b)
-        dual_graph = nx.contracted_nodes(dual_graph, a, b,self_loops=False)
+        dual_graph.remove_node(a)#remove the old nodes
+        dual_graph.remove_node(b)
+        print(np.hstack((faces, e_fit_prime)))
+        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime)))#reconnect the new node
 
-        # model.visual.face_colors[list(nx.descendants(contraction_graph,a))] = trimesh.visual.random_color()
+        contraction_graph.add_node(face_prime)
+        contraction_graph.add_edge(face_prime,a)
+        contraction_graph.add_edge(face_prime,b)
+
+        all_decendants = list(nx.descendants(contraction_graph, face_prime))
+        leaves = [i for i in all_decendants if i < len(model.faces)-1]
+        model.visual.face_colors[leaves] = trimesh.visual.random_color()
 
         # print(dual_graph.number_of_nodes())
         # print(a)
         # print(b)
-        # model.show(smooth=False)
+        model.show(smooth=False)
         counter = counter + 1
-    nx.draw(contraction_graph)
+    pos = hierarchy_pos(contraction_graph, len(p_array)-1)
+    nx.draw(contraction_graph, pos=pos, with_labels=True)
+
     plt.show()
     # model.show(smooth=False)
 
@@ -259,3 +277,30 @@ def faceClustering(model):
     #     next_to_merge = min(graph.)
 
     return []
+
+
+def hierarchy_pos(G, root, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5,
+                  pos = None, parent = None):
+    '''If there is a cycle that is reachable from root, then this will see infinite recursion.
+       G: the graph
+       root: the root node of current branch
+       width: horizontal space allocated for this branch - avoids overlap with other branches
+       vert_gap: gap between levels of hierarchy
+       vert_loc: vertical location of root
+       xcenter: horizontal location of root
+       pos: a dict saying where all nodes go if they have been assigned
+       parent: parent of this branch.'''
+    if pos == None:
+        pos = {root:(xcenter,vert_loc)}
+    else:
+        pos[root] = (xcenter, vert_loc)
+    neighbors = list(G.neighbors(root))
+    if len(neighbors)!=0:
+        dx = width/len(neighbors)
+        nextx = xcenter - width/2 - dx/2
+        for neighbor in neighbors:
+            nextx += dx
+            pos = hierarchy_pos(G,neighbor, width = dx, vert_gap = vert_gap,
+                                vert_loc = vert_loc-vert_gap, xcenter=nextx, pos=pos,
+                                parent = root)
+    return pos
