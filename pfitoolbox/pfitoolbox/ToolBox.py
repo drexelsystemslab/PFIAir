@@ -203,21 +203,19 @@ def faceClustering(model):
     print(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
     dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
 
-    print(model.face_adjacency)
-    print(len(face_area_array))
-
     contraction_graph = nx.DiGraph()
-    print(model.faces)
     contraction_graph.add_nodes_from(range(0,len(model.faces)))
 
     counter = 0
     while (dual_graph.number_of_nodes() > 1):
     # while (counter < 5):
-        print(counter)
+    #     print(counter)
         edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2]['weight'])  # find edge to contract, which connects face a to face b
 
         a = edge_to_contract[0]
         b = edge_to_contract[1]
+
+        print(a,b)
 
         p_prime = p_array[a] + p_array[b]
         r_prime = (face_area_array[a] * r_array[a] + face_area_array[b] * r_array[b]) / (
@@ -228,7 +226,6 @@ def faceClustering(model):
         face_area_array.append(face_area_array[a] + face_area_array[b])
 
         face_prime = len(p_array)-1#all three arrays should be the same length, so it shouldn't matter which one we choose
-        print(type(face_prime))
         dual_graph.add_node(face_prime)
         contraction_graph.add_node(face_prime)
 
@@ -236,13 +233,11 @@ def faceClustering(model):
         faces = []
         for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
             if(neighbor[1] != b):
-                print(face_prime,neighbor)
                 faces.append((face_prime,neighbor[1]))#don't need to check if a==b because we are preventing the creation of self loops when we contract
         for neighbor in dual_graph.edges(b):  # find all edges where one of the verticies is b and concat with previous list
             if (neighbor[1] != a):
                 faces.append((face_prime, neighbor[1]))
         faces = np.array(faces).astype("object")
-        print(faces)
 
 
         e_fit_prime = E_fit(p_array, faces)
@@ -259,6 +254,8 @@ def faceClustering(model):
 
         all_decendants = list(nx.descendants(contraction_graph, face_prime))
         leaves = [i for i in all_decendants if i < len(model.faces)-1]
+        print(leaves)
+        model.visual.face_colors[leaves] = trimesh.visual.random_color()
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
 
         # print(dual_graph.number_of_nodes())
