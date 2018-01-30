@@ -176,15 +176,17 @@ def P_n_d(P, n, d):
 
 def E_fit(p_array, face_adjacency):
     E_fits = []
+    i = 0
     for adjacents in face_adjacency:
         P_e = np.sum((p_array[adjacents[0]], p_array[adjacents[1]]), 0)
-        Z = P_e[0] - (np.outer(P_e[1], P_e[1].T) / P_e[2])
+        Z = P_e[0] - (np.outer(P_e[1][:, None], P_e[1][:, None].T) / P_e[2])
         eigenValues, eigenVectors = np.linalg.eig(Z)
-        n = eigenVectors[np.argmin(eigenValues)][:, None]
-        d = np.dot(n.T, P_e[1][:, None]) / P_e[2]
-
+        #n = eigenVectors[np.argmin(eigenValues)][:, None]
+        n= eigenVectors[:,np.argmin(eigenValues)][:, None]
+        d = np.dot(-1*n.T, P_e[1][:, None]) / P_e[2]
         E_fit = P_n_d(P_e, n, d) / P_e[2]
         E_fits.append(E_fit[0])
+        i = i + 1
     return E_fits
 
 
@@ -215,8 +217,6 @@ def faceClustering(model):
         a = edge_to_contract[0]
         b = edge_to_contract[1]
 
-        print(a,b)
-
         p_prime = p_array[a] + p_array[b]
         r_prime = (face_area_array[a] * r_array[a] + face_area_array[b] * r_array[b]) / (
                     face_area_array[a] + face_area_array[b])
@@ -227,7 +227,7 @@ def faceClustering(model):
 
         face_prime = len(p_array)-1#all three arrays should be the same length, so it shouldn't matter which one we choose
         dual_graph.add_node(face_prime)
-        contraction_graph.add_node(face_prime)
+        #contraction_graph.add_node(face_prime)
 
 
         faces = []
@@ -253,7 +253,7 @@ def faceClustering(model):
         contraction_graph.add_edge(face_prime,b)
 
         all_decendants = list(nx.descendants(contraction_graph, face_prime))
-        leaves = [i for i in all_decendants if i < len(model.faces)-1]
+        leaves = [i for i in all_decendants if i < len(model.faces)]
         print(leaves)
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
