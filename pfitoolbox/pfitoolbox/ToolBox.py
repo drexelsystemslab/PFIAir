@@ -173,6 +173,10 @@ def R_face(normal):
 def P_n_d(P, n, d):
     return np.dot(np.dot(n.T, P[0]), n) + 2 * d * np.dot(P[1][:, None].T, n) + P[2] * d ** 2
 
+def R_n(R, n):
+    return np.dot(np.dot(n.T, R[0]), n) + 2 * np.dot(R[1][:, None].T, n) + R[2]
+
+
 
 def E_fit(p_array, face_adjacency):
     E_fits = []
@@ -189,6 +193,22 @@ def E_fit(p_array, face_adjacency):
         i = i + 1
     return E_fits
 
+def E_dir(r_array, face_area_array, face_adjacency):
+    E_dirs = []
+    i =0
+    for adjacents in face_adjacency:
+        R_e = (face_area_array[adjacents[0]] * r_array[adjacents[0]] + face_area_array[adjacents[1]] * r_array[adjacents[1]]) / (
+                    face_area_array[adjacents[0]] + face_area_array[adjacents[1]])
+        D_e = R_e[0]
+        e_e = R_e[1]
+        print(R_e[2])
+        n = -2. * np.dot((np.linalg.pinv(D_e+D_e.T)), e_e )
+        n = n / np.linalg.norm(n)
+        E_dir = R_n(R_e, n)
+        E_dirs.append([E_dir[0]])
+        i=i+1
+    return E_dirs
+
 
 def faceClustering(model):
     p_array = []
@@ -199,11 +219,13 @@ def faceClustering(model):
         p_array.append(P_face(model.vertices[model.faces[i]]))
         r_array.append(R_face(model.face_normals[i]))
 
-    E_fit_array = E_fit(p_array, model.face_adjacency)
-
+    E_fit_array = np.asarray(E_fit(p_array, model.face_adjacency))
+    E_dir_array = np.asarray(E_dir(r_array, face_area_array, model.face_adjacency))
+    print (E_fit_array + E_dir_array)
     dual_graph = nx.Graph()  # keep record of graph to guide later edge contraction
-    print(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
-    dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array)))
+    print('E_fit = ' + str(np.hstack((model.face_adjacency.astype("object"), E_fit_array))))
+    print('E_dir = ' + str(np.hstack((model.face_adjacency.astype("object"), E_dir_array))))
+    dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array+E_dir_array)))
 
     contraction_graph = nx.DiGraph()
     contraction_graph.add_nodes_from(range(0,len(model.faces)))
@@ -231,6 +253,7 @@ def faceClustering(model):
 
 
         faces = []
+        faces_area = []
         for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
             if(neighbor[1] != b):
                 faces.append((face_prime,neighbor[1]))#don't need to check if a==b because we are preventing the creation of self loops when we contract
@@ -240,13 +263,17 @@ def faceClustering(model):
         faces = np.array(faces).astype("object")
 
 
-        e_fit_prime = E_fit(p_array, faces)
-
-
+        e_fit_prime = np.asarray(E_fit(p_array, faces))
+        e_dir_prime = np.asarray(E_dir(r_array, face_area_array, faces))
+        print (E_fit(p_array,faces))
+        print (E_dir(r_array, face_area_array, faces))
         dual_graph.remove_node(a)#remove the old nodes
         dual_graph.remove_node(b)
-        print(np.hstack((faces, e_fit_prime)))
-        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime)))#reconnect the new node
+
+        print ('e_Fit_prime = '+ str(np.hstack((faces, e_fit_prime))))
+
+        print('e_Dir_prime = ' + str(np.hstack((faces, e_dir_prime))))
+        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime+e_dir_prime)))#reconnect the new node
 
         contraction_graph.add_node(face_prime)
         contraction_graph.add_edge(face_prime,a)
@@ -261,8 +288,10 @@ def faceClustering(model):
         # print(dual_graph.number_of_nodes())
         # print(a)
         # print(b)
-        model.show(smooth=False)
+        #model.show(smooth=False)
         counter = counter + 1
+
+
     pos = hierarchy_pos(contraction_graph, len(p_array)-1)
     nx.draw(contraction_graph, pos=pos, with_labels=True)
 
