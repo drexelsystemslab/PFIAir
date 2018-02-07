@@ -173,9 +173,9 @@ def R_face(normal):
 def P_n_d(P, n, d):
     return np.dot(np.dot(n.T, P[0]), n) + 2 * d * np.dot(P[1][:, None].T, n) + P[2] * d ** 2
 
+
 def R_n(R, n):
     return np.dot(np.dot(n.T, R[0]), n) + 2 * np.dot(R[1][:, None].T, n) + R[2]
-
 
 
 def E_fit(p_array, face_adjacency):
@@ -185,28 +185,30 @@ def E_fit(p_array, face_adjacency):
         P_e = np.sum((p_array[adjacents[0]], p_array[adjacents[1]]), 0)
         Z = P_e[0] - (np.outer(P_e[1][:, None], P_e[1][:, None].T) / P_e[2])
         eigenValues, eigenVectors = np.linalg.eig(Z)
-        #n = eigenVectors[np.argmin(eigenValues)][:, None]
-        n= eigenVectors[:,np.argmin(eigenValues)][:, None]
-        d = np.dot(-1*n.T, P_e[1][:, None]) / P_e[2]
+        # n = eigenVectors[np.argmin(eigenValues)][:, None]
+        n = eigenVectors[:, np.argmin(eigenValues)][:, None]
+        d = np.dot(-1 * n.T, P_e[1][:, None]) / P_e[2]
         E_fit = P_n_d(P_e, n, d) / P_e[2]
         E_fits.append(E_fit[0])
         i = i + 1
     return E_fits
 
+
 def E_dir(r_array, face_area_array, face_adjacency):
     E_dirs = []
-    i =0
+    i = 0
     for adjacents in face_adjacency:
-        R_e = (face_area_array[adjacents[0]] * r_array[adjacents[0]] + face_area_array[adjacents[1]] * r_array[adjacents[1]]) / (
-                    face_area_array[adjacents[0]] + face_area_array[adjacents[1]])
+        R_e = (face_area_array[adjacents[0]] * r_array[adjacents[0]] + face_area_array[adjacents[1]] * r_array[
+            adjacents[1]]) / (
+                  face_area_array[adjacents[0]] + face_area_array[adjacents[1]])
         D_e = R_e[0]
         e_e = R_e[1]
         print(R_e[2])
-        n = -2. * np.dot((np.linalg.pinv(D_e+D_e.T)), e_e )
+        n = -2. * np.dot((np.linalg.pinv(D_e + D_e.T)), e_e)
         n = n / np.linalg.norm(n)
         E_dir = R_n(R_e, n)
         E_dirs.append([E_dir[0]])
-        i=i+1
+        i = i + 1
     return E_dirs
 
 
@@ -221,63 +223,66 @@ def faceClustering(model):
 
     E_fit_array = np.asarray(E_fit(p_array, model.face_adjacency))
     E_dir_array = np.asarray(E_dir(r_array, face_area_array, model.face_adjacency))
-    print (E_fit_array + E_dir_array)
+    print(E_fit_array + E_dir_array)
     dual_graph = nx.Graph()  # keep record of graph to guide later edge contraction
     print('E_fit = ' + str(np.hstack((model.face_adjacency.astype("object"), E_fit_array))))
     print('E_dir = ' + str(np.hstack((model.face_adjacency.astype("object"), E_dir_array))))
-    dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array+E_dir_array)))
+    dual_graph.add_weighted_edges_from(np.hstack((model.face_adjacency.astype("object"), E_fit_array + E_dir_array)))
 
     contraction_graph = nx.DiGraph()
-    contraction_graph.add_nodes_from(range(0,len(model.faces)))
+    contraction_graph.add_nodes_from(range(0, len(model.faces)))
 
     counter = 0
     while (dual_graph.number_of_nodes() > 1):
-    # while (counter < 5):
-    #     print(counter)
-        edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2]['weight'])  # find edge to contract, which connects face a to face b
+        # while (counter < 5):
+        #     print(counter)
+        edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2][
+            'weight'])  # find edge to contract, which connects face a to face b
 
         a = edge_to_contract[0]
         b = edge_to_contract[1]
 
         p_prime = p_array[a] + p_array[b]
         r_prime = (face_area_array[a] * r_array[a] + face_area_array[b] * r_array[b]) / (
-                    face_area_array[a] + face_area_array[b])
+            face_area_array[a] + face_area_array[b])
 
         p_array.append(p_prime)
         r_array.append(r_prime)
         face_area_array.append(face_area_array[a] + face_area_array[b])
 
-        face_prime = len(p_array)-1#all three arrays should be the same length, so it shouldn't matter which one we choose
+        face_prime = len(
+            p_array) - 1  # all three arrays should be the same length, so it shouldn't matter which one we choose
         dual_graph.add_node(face_prime)
-        #contraction_graph.add_node(face_prime)
+        # contraction_graph.add_node(face_prime)
 
 
         faces = []
         faces_area = []
         for neighbor in dual_graph.edges(a):  # find all edges where one of the verticies is a
-            if(neighbor[1] != b):
-                faces.append((face_prime,neighbor[1]))#don't need to check if a==b because we are preventing the creation of self loops when we contract
-        for neighbor in dual_graph.edges(b):  # find all edges where one of the verticies is b and concat with previous list
+            if (neighbor[1] != b):
+                faces.append((face_prime, neighbor[
+                    1]))  # don't need to check if a==b because we are preventing the creation of self loops when we contract
+        for neighbor in dual_graph.edges(
+                b):  # find all edges where one of the verticies is b and concat with previous list
             if (neighbor[1] != a):
                 faces.append((face_prime, neighbor[1]))
         faces = np.array(faces).astype("object")
 
-
         e_fit_prime = np.asarray(E_fit(p_array, faces))
         e_dir_prime = np.asarray(E_dir(r_array, face_area_array, faces))
-        print (E_fit(p_array,faces))
-        print (E_dir(r_array, face_area_array, faces))
-        dual_graph.remove_node(a)#remove the old nodes
+        print(E_fit(p_array, faces))
+        print(E_dir(r_array, face_area_array, faces))
+        dual_graph.remove_node(a)  # remove the old nodes
         dual_graph.remove_node(b)
 
-        print ('e_Fit_prime = '+ str(np.hstack((faces, e_fit_prime))))
+        print('e_Fit_prime = ' + str(np.hstack((faces, e_fit_prime))))
 
         print('e_Dir_prime = ' + str(np.hstack((faces, e_dir_prime))))
-        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime+e_dir_prime)))#reconnect the new node
+        dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime + e_dir_prime)))  # reconnect the new node
 
         contraction_graph.add_node(face_prime)
-        contraction_graph.add_edge(face_prime,a)
-        contraction_graph.add_edge(face_prime,b)
+        contraction_graph.add_edge(face_prime, a)
+        contraction_graph.add_edge(face_prime, b)
 
         all_decendants = list(nx.descendants(contraction_graph, face_prime))
         leaves = [i for i in all_decendants if i < len(model.faces)]
@@ -288,25 +293,49 @@ def faceClustering(model):
         # print(dual_graph.number_of_nodes())
         # print(a)
         # print(b)
-        #model.show(smooth=False)
+        # if(counter%500==0):
+        #     model.show(smooth=False)
         counter = counter + 1
 
-
-    pos = hierarchy_pos(contraction_graph, len(p_array)-1)
+    pos = hierarchy_pos(contraction_graph, len(p_array) - 1)
     nx.draw(contraction_graph, pos=pos, with_labels=True)
 
-    plt.show()
+    # plt.show()
     # model.show(smooth=False)
 
 
     # while(graph.number_of_nodes() > 1):
     #     next_to_merge = min(graph.)
 
-    return []
+    return contraction_graph
 
 
-def hierarchy_pos(G, root, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5,
-                  pos = None, parent = None):
+def contraction_graph_to_seg(contraction_graph, model, filename):
+    temp = []
+    for node in contraction_graph.neighbors(len(contraction_graph) - 1):
+        for child in contraction_graph.neighbors(node):
+            for child_child in contraction_graph.neighbors(child):
+                temp.append(child_child)
+
+    for j, segment in enumerate(temp):
+        all_decendants = list(nx.descendants(contraction_graph, segment))
+        leaves = [i for i in all_decendants if contraction_graph.out_degree(i) == 0]
+        temp[j] = leaves
+
+    segs = np.zeros((len(model.faces), 1)).astype("int")
+
+    for i, faces in enumerate(temp):
+        segs[faces] = i
+
+    with open("segmentations/" + filename, "w") as file:
+        for seg in segs:
+            file.write(str(seg[0]) + "\n")
+    file.close()
+    return segs
+
+
+def hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5,
+                  pos=None, parent=None):
     '''If there is a cycle that is reachable from root, then this will see infinite recursion.
        G: the graph
        root: the root node of current branch
@@ -317,16 +346,16 @@ def hierarchy_pos(G, root, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5
        pos: a dict saying where all nodes go if they have been assigned
        parent: parent of this branch.'''
     if pos == None:
-        pos = {root:(xcenter,vert_loc)}
+        pos = {root: (xcenter, vert_loc)}
     else:
         pos[root] = (xcenter, vert_loc)
     neighbors = list(G.neighbors(root))
-    if len(neighbors)!=0:
-        dx = width/len(neighbors)
-        nextx = xcenter - width/2 - dx/2
+    if len(neighbors) != 0:
+        dx = width / len(neighbors)
+        nextx = xcenter - width / 2 - dx / 2
         for neighbor in neighbors:
             nextx += dx
-            pos = hierarchy_pos(G,neighbor, width = dx, vert_gap = vert_gap,
-                                vert_loc = vert_loc-vert_gap, xcenter=nextx, pos=pos,
-                                parent = root)
+            pos = hierarchy_pos(G, neighbor, width=dx, vert_gap=vert_gap,
+                                vert_loc=vert_loc - vert_gap, xcenter=nextx, pos=pos,
+                                parent=root)
     return pos
