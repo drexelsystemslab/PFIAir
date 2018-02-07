@@ -327,7 +327,7 @@ def contraction_graph_to_seg(contraction_graph, model, filename):
     for i, faces in enumerate(temp):
         segs[faces] = i
 
-    with open("segmentations/" + filename, "w") as file:
+    with open(file_url,"w") as file:
         for seg in segs:
             file.write(str(seg[0]) + "\n")
     file.close()
