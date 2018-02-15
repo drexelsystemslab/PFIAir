@@ -11,6 +11,7 @@ import numpy as np
 from mpl_toolkits import mplot3d
 
 
+#name = 'm145002_9'
 name = 'cube'
 
 url = 'models/'+name+'.stl'
