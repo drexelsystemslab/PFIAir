@@ -314,8 +314,8 @@ def faceClustering(model):
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
         #print(a , b)
-        if (dual_graph.number_of_nodes() == 2):
-            model.show(smooth=False)
+        # if (dual_graph.number_of_nodes() == 2):
+            # model.show(smooth=False)
 
         counter = counter + 1
 
@@ -329,7 +329,7 @@ def faceClustering(model):
     # while(graph.number_of_nodes() > 1):
     #     next_to_merge = min(graph.)
 
-    return []
+    return contraction_graph
 
 
 def hierarchy_pos(G, root, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5,
@@ -357,3 +357,19 @@ def hierarchy_pos(G, root, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5
                                 vert_loc = vert_loc-vert_gap, xcenter=nextx, pos=pos,
                                 parent = root)
     return pos
+
+def basic_contraction_graph_to_seg(contraction_graph,model):
+    root = len(contraction_graph)-1 #makes the assumtion that the last node added is the root
+    clusters = []
+    for node in contraction_graph[root].keys():
+        for node2 in contraction_graph[node].keys():
+            for node3 in contraction_graph[node2].keys():
+                clusters.append(node3)
+    print(list(clusters))
+    print("test")
+    seg = np.zeros((len(model.faces),1)).astype("int")
+    for i,cluster in enumerate(clusters):
+        print(i)
+        leaves = [j for j in list(nx.descendants(contraction_graph, cluster)) if j < len(model.faces)]
+        seg[leaves] = i
+    return seg
