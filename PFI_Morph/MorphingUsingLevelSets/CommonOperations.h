@@ -5,7 +5,8 @@
 #include <openvdb/tools/LevelSetPlatonic.h>
 #include <sys/stat.h>   //mkdir
 
-namespace CommonOperations { 
+namespace CommonOperations {
+    
     template<class T1, class T2>
     void display(const T1 tag, const T2 msg) {
         tag != "" ? std::cout << tag << " - " << msg << std::endl : std::cout << msg << std::endl;
@@ -86,7 +87,7 @@ namespace CommonOperations {
         }
         
         std::string return_str(char_arr);
-        return return_str;
+        return return_str.substr(0, arr_length + 1);
     }
 }
 
