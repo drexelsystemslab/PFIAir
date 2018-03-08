@@ -24,7 +24,7 @@ namespace GridOperations {
     };
     
     openvdb::GridBase::Ptr readFile(const std::string);
-    void writeToFile(const std::string, openvdb::FloatGrid::Ptr);
+    void writeToFile(const std::string, const openvdb::FloatGrid::Ptr);
     void writeOnlySurface(const openvdb::FloatGrid::Ptr);
     bool checkIfSurface(openvdb::FloatGrid::ValueOnIter, const openvdb::FloatGrid::Ptr);
     
@@ -47,7 +47,7 @@ namespace GridOperations {
         return baseGrid;
     }
     
-    void writeToFile(const std::string file_name, openvdb::FloatGrid::Ptr grid_pointer) {
+    void writeToFile(const std::string file_name, const openvdb::FloatGrid::Ptr grid_pointer) {
         grid_pointer->setGridClass(openvdb::GRID_LEVEL_SET);
         openvdb::io::File file(file_name);
         openvdb::GridPtrVec grids;
@@ -72,6 +72,18 @@ namespace GridOperations {
         std::cout << surface << std::endl;
         std::cout << non_surface << std::endl;
         GridOperations::writeToFile("only_surface.vdb", grid_pointer);
+    }
+    
+    int countSurfaceVoxels(const openvdb::FloatGrid::Ptr grid_pointer) {
+        int count = 0;
+        for (openvdb::FloatGrid::ValueOnIter iter = grid_pointer->beginValueOn(); iter; ++iter) {
+            if(iter.getValue() < 0) {
+                if(GridOperations::checkIfSurface(iter, grid_pointer)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
     
     bool checkIfSurface(openvdb::FloatGrid::ValueOnIter iterator, const openvdb::FloatGrid::Ptr grid_pointer) {
