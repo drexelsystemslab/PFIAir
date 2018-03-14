@@ -202,6 +202,28 @@ def irregularity(face_area, verts):
     perimeter = np.linalg.norm(verts[0]-verts[1])+ np.linalg.norm(verts[1]-verts[2])+ np.linalg.norm(verts[0]-verts[2])
     return perimeter**2/(4.*np.pi*face_area)
 
+def dist_from_Sphere(vert, center, r):
+    return np.square(np.linalg.norm(vert-center, axis=1)- r)
+
+def E_fit_Sphere(model, face_adjacency):
+    E_fit_spheres = []
+    for adjacent in face_adjacency:
+        verts_face1 = model.vertices[model.faces[adjacent[0]]]
+        verts_face2 = model.vertices[model.faces[adjacent[1]]]
+        verts = np.vstack((verts_face1,verts_face2))
+        verts = np.unique(verts, axis=0)
+        ones= np.ones((verts.shape[0],1))
+        A= np.hstack((2*verts, ones))
+        b = np.sqrt(np.linalg.norm(verts, axis=1))
+        w= np.dot(np.linalg.inv(np.dot(A.T,A)), np.dot(A.T, b))
+        c_x = w[0,0]
+        c_y = w[1,0]
+        c_z = w[2,0]
+        center = np.array([c_x,c_y,c_z])
+        r = np.sqrt(w[3,0] + c_x**2 + c_y **2 + c_z ** 2)
+        E_fit_spheres = np.append(np.sum(dist_from_Sphere(verts, center, r)))
+    return E_fit_spheres
+
 def E_fit(p_array, face_adjacency):
     E_fits = []
     i = 0
@@ -240,6 +262,7 @@ def faceClustering(model):
     edges_length = edges_length.reshape((1, len(edges_length)))
 
     for i in range(0, len(model.faces)):
+        A = model.vertices
         p_array.append(P_face(model.vertices[model.faces[i]]))
         r_array.append(R_face(model.face_normals[i]))
         irregularity_array.append(irregularity(face_area_array[i], model.vertices[model.faces[i]]))
