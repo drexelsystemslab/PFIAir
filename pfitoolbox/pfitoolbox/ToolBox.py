@@ -313,9 +313,9 @@ def faceClustering(model):
         print(leaves)
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
-        #print(a , b)
-        if (dual_graph.number_of_nodes() == 2):
-            model.show(smooth=False)
+        print(a , b)
+        #if (dual_graph.number_of_nodes() == 2):
+        model.show(smooth=False)
 
         counter = counter + 1
 

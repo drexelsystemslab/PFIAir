@@ -1,4 +1,3 @@
-#from stl import mesh
 import time
 from pfitoolbox import ToolBox
 import tasks
