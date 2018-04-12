@@ -196,7 +196,7 @@ def E_shape(edges_array, edges_length, face_area_array, irregularity_array,face_
     irregularity_array = np.asarray(irregularity_array).reshape((len(irregularity_array),1))
     gamma_array = np.hstack((irregularity_array[face_adjacency[:,0]], irregularity_array[face_adjacency[:,1]]))
     E_shapes= ((gamma - np.max(gamma_array, axis = 1 ))/gamma)
-    return 0.75*E_shapes
+    return 0. *E_shapes
 
 def irregularity(face_area, verts):
     perimeter = np.linalg.norm(verts[0]-verts[1])+ np.linalg.norm(verts[1]-verts[2])+ np.linalg.norm(verts[0]-verts[2])
@@ -205,23 +205,29 @@ def irregularity(face_area, verts):
 def dist_from_Sphere(vert, center, r):
     return np.square(np.linalg.norm(vert-center, axis=1)- r)
 
-def E_fit_Sphere(model, face_adjacency):
+def E_fit_Sphere(face_adjacency, face_vertices):
     E_fit_spheres = []
     for adjacent in face_adjacency:
-        verts_face1 = model.vertices[model.faces[adjacent[0]]]
-        verts_face2 = model.vertices[model.faces[adjacent[1]]]
+        verts_face1 = face_vertices[adjacent[0]]
+        verts_face2 = face_vertices[adjacent[1]]
         verts = np.vstack((verts_face1,verts_face2))
         verts = np.unique(verts, axis=0)
         ones= np.ones((verts.shape[0],1))
         A= np.hstack((2*verts, ones))
-        b = np.sqrt(np.linalg.norm(verts, axis=1))
-        w= np.dot(np.linalg.inv(np.dot(A.T,A)), np.dot(A.T, b))
-        c_x = w[0,0]
-        c_y = w[1,0]
-        c_z = w[2,0]
-        center = np.array([c_x,c_y,c_z])
-        r = np.sqrt(w[3,0] + c_x**2 + c_y **2 + c_z ** 2)
-        E_fit_spheres = np.append(np.sum(dist_from_Sphere(verts, center, r)))
+        # print(A)
+        b = np.linalg.norm(verts, axis=1)**2
+        b=b[:,None]
+        x = np.dot(A.T,A)
+        if np.linalg.cond(x) < 1 / sys.float_info.epsilon:
+            w = np.dot(np.linalg.inv(np.dot(A.T,A)), np.dot(A.T, b))
+            c_x = w[0,0]
+            c_y = w[1,0]
+            c_z = w[2,0]
+            center = np.array([c_x,c_y,c_z])
+            r = np.sqrt(w[3,0] + c_x**2 + c_y **2 + c_z ** 2)
+            E_fit_spheres = np.append(E_fit_spheres, np.sum(dist_from_Sphere(verts, center, r)))
+        else:
+            E_fit_Sphere = np.append(E_fit_spheres, np.inf)
     return E_fit_spheres
 
 def E_fit(p_array, face_adjacency):
@@ -260,13 +266,16 @@ def faceClustering(model):
     face_area_array = list(model.area_faces)
     edges_length = np.linalg.norm(model.vertices[model.edges_unique][:, 1, :] - model.vertices[model.edges_unique][:, 0, :], axis=1)
     edges_length = edges_length.reshape((1, len(edges_length)))
+    face_vertices = []
 
     for i in range(0, len(model.faces)):
         A = model.vertices
+        print(model.vertices[model.faces[i]])
         p_array.append(P_face(model.vertices[model.faces[i]]))
         r_array.append(R_face(model.face_normals[i]))
         irregularity_array.append(irregularity(face_area_array[i], model.vertices[model.faces[i]]))
-
+        face_vertices.append(model.vertices[model.faces[i]])
+    print (A)
     E_fit_array = np.asarray(E_fit(p_array, model.face_adjacency))
     E_dir_array = np.asarray(E_dir(r_array, face_area_array, model.face_adjacency))
     edges_array = model.faces_unique_edges.tolist()
@@ -297,6 +306,9 @@ def faceClustering(model):
         ex_edge= exterior_edge(merging_faces_edges)
         #print(ex_edge)
         edges_array.append(ex_edge.tolist())
+        new_face_vertices = np.vstack((face_vertices[a], face_vertices[b]))
+        new_face_vertices = np.unique(new_face_vertices, axis = 0)
+        face_vertices.append(new_face_vertices)
         face_prime = len(p_array)-1#all three arrays should be the same length, so it shouldn't matter which one we choose
         dual_graph.add_node(face_prime)
 
@@ -309,12 +321,22 @@ def faceClustering(model):
                 faces.append([face_prime, neighbor[1]])
         faces = np.array(faces).astype("int")
 
+        contraction_graph.add_node(face_prime)
+        contraction_graph.add_edge(face_prime,a)
+        contraction_graph.add_edge(face_prime,b)
+        all_decendants = list(nx.descendants(contraction_graph, face_prime))
+        leaves = [i for i in all_decendants if i < len(model.faces)]
+
+
         if len(faces) > 0:
             faces = np.unique(faces, axis =0)
             p = np.sum(edges_length[0][ex_edge])
             gamma= p**2/(4*np.pi*(face_area_array[a] + face_area_array[b]))
             irregularity_array.append(gamma)
             e_fit_prime = np.asarray(E_fit(p_array, faces))
+
+            print ('e_fit_prime = ' )
+            print (e_fit_prime)
             e_dir_prime = np.asarray(E_dir(r_array, face_area_array, faces))
             if (faces.shape[0] > 1):
                 e_shape_prime = np.asarray(E_shape(edges_array, edges_length, face_area_array,
@@ -322,23 +344,31 @@ def faceClustering(model):
                 e_shape_prime = e_shape_prime.reshape((len(e_shape_prime), 1))
             else :
                 e_shape_prime = np.array([[0]])
-
-            dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_prime+e_dir_prime + e_shape_prime)))#reconnect the new node
+            e_fit_sphere_prime = E_fit_Sphere(faces, face_vertices)[:,None]
+            print('e_fit_sphere_prime = ')
+            print(e_fit_sphere_prime)
+            e_fit_primitive = np.minimum(e_fit_prime, e_fit_sphere_prime)
+            for i in range(e_fit_primitive.shape[1]):
+                if e_fit_primitive[i,0] == e_fit_sphere_prime[i,0]:
+                    print ('sphere')
+                else:
+                    print ('plane')
+            dual_graph.add_weighted_edges_from(np.hstack((faces, e_fit_primitive+e_dir_prime + e_shape_prime)))#reconnect the new node
 
         dual_graph.remove_node(a)  # remove the old nodes
         dual_graph.remove_node(b)
-        contraction_graph.add_node(face_prime)
-        contraction_graph.add_edge(face_prime,a)
-        contraction_graph.add_edge(face_prime,b)
+        # contraction_graph.add_node(face_prime)
+        # contraction_graph.add_edge(face_prime,a)
+        # contraction_graph.add_edge(face_prime,b)
 
-        all_decendants = list(nx.descendants(contraction_graph, face_prime))
-        leaves = [i for i in all_decendants if i < len(model.faces)]
+        # all_decendants = list(nx.descendants(contraction_graph, face_prime))
+        # leaves = [i for i in all_decendants if i < len(model.faces)]
         print(leaves)
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
-        model.visual.face_colors[leaves] = trimesh.visual.random_color()
-        print(a , b)
-        #if (dual_graph.number_of_nodes() == 2):
-        model.show(smooth=False)
+        # model.visual.face_colors[leaves] = trimesh.visual.random_color()
+        # print(a , b)
+        if (dual_graph.number_of_nodes() == 8):
+            model.show(smooth=False)
 
         counter = counter + 1
 

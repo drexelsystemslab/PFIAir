@@ -9,7 +9,7 @@ import numpy as np
 from mpl_toolkits import mplot3d
 
 #name = 'hex2'
-name = 'cube'
+name = 'm145002_9'
 
 url = 'models/' + name + '.stl'
 fileName = url.split('/')[-1]
