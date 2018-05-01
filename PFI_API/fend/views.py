@@ -76,7 +76,10 @@ def search(request):
 
             # ok now the file is in temp/[form_id].um (stands for user model)
             # so let's generate it's descriptor
-            model = trimesh.load_mesh('temp/' + form_id + '.stl')
+            try:
+                model = trimesh.load_mesh('temp/' + form_id + str(request.FILES['file']), file_type='stl')
+            except Exception:
+                model = trimesh.load_mesh('temp/' + form_id + str(request.FILES['file']), file_type='stl')
 
             angleHist = np.array(ToolBox.angleHist(model)[
                                      'angleHist'])  # strip the descriptor of its label and convert it to a numpy array
@@ -110,7 +113,7 @@ def search(request):
 
 
 def handle_uploaded_file(f, form_id):
-    with open("temp/" + form_id + '.stl', 'wb+') as destination:
+    with open("temp/" + form_id + str(f), 'wb+')as destination:
         for chunk in f.chunks():
             destination.write(chunk)
     pass
