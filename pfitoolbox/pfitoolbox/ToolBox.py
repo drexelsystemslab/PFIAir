@@ -327,7 +327,7 @@ def contraction_graph_to_seg(contraction_graph, model, filename):
     for i, faces in enumerate(temp):
         segs[faces] = i
 
-    with open(file_url,"w") as file:
+    with open(filename,"w") as file:
         for seg in segs:
             file.write(str(seg[0]) + "\n")
     file.close()
@@ -359,3 +359,11 @@ def hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5,
                                 vert_loc=vert_loc - vert_gap, xcenter=nextx, pos=pos,
                                 parent=root)
     return pos
+
+def view_seg(model,seg):
+    colors = []
+    for i in range(0,max(seg)+1):
+        colors.append(trimesh.visual.random_color())
+    for facenum, group in enumerate(seg):
+        model.visual.face_colors[facenum] = colors[group[0]]
+    model.show(smooth=False)

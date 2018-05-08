@@ -24,6 +24,7 @@ except(OSError, IOError, ValueError):
 # ToolBox.localNeighborhoods(model)
 contraction_graph = ToolBox.faceClustering(model)
 seg = ToolBox.contraction_graph_to_seg(contraction_graph, model, "segmentations/" + name + ".seg")
+ToolBox.view_seg(model,seg)
 # for facet in facets:
 #     model.visual.face_colors[facet] = [252, 154, 7, 255]
 #
