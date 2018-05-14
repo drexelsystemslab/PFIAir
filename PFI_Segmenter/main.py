@@ -15,9 +15,13 @@ if __name__ == "__main__":
 
         filename = sys.argv[1].split(".",2)[0]
         contraction_graph = ToolBox.faceClustering(model)
-        with open(filename+".hst","w") as file:
+        # with open(filename+".hst","w") as file:
 
-        seg = ToolBox.contraction_graph_to_seg(contraction_graph, model, sys.argv[3])
+        seg = ToolBox.contraction_graph_to_seg(contraction_graph, model)
+
+        with open(sys.argv[3],"w") as file:
+            for face in seg:
+                file.write(face)
 
         with open(sys.argv[2],"w") as file:#go ahead and write the model back out to the output in case something needs it
             model.export(file,"off")
