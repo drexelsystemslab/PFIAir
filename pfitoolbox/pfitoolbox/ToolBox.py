@@ -12,7 +12,6 @@ from trimesh import sample, grouping, geometry
 import random
 from itertools import chain
 
-
 def angleHist(model):
     neighborsGraph = findNeighbors(model)
     angles = neighborsGraph[:, 2]
@@ -190,13 +189,16 @@ def interior_edge(merging_faces_edges):
     return vals[idx_interior]
 
 
-def E_shape(irregularity_array, edges_array, edges_length, face_area_array, edge):
-    merging_faces_edges = edges_array[edge[0]] + edges_array[edge[1]]
-    ex_edge = exterior_edge(merging_faces_edges)
-    p = np.sum(edges_length[0][ex_edge])
-    gamma = p ** 2 / (4 * np.pi * (face_area_array[edge[0]] + face_area_array[edge[1]]))
-    E_shapes = ((gamma - np.max((irregularity_array[edge[0]], irregularity_array[edge[1]]))) / gamma)
-    return 0. * E_shapes  # also returns the face's gamma so it can be used later
+def E_shape(irregularity_array, edges_array, edges_length, face_area_array, face_adjacency):
+    result = []
+    for edge in face_adjacency:
+        merging_faces_edges = edges_array[edge[0]] + edges_array[edge[1]]
+        ex_edge = exterior_edge(merging_faces_edges)
+        p = np.sum(edges_length[0][ex_edge])
+        gamma = p ** 2 / (4 * np.pi * (face_area_array[edge[0]] + face_area_array[edge[1]]))
+        E_shapes = ((gamma - np.max((irregularity_array[edge[0]], irregularity_array[edge[1]]))) / gamma)
+        result.append(0. * E_shapes)  # also returns the face's gamma so it can be used later
+    return np.array(result)[:,None]
 
 
 def irregularity(face_area, verts):
@@ -229,7 +231,7 @@ def E_fit_Sphere(face_adjacency, face_vertices):
         r = np.sqrt(w[3, 0] + c_x ** 2 + c_y ** 2 + c_z ** 2)
         return [np.sum(dist_from_Sphere(verts, center, r))], [c_x, c_y, c_z, r, 0, 0, 0]
     else:
-        return [np.inf], [None, None, None, None, None, None, None]
+        return [np.inf], [1, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
 
 
 def E_fit_plane(p_array, face_adjacency):
@@ -243,15 +245,18 @@ def E_fit_plane(p_array, face_adjacency):
                             0]  # TODO: n is temporary # extra [0] to get the value out of the "Tracked array"
 
 
-def E_dir(r_array, face_area_array, edge):
-    R_e = (face_area_array[edge[0]] * r_array[edge[0]] + face_area_array[edge[1]] * r_array[
-        edge[1]]) / (face_area_array[edge[0]] + face_area_array[edge[1]])
-    D_e = R_e[0]
-    e_e = R_e[1]
-    n = -2. * np.dot((np.linalg.pinv(D_e + D_e.T)), e_e)
-    n = n / np.linalg.norm(n)
-    E_dir = R_n(R_e, n)
-    return E_dir[0]
+def E_dir(r_array, face_area_array, face_adjacency):
+    result = []
+    for edge in face_adjacency:
+        R_e = (face_area_array[edge[0]] * r_array[edge[0]] + face_area_array[edge[1]] * r_array[
+            edge[1]]) / (face_area_array[edge[0]] + face_area_array[edge[1]])
+        D_e = R_e[0]
+        e_e = R_e[1]
+        n = -2. * np.dot((np.linalg.pinv(D_e + D_e.T)), e_e)
+        n = n / np.linalg.norm(n)
+        E_dir = R_n(R_e, n)
+        result.append(E_dir[0])
+    return np.array(result)[:,None]
 
 
 def get_face_adj_info(model, edges_array, edges_length, edges_vector_norm2, face_center):
@@ -369,36 +374,42 @@ def E_fit_cylinder(face_adjacency, face_vertices, cov_list, face_adjacency_info,
         return np.sum((cross - r) ** 2), [c_cylinder[0][0], c_cylinder[0][1], c_cylinder[0][2], c_cylinder_normal[0][0],
                                           c_cylinder_normal[0][1], c_cylinder_normal[0][2], r]
     except AssertionError:
-        return np.inf, [None, None, None, None, None, None, None]
+        return np.inf, [2, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
 
 
 def fit_shapes(face_adjacency, p_array, face_vertices, cov_list, face_adjacency_info, edges_array, face_area_array,
                face_center, contraction_graph, n):
-    E_fit_array, fitted_plane = E_fit_plane(p_array, face_adjacency)
-    E_sphere, fitted_sphere = E_fit_Sphere(face_adjacency, face_vertices)
-    E_fit_cylinders, fitted_cylinder = E_fit_cylinder(face_adjacency, face_vertices, cov_list, face_adjacency_info,
-                                                      edges_array,
-                                                      face_area_array, face_center, contraction_graph, n)
-    return np.hstack((E_fit_array, E_sphere, E_fit_cylinders, fitted_plane, fitted_sphere, fitted_cylinder))
+    result = []
+    for edge in face_adjacency:
+        E_fit_array, fitted_plane = E_fit_plane(p_array, edge)
+        E_sphere, fitted_sphere = E_fit_Sphere(edge, face_vertices)
+        E_fit_cylinders, fitted_cylinder = E_fit_cylinder(edge, face_vertices, cov_list, face_adjacency_info,
+                                                          edges_array,
+                                                          face_area_array, face_center, contraction_graph, n)
+        result.append(np.hstack((E_fit_array, E_sphere, E_fit_cylinders, fitted_plane, fitted_sphere, fitted_cylinder)))
+    return np.array(result)
 
 
 def E_fit(shape_fits):
-    return np.min(shape_fits)
+    return np.min(shape_fits,axis=1)[:,None]
 
 
 def E(r_array, face_area_array, face_adjacency, edges_array, edges_length, irregularity_array, p_array, face_vertices,
       cov_list, face_adjacency_info, face_center, contraction_graph, n):
-    result = np.empty((len(face_adjacency), 27))
-    for i, edge in enumerate(face_adjacency):
-        result[i, 2] = E_dir(r_array, face_area_array, edge)
-        result[i, 1] = E_shape(irregularity_array, edges_array, edges_length, face_area_array, edge)
+    result = []
 
-        result[i, 3:27] = fit_shapes(edge, p_array, face_vertices, cov_list, face_adjacency_info,
+
+    edir = E_dir(r_array, face_area_array, face_adjacency)
+    eshape = E_shape(irregularity_array, edges_array, edges_length, face_area_array, face_adjacency)
+
+    efitshapes = fit_shapes(face_adjacency, p_array, face_vertices, cov_list, face_adjacency_info,
                                      edges_array, face_area_array, face_center, contraction_graph, n)
 
-        result[i, 0] = E_fit(result[i, 3:6])
 
-    return result
+    efit = E_fit(efitshapes)
+
+
+    return np.hstack((efit,edir,eshape,efitshapes))
 
 
 def faceClustering(model):
@@ -439,6 +450,7 @@ def faceClustering(model):
     E_array = E(r_array, face_area_array, model.face_adjacency, edges_array, edges_length, irregularity_array,
                 p_array, face_vertices, cov_list, face_adjacency_info, face_center, contraction_graph, n)
     dual_graph = nx.Graph()
+
     dual_graph.add_weighted_edges_from(
         np.hstack((model.face_adjacency.astype("object"), np.sum(E_array[:, 0:3], axis=1)[:, None])))
 
