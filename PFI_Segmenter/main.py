@@ -1,6 +1,7 @@
 import sys
 from pfitoolbox import ToolBox
 import trimesh
+import networkx as nx
 
 
 if __name__ == "__main__":
@@ -14,7 +15,14 @@ if __name__ == "__main__":
             raise IOError
 
         filename = sys.argv[1].split(".",2)[0]
-        contraction_graph = ToolBox.faceClustering(model)
+
+        try:
+            contraction_graph = nx.read_gpickle(filename+".gpickle")
+        except IOError:
+            print("generating contraction graph for ",filename)
+            contraction_graph = ToolBox.faceClustering(model)
+
+        nx.write_gpickle(contraction_graph,filename+".gpickle")
         # with open(filename+".hst","w") as file:
 
         seg = ToolBox.contraction_graph_to_seg(contraction_graph, model)
