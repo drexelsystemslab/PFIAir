@@ -12,8 +12,8 @@ from mpl_toolkits import mplot3d
 # name = 'm145002_9'
 # name = 'cube'
 # name = 'sphere'
-name = 'cylinder'
-# name = 'cylinder_subdivided'
+# name = 'cylinder'
+name = 'cylinder_subdivided'
 url = 'models/' + name + '.stl'
 fileName = url.split('/')[-1]
 print("Generating descriptor for usermodel: " + fileName)

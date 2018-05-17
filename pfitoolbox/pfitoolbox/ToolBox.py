@@ -204,7 +204,7 @@ def E_shape(edges_array, edges_length, face_area_array, irregularity_array, face
     irregularity_array = np.asarray(irregularity_array).reshape((len(irregularity_array), 1))
     gamma_array = np.hstack((irregularity_array[face_adjacency[:, 0]], irregularity_array[face_adjacency[:, 1]]))
     E_shapes = ((gamma - np.max(gamma_array, axis=1)) / gamma)
-    return 0. * E_shapes
+    return E_shapes
 
 
 def irregularity(face_area, verts):
@@ -445,8 +445,8 @@ def fit_shapes(model, face_adjacency, p_array, face_vertices, cov_list, face_adj
 
 def E_fit(shape_fits):
     print(shape_fits)
-    return np.around(shape_fits[:,0:3], 25).min(axis=1)[:, None]
-    # return shape_fits.min(axis=1)[:, None]
+    # return np.around(shape_fits[:,0:3], 25).min(axis=1)[:, None]
+    return shape_fits.min(axis=1)[:, None]
 
 def voronoi_area(model):
     result = np.zeros((model.vertices.shape[0], model.faces.shape[0]))
