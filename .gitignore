@@ -19,11 +19,14 @@
 /PFI_Python/models/
 /PFI_API/static/previews/
 
-<<<<<<< HEAD
 # Xcode
 /PFI_openVDBTools/Mac\ app/PFITools/Carthage/
 /PFI_openVDBTools/Mac\ app/PFITools/DerivedData/
 /PFI_openVDBTools/Mac\ app/PFITools/build/
-=======
 .DS_Store
->>>>>>> d941640f1041e8837eac27a8d5b4b8daf9fbd6dd
+
+# iOS app
+/PFI_API/Depth/DerivedData/
+
+
+
