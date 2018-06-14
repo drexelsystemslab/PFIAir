@@ -30,7 +30,6 @@ def getUserModels(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         userModels_subset = paginator.page(paginator.num_pages)
     #userModels_python = serializers.serialize('python', userModels_subset)
-    print(userModels_subset[0])
     return render(request, 'UserModelList.html', {"userModel_list": userModels_subset})
 
 

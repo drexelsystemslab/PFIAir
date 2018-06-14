@@ -13,19 +13,24 @@
 int main(int argc, const char * argv[]) {
     using namespace openvdb;
     
-    PFIAir::Container model = PFIAir::Container();
-
-    model.loadMeshModel(argv[1]);
-    model.computeMeshCenter();
-    return EXIT_SUCCESS;
+    //1
+//    PFIAir::Container model = PFIAir::Container();
+//
+//    model.loadMeshModel(argv[1]);
+//    model.computeMeshCenter();
+//
+//
+//    return EXIT_SUCCESS;
+    
+    
     //
-    float edgeLen = model.computeAverageEdgeLength() / 10;
-
-    model.setScale(Vec3d(edgeLen,edgeLen,edgeLen));
-    
-    auto cube = model.getUnsignedDistanceField(3);
-    
-    PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
+//    float edgeLen = model.computeAverageEdgeLength() / 10;
+//
+//    model.setScale(Vec3d(edgeLen,edgeLen,edgeLen));
+//
+//    auto cube = model.getUnsignedDistanceField(3);
+//
+//    PFIAir::algorithme::changeActiveVoxelValues(cube, 0.5);
     
     //scale
 //    openvdb::math::Mat4d mat = openvdb::math::Mat4d::identity();
@@ -41,7 +46,7 @@ int main(int argc, const char * argv[]) {
     
     //end
     
-    model.exportModel(argv[2], cube);
+    //model.exportModel(argv[2], cube);
     //PFIAir::algorithme::printValues(cube);
     
     //std::cout << model.computeAverageEdgeLength() << std::endl;
