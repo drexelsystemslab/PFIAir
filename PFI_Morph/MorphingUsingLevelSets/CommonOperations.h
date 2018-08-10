@@ -36,7 +36,7 @@ namespace CommonOperations {
                 *p = '/';
             }
         mkdir(tmp, S_IRWXU);
-    }
+    } 
     
     template<typename Out>
     void split(const std::string &s, char delim, Out result) {
@@ -71,11 +71,27 @@ namespace CommonOperations {
     }
     
     std::string intNumberFormatCommas(std::string format_str) {
-        std::string str = CommonOperations::prep_do_split(format_str, '.')[0];
+        std::vector<std::string> str_arr = CommonOperations::prep_do_split(format_str, '.');
+        std::string str = str_arr[0];
+        
+        std::string decimal = "";
+        
         int str_length = (int)str.length() - 1,
         arr_length = str_length + (int)(str_length / 3);
         
-        if(str_length < 3) return str;
+        if(str_length < 3) {
+            if(str_arr.size() != 2) return str;
+            else {
+                decimal = str_arr[1];
+                if(str.length() == 1) {
+                    str += "." + decimal.substr(0, 2);
+                }
+                else if(str.length() == 2) {
+                    str += "." + decimal.substr(0, 1);
+                }
+                return str;
+            }
+        }
         
         char char_arr[arr_length];
         

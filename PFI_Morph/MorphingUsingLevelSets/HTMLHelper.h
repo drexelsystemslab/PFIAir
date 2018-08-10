@@ -16,8 +16,9 @@ namespace HTMLHelper {
     public:
         TableRow() {};
         size_t CFL_count;
-        int time_steps, source_surface_count, target_surface_count;
-        double total_curv, total_val, total_energy, mean;
+        int time_steps, source_surface_count, target_surface_count, abs_diff_count;
+        double total_curv, weighted_total_curv, max_curv, total_val, weighted_total_val, total_energy, mean;
+        double evol_avg, src_tar_avg;
         std::string source_name, target_name;
     };
     
@@ -28,7 +29,7 @@ namespace HTMLHelper {
     
     std::string generateTableRowsHTML(std::vector<std::vector<HTMLHelper::TableRow>>& obj_pairs) {
         
-        std::sort(obj_pairs.begin(), obj_pairs.end(), comparisionFunction);
+//        std::sort(obj_pairs.begin(), obj_pairs.end(), comparisionFunction);
         
         std::string rows = "";
         std::string image_name;
@@ -38,31 +39,55 @@ namespace HTMLHelper {
             else if(obj_pairs[i][0].target_name.substr(0, 4) == "nail") image_name = "nail";
             else image_name = obj_pairs[i][0].target_name;
             
-            rows += "<tr><td colspan='3'><img src='images/" + image_name + ".png' /></td><td colspan='6'></td></tr>";
             
-            rows += "<tr><td colspan=9>" + obj_pairs[i][0].source_name + "-" + obj_pairs[i][0].target_name + "</td></tr>";
+            
+            
+//            obj_pairs[i][0].weighted_total_curv = obj_pairs[i][0].total_curv / obj_pairs[i][0].evol_avg;
+//            obj_pairs[i][0].weighted_total_val = (obj_pairs[i][0].total_val / obj_pairs[i][0].evol_avg) * 100;
+//            obj_pairs[i][0].total_energy = obj_pairs[i][0].weighted_total_curv + obj_pairs[i][0].weighted_total_val;
+//            
+//            obj_pairs[i][1].weighted_total_curv = obj_pairs[i][1].total_curv / obj_pairs[i][1].evol_avg;
+//            obj_pairs[i][1].weighted_total_val = (obj_pairs[i][1].total_val / obj_pairs[i][1].evol_avg) * 100;
+//            obj_pairs[i][1].total_energy = obj_pairs[i][1].weighted_total_curv + obj_pairs[i][1].weighted_total_val;
+//            obj_pairs[i][1].mean = (obj_pairs[i][0].total_energy + obj_pairs[i][1].total_energy) / 2;
+            
+            
+            
+            
+            rows += "<tr><td rowspan='4' style='border-bottom:1px black solid'><img class='table_img' src='images/" + image_name + ".png' /></td>";
+            rows += "<td colspan=14>" + obj_pairs[i][0].source_name + "-" + obj_pairs[i][0].target_name + "</td></tr>";
             rows += "<tr><td>" + std::to_string(obj_pairs[i][0].CFL_count) + "</td>";
             rows += "<td>" + std::to_string(obj_pairs[i][0].time_steps) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].source_surface_count)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].target_surface_count)) + "</td>";
-            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(openvdb::math::Abs(obj_pairs[i][0].source_surface_count - obj_pairs[i][0].target_surface_count))) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].abs_diff_count)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].evol_avg)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].src_tar_avg)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].total_curv)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].max_curv)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].weighted_total_curv)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].total_val)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].weighted_total_val)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][0].total_energy)) + "</td>";
             rows += "<td></td></tr>";
             
-            rows += "<tr><td colspan=9>" + obj_pairs[i][1].source_name + "-" + obj_pairs[i][1].target_name + "</td></tr>";
+            rows += "<tr><td colspan=14>" + obj_pairs[i][1].source_name + "-" + obj_pairs[i][1].target_name + "</td></tr>";
             rows += "<tr><td>" + std::to_string(obj_pairs[i][1].CFL_count) + "</td>";
             rows += "<td>" + std::to_string(obj_pairs[i][1].time_steps) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].source_surface_count)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].target_surface_count)) + "</td>";
-            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(openvdb::math::Abs(obj_pairs[i][1].source_surface_count - obj_pairs[i][1].target_surface_count))) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].abs_diff_count)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].evol_avg)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].src_tar_avg)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].total_curv)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].max_curv)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].weighted_total_curv)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].total_val)) + "</td>";
+            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].weighted_total_val)) + "</td>";
             rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].total_energy)) + "</td>";
-            rows += "<td>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].mean)) + "</td></tr>";
+            rows += "<td><strong>" + CommonOperations::intNumberFormatCommas(std::to_string(obj_pairs[i][1].mean)) + "</stong></td></tr>";
         }
-        
+        std::sort(obj_pairs.begin(), obj_pairs.end(), comparisionFunction);
         std::cout << rows << std::endl;
         return rows;
     }
@@ -78,13 +103,19 @@ namespace HTMLHelper {
         
         table += "<table id='morph_table' class='table table-striped table-bordered'>";
         table += "<thead><tr>";
+        table += "<th>Image</th>";
         table += "<th>CFL Iterations</th>";
         table += "<th>Time steps</th>";
         table += "<th>Source voxel count</th>";
         table += "<th>Target voxel count</th>";
         table += "<th>Abs diff</th>";
+        table += "<th>Evolving average</th>";
+        table += "<th>Source-target average</th>";
         table += "<th>Total Curvature</th>";
+        table += "<th>Max Curvature</th>";
+        table += "<th>Curvature / unit area</th>";
         table += "<th>Total Value</th>";
+        table += "<th>(Value / unit area) * 100</th>";
         table += "<th>Total Energy</th>";
         table += "<th>Mean</th>";
         table += "</tr></thead>";
@@ -94,8 +125,8 @@ namespace HTMLHelper {
         
         html += "<html>";
         html += "<head>";
+        html += "<link rel='stylesheet' href='style.css'>";
         html += "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css' integrity='sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M' crossorigin='anonymous'>";
-        html+= "<style> img { width:200px; height:100px; } </style>";
         html += "</head>";
         html += "<body>";
         html += "<img src='images/" + main_obj + ".png' />";
@@ -103,7 +134,7 @@ namespace HTMLHelper {
         html += "<script src='https://code.jquery.com/jquery-3.2.1.slim.min.js' integrity='sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN' crossorigin='anonymous'></script>";
         html += "<script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js' integrity='sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4' crossorigin='anonymous'></script>";
         html += "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js' integrity='sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1' crossorigin='anonymous'></script>";
-        
+        html += "<script src='script.js'></script>";
         html += "</body";
         html += "</html>";
         
@@ -122,7 +153,7 @@ namespace HTMLHelper {
         std::vector<HTMLHelper::TableRow> row_pair;
         
         HTMLHelper::TableRow row1, row2;
-        
+        json temp;
         for(auto r_pair : r_all) {
             json r1 = r_pair[0];
             json r2 = r_pair[1];
@@ -130,30 +161,31 @@ namespace HTMLHelper {
             row1 = HTMLHelper::TableRow();
             row2 = HTMLHelper::TableRow();
             
-            row1.CFL_count = r1["CFL_count"].get<std::size_t>();
-            row1.time_steps = r1["time_steps"].get<int>();
-            row1.source_surface_count = r1["source_surface_count"].get<int>();
-            row1.target_surface_count = r1["target_surface_count"].get<int>();
-            row1.total_curv = r1["total_curv"].get<int>();
-            row1.total_val = r1["total_val"].get<int>();
-            row1.total_energy = r1["total_energy"].get<int>();
-            row1.mean = r1["mean"].get<double>();
-            row1.source_name = r1["source_name"].get<std::string>();
-            row1.target_name = r1["target_name"].get<std::string>();
-            
-            row2.CFL_count = r2["CFL_count"].get<std::size_t>();
-            row2.time_steps = r2["time_steps"].get<int>();
-            row2.source_surface_count = r2["source_surface_count"].get<int>();
-            row2.target_surface_count = r2["target_surface_count"].get<int>();
-            row2.total_curv = r2["total_curv"].get<int>();
-            row2.total_val = r2["total_val"].get<int>();
-            row2.total_energy = r2["total_energy"].get<int>();
-            row2.mean = r2["mean"].get<double>();
-            row2.source_name = r2["source_name"].get<std::string>();
-            row2.target_name = r2["target_name"].get<std::string>();
-            
             row_pair.push_back(row1);
             row_pair.push_back(row2);
+            
+            for(int i = 0; i < 2; i++) {
+                if(i == 0) temp = r1;
+                else temp = r2;
+                
+                row_pair[i].CFL_count = temp["CFL_count"].get<std::size_t>();
+                row_pair[i].time_steps = temp["time_steps"].get<int>();
+                row_pair[i].source_surface_count = temp["source_surface_count"].get<int>();
+                row_pair[i].target_surface_count = temp["target_surface_count"].get<int>();
+                row_pair[i].abs_diff_count = temp["abs_diff_count"].get<int>();
+                row_pair[i].evol_avg = temp["evol_avg"].get<double>();
+                row_pair[i].src_tar_avg = temp["src_tar_avg"].get<double>();
+                row_pair[i].total_curv = temp["total_curv"].get<double>();
+                row_pair[i].max_curv = temp["max_curv"].get<double>();
+                row_pair[i].weighted_total_curv = temp["weighted_total_curv"].get<double>();
+                row_pair[i].total_val = temp["total_val"].get<double>();
+                row_pair[i].weighted_total_val = temp["weighted_total_val"].get<double>();
+                row_pair[i].total_energy = temp["total_energy"].get<double>();
+                row_pair[i].mean = temp["mean"].get<double>();
+                row_pair[i].source_name = temp["source_name"].get<std::string>();
+                row_pair[i].target_name = temp["target_name"].get<std::string>();
+            }
+             
             all_pairs.push_back(row_pair);
             row_pair.clear();
         }
@@ -169,8 +201,14 @@ namespace HTMLHelper {
                     {"time_steps", pairs[i][j].time_steps},
                     {"source_surface_count", pairs[i][j].source_surface_count},
                     {"target_surface_count", pairs[i][j].target_surface_count},
+                    {"abs_diff_count", pairs[i][j].abs_diff_count},
+                    {"evol_avg", pairs[i][j].evol_avg},
+                    {"src_tar_avg", pairs[i][j].src_tar_avg},
                     {"total_curv", pairs[i][j].total_curv},
+                    {"max_curv", pairs[i][j].max_curv},
+                    {"weighted_total_curv", pairs[i][j].weighted_total_curv},
                     {"total_val", pairs[i][j].total_val},
+                    {"weighted_total_val", pairs[i][j].weighted_total_val},
                     {"total_energy", pairs[i][j].total_energy},
                     {"mean", pairs[i][j].mean},
                     {"source_name", pairs[i][j].source_name},
@@ -182,7 +220,12 @@ namespace HTMLHelper {
             r_pair.clear();
         } 
         std::cout << r_all.dump() << std::endl << std::endl;
-        std::ofstream o(file_name);
+        
+        std::string path = "JSON/";
+        CommonOperations::makeDirs(path.c_str());
+        
+        std::string file_path = path + file_name;
+        std::ofstream o(file_path);
         o << std::setw(4) << r_all << std::endl;
     }
 }

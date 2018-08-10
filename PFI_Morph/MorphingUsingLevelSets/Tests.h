@@ -21,7 +21,7 @@ namespace Tests {
         CommonOperations::display("count on", count);
         CommonOperations::display("less", less);
         CommonOperations::display("more", more);
-        
+         
         
         
         for (openvdb::FloatGrid::ValueAllIter iter = grid_pointer->beginValueAll(); iter; ++iter) {

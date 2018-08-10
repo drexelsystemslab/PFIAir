@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
 #include <fstream>
+#include <openvdb/tools/LevelSetFilter.h>
 
 #include "CommonOperations.h"
 
@@ -84,7 +85,7 @@ namespace GridOperations {
             }
         }
         return count;
-    }
+    } 
     
     bool checkIfSurface(openvdb::FloatGrid::ValueOnIter iterator, const openvdb::FloatGrid::Ptr grid_pointer) {
         bool found_positive = false;
@@ -188,6 +189,56 @@ namespace GridOperations {
             else iter.setValue(1.0);
         }
     }
+    
+    void performMorphologicalOpening(openvdb::FloatGrid::Ptr& grid_pointer) {
+        openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*(grid_pointer));
+        double vs = grid_pointer->voxelSize()[0];
+        lsf.setNormCount(5);
+        
+        lsf.offset(vs);
+        lsf.normalize();
+        
+        lsf.offset(-vs);
+        lsf.normalize();
+    }
+    
+    void getWorldCoordinates(openvdb::FloatGrid::Ptr grid, Eigen::MatrixXd& mat) {
+        openvdb::Coord curr_coord;
+        int counter = 0;
+        for (openvdb::FloatGrid::ValueOnIter iter = grid->beginValueOn(); iter; ++iter) {
+            if(iter.getValue() < 0) {
+                if(GridOperations::checkIfSurface(iter, grid)) {
+                    curr_coord = iter.getCoord();
+                    mat(0, counter) = curr_coord.x();
+                    mat(1, counter) = curr_coord.y();
+                    mat(2, counter) = curr_coord.z();
+                    mat(3, counter) = 1.0;
+                    counter++;
+                }
+            }
+        }
+    }
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,7 +9,7 @@
 #include <eigen3/Eigen/Eigenvalues>
 #include <dirent.h>
 #include <algorithm>
-
+#include <set>
 #include "CommonOperations.h"
 #include "Container.hpp"
 
@@ -87,37 +87,70 @@ namespace MeshOperations {
         centroid[2] = sum_coords(0, 2);
     }
     
-    void performPCA(std::vector<std::vector<std::string>> v_list, std::vector<Eigen::Matrix<double, 1, 4>>& v_mat_list, Eigen::Matrix4d& rot_mat) {
-        //MatrixXd requires size before hand
-        Eigen::MatrixXd A(3, v_list.size());
+    void getVectorFromSet(std::set<openvdb::Vec3d>& vertices_set, std::vector<Eigen::Matrix<double, 1, 4>>& vertices_vector) {
         Eigen::Matrix<double, 1, 4> list_item;
+        for (std::set<openvdb::Vec3d>::iterator iter= vertices_set.begin(); iter!= vertices_set.end(); ++iter) {
+            list_item(0, 0) = (*iter).x();
+            list_item(0, 1) = (*iter).y();
+            list_item(0, 2) = (*iter).z();
+            list_item(0, 3) = 1.0;
+            vertices_vector.push_back(list_item);
+        }
+    }
+    
+    void performPCA(std::vector<std::vector<std::string>> v_list,
+                    std::vector<Eigen::Matrix<double, 1, 4>>& all_vertices,
+                    std::vector<Eigen::Matrix<double, 1, 4>>& distinct_vertices,
+                    Eigen::Matrix4d& rot_mat) {
+        
+        Eigen::Matrix<double, 1, 4> list_item;
+        std::set<openvdb::Vec3d> vertices_set;
+        
+        size_t no_elem;
+        if(v_list.size() > 0) no_elem = v_list[0].size();
+        else return;
         
         for(int i = 0; i < v_list.size(); i++) {
             
-            list_item(0, 0) = std::stod(v_list[i][2]);
-            list_item(0, 1) = std::stod(v_list[i][3]);
-            list_item(0, 2) = std::stod(v_list[i][4]);
+            list_item(0, 0) = std::stod(v_list[i][no_elem - 3]);
+            list_item(0, 1) = std::stod(v_list[i][no_elem - 2]);
+            list_item(0, 2) = std::stod(v_list[i][no_elem - 1]);
             list_item(0, 3) = 1.0;
             
-            v_mat_list.push_back(list_item);
+            all_vertices.push_back(list_item);
         }
+        
+        openvdb::Vec3d centroid;
+        calcCentroid(all_vertices, centroid);
+        
+        for(int i = 0; i < all_vertices.size(); i++) {
+            all_vertices[i](0, 0) -= centroid.x();
+            all_vertices[i](0, 1) -= centroid.y();
+            all_vertices[i](0, 2) -= centroid.z();
+            vertices_set.insert(openvdb::Vec3d(all_vertices[i](0, 0), all_vertices[i](0, 1), all_vertices[i](0, 2)));
+        }
+        getVectorFromSet(vertices_set, distinct_vertices);
         
         openvdb::Vec3d center(0, 0, 0);
         
         std::vector<double> axis_lengths(3);
-        calcBoundingBox(v_mat_list, center, axis_lengths);
+        calcBoundingBox(distinct_vertices, center, axis_lengths);
         double max_length = openvdb::math::Max(axis_lengths[0], axis_lengths[1]);
         max_length = openvdb::math::Max(max_length, axis_lengths[2]);
         
-        if(max_length < 1.0) adjustScale(v_mat_list, max_length);
-
-        for(int i = 0; i < v_mat_list.size(); i++) {
-            A(0, i) = v_mat_list[i](0, 0);
-            A(1, i) = v_mat_list[i](0, 1);
-            A(2, i) = v_mat_list[i](0, 2);
+        if(max_length < 1.0) adjustScale(distinct_vertices, max_length);
+        
+        //MatrixXd requires size before hand
+        Eigen::MatrixXd A(3, distinct_vertices.size());
+        
+        for(int i = 0; i < distinct_vertices.size(); i++) {
+            A(0, i) = distinct_vertices[i](0, 0);
+            A(1, i) = distinct_vertices[i](0, 1);
+            A(2, i) = distinct_vertices[i](0, 2);
         }
         
         Eigen::Matrix3d covariance_mat = A * A.transpose();
+        
         Eigen::EigenSolver<Eigen::Matrix3d> es(covariance_mat);
         
         Eigen::Matrix<double, 3, 1> eigen_vals = es.eigenvalues().col(0).real();
@@ -151,18 +184,16 @@ namespace MeshOperations {
                 break;
         }
         
-        int real_sorted_index[3] = {max_index, mid_index, min_index};
-        
-        Eigen::Matrix<double, 3, 1> z_axis_vec = eigen_vecs.col(real_sorted_index[0]);
-        Eigen::Matrix<double, 3, 1> y_axis_vec = eigen_vecs.col(real_sorted_index[1]);
-        Eigen::Matrix<double, 3, 1> x_axis_vec = eigen_vecs.col(real_sorted_index[2]);
+        Eigen::Matrix<double, 3, 1> z_axis_vec = eigen_vecs.col(max_index);
+        Eigen::Matrix<double, 3, 1> y_axis_vec = eigen_vecs.col(mid_index);
+        Eigen::Matrix<double, 3, 1> x_axis_vec = eigen_vecs.col(min_index);
         
         rot_mat <<  x_axis_vec(0), y_axis_vec(0), z_axis_vec(0), 0,
-                    x_axis_vec(1), y_axis_vec(1), z_axis_vec(1), 0,
-                    x_axis_vec(2), y_axis_vec(2), z_axis_vec(2), 0,
-                    0, 0, 0, 1;
+        x_axis_vec(1), y_axis_vec(1), z_axis_vec(1), 0,
+        x_axis_vec(2), y_axis_vec(2), z_axis_vec(2), 0,
+        0, 0, 0, 1;
     }
-       
+    
     void calcBoundingBox(std::vector<Eigen::Matrix<double, 1, 4>> vertices, openvdb::Vec3d& center,
                          std::vector<double>& axis_lengths, bool includePCA) {
         double limit = openvdb::math::Pow(10, 10);
@@ -195,7 +226,7 @@ namespace MeshOperations {
         center[1] = (min_y + max_y) / 2;
         center[2] = (min_z + max_z) / 2;
         
-//        max_z_val = openvdb::math::Max(openvdb::math::Abs(min_z), openvdb::math::Abs(max_z));
+        //        max_z_val = openvdb::math::Max(openvdb::math::Abs(min_z), openvdb::math::Abs(max_z));
     }
     
     void adjustScale(std::vector<Eigen::Matrix<double, 1, 4>>& vertices1, double z1) {
@@ -305,16 +336,16 @@ namespace MeshOperations {
         std::vector<std::vector<std::string>> vn_list;
         std::vector<std::vector<std::string>> f_list1;
         std::vector<Eigen::Matrix<double, 1, 4>> vertices1;
+        std::vector<Eigen::Matrix<double, 1, 4>> distinct_vertices1;
         Eigen::Matrix4d rot_mat1;
         openvdb::Vec3d center1(0, 0, 0), centroid(0, 0, 0);
         Eigen::Matrix<double, 1, 4> list_item;
         std::vector<double> axis_lengths1(3);
-//        double max_z;
         
         MeshOperations::readOBJ(filepath1, v_list, vn_list, f_list1);
-        MeshOperations::performPCA(v_list, vertices1, rot_mat1);
+        MeshOperations::performPCA(v_list, vertices1, distinct_vertices1, rot_mat1);
         
-        calcCentroid(vertices1, centroid);
+        calcCentroid(distinct_vertices1, centroid);
         
         addPCAAxisToVertices(vertices1, centroid, rot_mat1);
         MeshOperations::translateCenterToOrigin(vertices1, centroid);;
@@ -325,8 +356,6 @@ namespace MeshOperations {
         calcBoundingBox(vertices1, center1, axis_lengths1, true);
         MeshOperations::translateCenterToOrigin(vertices1, center1);
         
-//        double max_length1 = openvdb::math::Max(axis_lengths1[0], axis_lengths1[1]);
-//        max_length1 = openvdb::math::Max(max_length1, axis_lengths1[2]);
         MeshOperations::adjustScale(vertices1, axis_lengths1[2]);
         
         if(calcSkewness(vertices1, true) > 0)
@@ -337,48 +366,46 @@ namespace MeshOperations {
     
     
     void doAllMeshOperations(std::string filepath, std::string write_name) {
-//        if(write_name == ".DS_Store") return;
+        //        if(write_name == ".DS_Store") return;
         
         std::vector<std::vector<std::string>> v_list;
         std::vector<std::vector<std::string>> vn_list;
         std::vector<std::vector<std::string>> f_list;
         std::vector<Eigen::Matrix<double, 1, 4>> vertices;
+        std::vector<Eigen::Matrix<double, 1, 4>> distinct_vertices;
         Eigen::Matrix4d rot_mat;
         openvdb::Vec3d center(0, 0, 0), centroid(0, 0, 0);
         Eigen::Matrix<double, 1, 4> list_item;
         std::vector<double> axis_lengths(3);
         bool includePCA = false;
-//        double z_max1;
         
         MeshOperations::readOBJ(filepath, v_list, vn_list, f_list);
-        MeshOperations::performPCA(v_list, vertices, rot_mat);
+        MeshOperations::performPCA(v_list, vertices, distinct_vertices, rot_mat);
         
-        calcCentroid(vertices, centroid);
+        calcCentroid(distinct_vertices, centroid);
         
         if(includePCA)
             addPCAAxisToVertices(vertices, centroid, rot_mat);
         
+        MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         MeshOperations::translateCenterToOrigin(vertices, centroid);
-        
         
         for(int i = 0; i < vertices.size(); i++)
             vertices[i] *= rot_mat;
-        
+        MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         calcBoundingBox(vertices, center, axis_lengths, includePCA);
         MeshOperations::translateCenterToOrigin(vertices, center);
-        
-//        double max_length = openvdb::math::Max(axis_lengths[0], axis_lengths[1]);
-//        max_length = openvdb::math::Max(max_length, axis_lengths[2]);
-        
+        MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         //scaling such that length of z component of bounding box = 1
         MeshOperations::adjustScale(vertices, axis_lengths[2]);
-        
+        MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         if(calcSkewness(vertices, includePCA) > 0)
             rotateAcrossYAxis(vertices);
         
         MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
-
+        
     }
+    
     
     void performActionForAllObjs() {
         DIR *dir1;
