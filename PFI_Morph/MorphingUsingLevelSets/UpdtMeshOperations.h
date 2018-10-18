@@ -393,6 +393,9 @@ namespace UpdtMeshOperations {
         GridOperations::getWorldCoordinates(grid, vdb_coords);
     }
     
+    /**
+     *
+     */
     void doAllMeshOperations(std::string filepath, std::string write_name) {
         if(write_name == "test/.DS_Store") return;
         
@@ -405,16 +408,29 @@ namespace UpdtMeshOperations {
         
         coordsHandler(filepath, mesh_coords, vdb_coords, f_list, includePCA);
 
-        //TODO: Use just vdb_coords
+        // Perform PCA on the models to figure out how to orient
+        // the model
+        //TODO: Use just vdb_coords <-- ???
         UpdtMeshOperations::performPCA(vdb_coords, rot_mat);
         
+        // Orient the model 
         mesh_coords = rot_mat * mesh_coords;
+
+        // Calculate the new bounding box
         calcBoundingBox(mesh_coords, center, axis_lengths, includePCA);
+
+        // Calculate the scale of thhe model
         mesh_coords = getScaleMatrix(axis_lengths[2]) * getTranslateMatrix(center) * mesh_coords;
+
+        // Write the object to disk
+        // TODO: why is this called twice?
         UpdtMeshOperations::writeOBJ(write_name, mesh_coords, f_list, includePCA);
+
+        //If the skewness is positive, we need to rotate the model 180 degrees
         if(calcSkewness(vdb_coords, includePCA) > 0)
             mesh_coords = getYAxisRotMat(180) * mesh_coords;
         
+        // Write the modified OBJ file to disk
         UpdtMeshOperations::writeOBJ(write_name, mesh_coords, f_list, includePCA);
         
     }

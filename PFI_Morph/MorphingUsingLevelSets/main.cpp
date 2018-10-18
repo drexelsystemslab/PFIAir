@@ -10,6 +10,9 @@
 
 #include "UpdtMeshOperations.h"
 
+//const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
+const std::string MORPH_OUTPUT_DIR = "morphs/";
+
 int main()
 {
     openvdb::initialize();
@@ -36,93 +39,217 @@ int main()
     DIR *dir;
     struct dirent *ent;
     
-    std::string model_names[] = {"cylinder", "hand", "stand", "duck", "mushroom-1", "nail-1", "swan", "pebble", "claw", "container", "winding-wheel", "bird", "man-gun", "tool", "modular-hand", "beast", "hammer", "bishop", "cup", "flask", "head", "queen", "table", "spaceship"};
+    // List of objects
+    std::string model_names[] = {
+        "cylinder", 
+        "hand",  
+        "stand", 
+        "duck", 
+        "mushroom-1", 
+        "nail-1", 
+        "swan", 
+        "pebble",  
+        "claw", 
+        "container", 
+        "winding-wheel", 
+        "bird", 
+        "man-gun", 
+        "tool", 
+        "modular-hand", 
+        "beast", 
+        "hammer", 
+        "bishop", 
+        "cup", 
+        "flask", 
+        "head",  
+        "queen", 
+        "table", 
+        "spaceship"
+    };
         
+    // For every model
     for(int k = 0; k < sizeof(model_names)/ sizeof(model_names[0]); k++) {
-        MorphOperations::Morph morph_obj = MorphOperations::Morph(model_names[k] + ".stl.obj", model_names[k] + ".vdb", model_names[k],
-                                                                  "/Volumes/ExtHDD/Jeshur/new/morphs/" + model_names[k] + "/",
-                                                                  "original_objs/", "vdbs/");;
+        // Create a data structure for morphing
+        MorphOperations::Morph morph_obj = MorphOperations::Morph(
+            // obj file
+            model_names[k] + ".stl.obj", 
+            // VDB file
+            model_names[k] + ".vdb", 
+            // name without extension.
+            model_names[k],
+            //path for the models
+            MORPH_OUTPUT_DIR + model_names[k] + "/",
+            // Object files go here
+            "original_objs/", 
+            // VDB files go here
+            "vdbs/");;
         
         
+        // Make sure the paths exist
+        // TODO: Since the directories are hard-coded, this could
+        // be done outside the for loop
         CommonOperations::makeDirs(morph_obj.curr_path.c_str());
         CommonOperations::makeDirs(morph_obj.obj_path.c_str());
         CommonOperations::makeDirs(morph_obj.vdb_path.c_str());
         
+        // This data structure stores stats about the current morph
+        // row 1 is from A -> B
+        // row 2 is from B -> A
         HTMLHelper::TableRow row1;
         HTMLHelper::TableRow row2;
         
         bool ignore = false;
         double energy1 = 0, energy2 = 0;
         
+        // Vector of stat row pairs.
+        // TODO: maybe use  a vector of std::pair<TableRow, TableRow>
+        // to be clearer about intent?
         std::vector<std::vector<HTMLHelper::TableRow>> obj_pair_vector;
         std::vector<HTMLHelper::TableRow> pair;
         
+        // Iterate over the OBJ files
         if ((dir = opendir ("original_objs")) != NULL) {
             /* print all the files and directories within directory */
-            while ((ent = readdir (dir)) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
                 ignore = false;
-                for(int j = 0; j < sizeof(morph_obj.ignore_arr)/sizeof(morph_obj.ignore_arr[0]); j++)
+
+                // Check if this 
+                // TODO: This should be hhandled inside the morph
+                // object. Also use STL data structures for clearer code
+                int ignore_arr_size = (
+                    sizeof(morph_obj.ignore_arr)
+                    /sizeof(morph_obj.ignore_arr[0]));
+                for(int j = 0; j < ignore_arr_size; j++)
                     if(morph_obj.ignore_arr[j] == ent->d_name) ignore = true;
-                if(ignore) continue;
+                if(ignore) {
+                    std::cout << "Ignoring file " << ent->d_name << std::endl;
+                    continue;
+                }
                 
+                // If we find a regular file
                 if(ent->d_type == DT_REG) {
-                    
+                    std::cout << "Examining file " << ent->d_name << std::endl;
+
+                    // Source and target VDB grids
                     morph_obj.source_grid = nullptr;
                     morph_obj.target_grid = nullptr;
                     
+                    // Create empty table rows
                     row1 = HTMLHelper::TableRow();
                     row2 = HTMLHelper::TableRow();
                     
-                    morph_obj.file_name = CommonOperations::getFileNameWithoutExtension(std::string(ent->d_name), ".stl");
+                    // Extract the morph filename from the 
+                    morph_obj.file_name = CommonOperations::getFileNameWithoutExtension(
+                        std::string(ent->d_name), ".stl");
                     std::cout << morph_obj.file_name << std::endl;
                     
-                    UpdtMeshOperations::doAllMeshOperations(morph_obj.obj_path + morph_obj.curr_obj, "srt1.obj");
-                    UpdtMeshOperations::doAllMeshOperations(morph_obj.obj_path + ent->d_name, "srt2.obj");
+                    // Orient the meshes and store them to temporary .obj files
+                    std::cout << "Orienting Meshes" << std::endl;
+                    UpdtMeshOperations::doAllMeshOperations(
+                        morph_obj.obj_path + morph_obj.curr_obj, "srt1.obj");
+                    UpdtMeshOperations::doAllMeshOperations(
+                        morph_obj.obj_path + ent->d_name, "srt2.obj");
                     
-                    UpdtMeshOperations::convertMeshToVolume("srt1.obj", morph_obj.curr_name, morph_obj.vdb_path, morph_obj.source_nb, morph_obj.voxel_size);
-                    UpdtMeshOperations::convertMeshToVolume("srt2.obj", morph_obj.file_name + ".vdb", morph_obj.vdb_path, morph_obj.target_nb, morph_obj.voxel_size);
+                    // Convert the modified meshes into VDB volumes
+                    // and store them in vdb files
+                    std::cout << "Converting Meshes -> volumes" << std::endl;
+                    UpdtMeshOperations::convertMeshToVolume(
+                        "srt1.obj", 
+                        morph_obj.curr_name, 
+                        morph_obj.vdb_path, 
+                        morph_obj.source_nb, 
+                        morph_obj.voxel_size);
+                    UpdtMeshOperations::convertMeshToVolume(
+                        "srt2.obj", 
+                        morph_obj.file_name + ".vdb", 
+                        morph_obj.vdb_path, 
+                        morph_obj.target_nb, 
+                        morph_obj.voxel_size);
                     
-                    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(morph_obj.vdb_path + morph_obj.curr_name));
-                    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(morph_obj.vdb_path + morph_obj.file_name + ".vdb"));
+                    // Read in the files
+                    std::cout << "Reading VDB files" << std::endl;
+                    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+                        GridOperations::readFile(
+                            morph_obj.vdb_path + morph_obj.curr_name));
+                    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+                        GridOperations::readFile(
+                        morph_obj.vdb_path + morph_obj.file_name + ".vdb"));
                     
-                    morph_obj.morph_path = morph_obj.curr_path + morph_obj.curr_name_wo_ext + "-" + morph_obj.file_name;
+                    morph_obj.morph_path = (
+                        morph_obj.curr_path 
+                        + morph_obj.curr_name_wo_ext 
+                        + "-" 
+                        + morph_obj.file_name);
+                    std::cout << "Morph Path" << std::endl;
                     
+                    // Store the model names in the stat data structures
                     row1.source_name = morph_obj.curr_name_wo_ext;
                     row1.target_name = morph_obj.file_name;
                     
+                    std::cout << "Morphing models" << std::endl;
                     energy1 = morph_obj.morphModels(row1);
                     
+                    // Clear the grid points
                     morph_obj.source_grid = nullptr;
                     morph_obj.target_grid = nullptr;
                     
-                    UpdtMeshOperations::convertMeshToVolume("srt1.obj", morph_obj.curr_name, morph_obj.vdb_path, morph_obj.target_nb, morph_obj.voxel_size);
-                    UpdtMeshOperations::convertMeshToVolume("srt2.obj", morph_obj.file_name + ".vdb", morph_obj.vdb_path, morph_obj.source_nb, morph_obj.voxel_size);
+                    // TODO: Why is this done twice?
+                    std::cout << "Converting Mesh -> Volumes (Again)" << std::endl; 
+                    UpdtMeshOperations::convertMeshToVolume(
+                        "srt1.obj", 
+                        morph_obj.curr_name, 
+                        morph_obj.vdb_path, 
+                        morph_obj.target_nb, 
+                        morph_obj.voxel_size);
+                    UpdtMeshOperations::convertMeshToVolume(
+                        "srt2.obj", 
+                        morph_obj.file_name + ".vdb", 
+                        morph_obj.vdb_path, 
+                        morph_obj.source_nb, 
+                        morph_obj.voxel_size);
                     
-                    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(morph_obj.vdb_path + morph_obj.file_name + ".vdb"));
-                    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(GridOperations::readFile(morph_obj.vdb_path + morph_obj.curr_name));
+                    // Again, read in the models.
+                    std::cout << "Reading VDB files (again)" << std::endl;
+                    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+                        GridOperations::readFile(morph_obj.vdb_path + morph_obj.file_name + ".vdb"));
+                    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+                        GridOperations::readFile(morph_obj.vdb_path + morph_obj.curr_name));
                     
-                    morph_obj.morph_path = morph_obj.curr_path + morph_obj.file_name + "-" + morph_obj.curr_name_wo_ext;
+                    morph_obj.morph_path = (
+                        morph_obj.curr_path 
+                        + morph_obj.file_name 
+                        + "-" 
+                        + morph_obj.curr_name_wo_ext);
+                    std::cout << "Morph path (again): " << morph_obj.morph_path << std::endl;
                     
                     row2.source_name = morph_obj.file_name;
                     row2.target_name = morph_obj.curr_name_wo_ext;
                     
+                    // Compute energy the other way
                     energy2 = morph_obj.morphModels(row2);
                     row2.mean = (energy1 + energy2) / 2;
                     
+                    // Store the table row in the vector
                     pair.push_back(row1);
                     pair.push_back(row2);
                     obj_pair_vector.push_back(pair);
                     pair.clear();
+                    
+                    // Generate the report
+                    std::cout << "Generating HTML file" << std::endl;
                     HTMLHelper::writeReport(obj_pair_vector, morph_obj.curr_name_wo_ext);
                     HTMLHelper::saveObjectState(obj_pair_vector, morph_obj.curr_name_wo_ext + ".json");
                 }
             }
+            // Generate a last report
+            // TODO: what does this last report do?
+            std::cout << "writing report for " << morph_obj.curr_name_wo_ext << std::endl;
             HTMLHelper::writeReport(obj_pair_vector, morph_obj.curr_name_wo_ext);
             HTMLHelper::saveObjectState(obj_pair_vector, morph_obj.curr_name_wo_ext + ".json");
             closedir (dir);
         } else {
             /* could not open directory */
-            perror ("");
+            perror("Could not open directory");
             return EXIT_FAILURE;
         }
     }
