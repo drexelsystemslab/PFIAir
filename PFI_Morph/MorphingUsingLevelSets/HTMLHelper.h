@@ -12,14 +12,29 @@
 using json = nlohmann::json;
 namespace HTMLHelper {
     
+    /**
+     * This stores data for a single row in the table.
+     * TODO: Move this to a struct. Maybe call it MorphStats?
+     */
     class TableRow {
     public:
         TableRow() {};
         size_t CFL_count;
-        int time_steps, source_surface_count, target_surface_count, abs_diff_count;
-        double total_curv, weighted_total_curv, max_curv, total_val, weighted_total_val, total_energy, mean;
-        double evol_avg, src_tar_avg;
-        std::string source_name, target_name;
+        int time_steps;
+        int source_surface_count;
+        int target_surface_count;
+        int abs_diff_count;
+        double total_curv;
+        double weighted_total_curv;
+        double max_curv;
+        double total_val; 
+        double weighted_total_val;
+        double total_energy;
+        double mean;
+        double evol_avg;
+        double src_tar_avg;
+        std::string source_name;
+        std::string target_name;
     };
     
     

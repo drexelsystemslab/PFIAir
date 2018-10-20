@@ -98,6 +98,7 @@ namespace MorphOperations {
                 return 0;
             }
             
+            // Get stats about the source/target voxel counts
             row.source_surface_count = GridOperations::countSurfaceVoxels(source_grid);
             row.target_surface_count = GridOperations::countSurfaceVoxels(target_grid);
             row.abs_diff_count = openvdb::math::Abs(row.source_surface_count - row.target_surface_count);
@@ -110,8 +111,16 @@ namespace MorphOperations {
             ls_morph.setNormCount(5);
             
             size_t CFL_count = 0.0;
-            double time = 0.0, time_inc = dt, energy_consumed = 0.0, total_energy = 0.0, total_curv = 0.0, total_val = 0.0;
-            double mc_sum = 0.0, val_sum = 0.0, weight_val = 100, max_curv = 0.0;
+            double time = 0.0;
+            double time_inc = dt;
+            double energy_consumed = 0.0;
+            double total_energy = 0.0;
+            double total_curv = 0.0; 
+            double total_val = 0.0;
+            double mc_sum = 0.0;
+            double val_sum = 0.0;
+            double weight_val = 100;
+            double max_curv = 0.0;
             double source_surface_count_sum = GridOperations::countSurfaceVoxels(source_grid);
             
             std::string file_name = "";
@@ -129,6 +138,8 @@ namespace MorphOperations {
             while(true) {
                 openvdb::FloatGrid::Ptr before_advect = openvdb::deepCopyTypedGrid<openvdb::FloatGrid>(source_grid);
                 
+                // Advect the level set and count the 
+                // Courrant-Friedrrichs-Lewy iterations
                 CFL_count += ls_morph.advect(time, time + time_inc);
                 
                 count++;
