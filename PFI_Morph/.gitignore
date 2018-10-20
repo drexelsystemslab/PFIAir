@@ -1,4 +1,5 @@
 build/
+output/
 morph
 morphs/
 JSON/

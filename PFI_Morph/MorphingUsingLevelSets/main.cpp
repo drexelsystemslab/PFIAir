@@ -11,7 +11,11 @@
 #include "UpdtMeshOperations.h"
 
 //const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
-const std::string MORPH_OUTPUT_DIR = "morphs/";
+const std::string OUTPUT_DIR = "output/";
+const std::string INPUT_DIR = "original_objs/";
+const std::string TEMP_OBJ1 = OUTPUT_DIR + "srt1.obj";
+const std::string TEMP_OBJ2 = OUTPUT_DIR + "srt2.obj";
+const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
 
 int main()
 {
@@ -66,6 +70,8 @@ int main()
         "table", 
         "spaceship"
     };
+    
+    CommonOperations::makeDirs(OUTPUT_DIR.c_str());
         
     // For every model
     for(int k = 0; k < sizeof(model_names)/ sizeof(model_names[0]); k++) {
@@ -78,16 +84,14 @@ int main()
             // name without extension.
             model_names[k],
             //path for the models
-            MORPH_OUTPUT_DIR + model_names[k] + "/",
+            OUTPUT_DIR + model_names[k] + "/",
             // Object files go here
-            "original_objs/", 
+            INPUT_DIR, 
             // VDB files go here
-            "vdbs/");;
+            VDB_DIR);;
         
         
         // Make sure the paths exist
-        // TODO: Since the directories are hard-coded, this could
-        // be done outside the for loop
         CommonOperations::makeDirs(morph_obj.curr_path.c_str());
         CommonOperations::makeDirs(morph_obj.obj_path.c_str());
         CommonOperations::makeDirs(morph_obj.vdb_path.c_str());
@@ -108,7 +112,7 @@ int main()
         std::vector<HTMLHelper::TableRow> pair;
         
         // Iterate over the OBJ files
-        if ((dir = opendir ("original_objs")) != NULL) {
+        if ((dir = opendir(INPUT_DIR.c_str())) != NULL) {
             /* print all the files and directories within directory */
             while ((ent = readdir(dir)) != NULL) {
                 ignore = false;
@@ -146,21 +150,25 @@ int main()
                     // Orient the meshes and store them to temporary .obj files
                     std::cout << "Orienting Meshes" << std::endl;
                     UpdtMeshOperations::doAllMeshOperations(
-                        morph_obj.obj_path + morph_obj.curr_obj, "srt1.obj");
+                        OUTPUT_DIR, 
+                        morph_obj.obj_path + morph_obj.curr_obj, 
+                        TEMP_OBJ1);
                     UpdtMeshOperations::doAllMeshOperations(
-                        morph_obj.obj_path + ent->d_name, "srt2.obj");
+                        OUTPUT_DIR, 
+                        morph_obj.obj_path + ent->d_name, 
+                        TEMP_OBJ2);
                     
                     // Convert the modified meshes into VDB volumes
                     // and store them in vdb files
                     std::cout << "Converting Meshes -> volumes" << std::endl;
                     UpdtMeshOperations::convertMeshToVolume(
-                        "srt1.obj", 
+                        TEMP_OBJ1, 
                         morph_obj.curr_name, 
                         morph_obj.vdb_path, 
                         morph_obj.source_nb, 
                         morph_obj.voxel_size);
                     UpdtMeshOperations::convertMeshToVolume(
-                        "srt2.obj", 
+                        TEMP_OBJ2, 
                         morph_obj.file_name + ".vdb", 
                         morph_obj.vdb_path, 
                         morph_obj.target_nb, 
@@ -196,13 +204,13 @@ int main()
                     // TODO: Why is this done twice?
                     std::cout << "Converting Mesh -> Volumes (Again)" << std::endl; 
                     UpdtMeshOperations::convertMeshToVolume(
-                        "srt1.obj", 
+                        TEMP_OBJ1, 
                         morph_obj.curr_name, 
                         morph_obj.vdb_path, 
                         morph_obj.target_nb, 
                         morph_obj.voxel_size);
                     UpdtMeshOperations::convertMeshToVolume(
-                        "srt2.obj", 
+                        TEMP_OBJ2, 
                         morph_obj.file_name + ".vdb", 
                         morph_obj.vdb_path, 
                         morph_obj.source_nb, 
@@ -239,6 +247,11 @@ int main()
                     std::cout << "Generating HTML file" << std::endl;
                     HTMLHelper::writeReport(obj_pair_vector, morph_obj.curr_name_wo_ext);
                     HTMLHelper::saveObjectState(obj_pair_vector, morph_obj.curr_name_wo_ext + ".json");
+
+                    // TODO: Remove this
+                    // It takes a few minutes to morph a single pair of models
+                    // Uncomment this line to only run the first pair
+                    break;
                 }
             }
             // Generate a last report

@@ -42,7 +42,12 @@ namespace PFIAir {
         this -> _scale.preScale(scale);
     }
     
-    /// import index and face defined model files like obj or smf file
+    /**
+     * Import index and face defined model files like obj or smf file.
+     *
+     * TODO: Why do we have both this and loadOBJ in UpdtMeshOperations?
+     * this seems redundant.
+     */
     void Container::loadMeshModel(const string filename) {
         this -> _filename = filename;
         
