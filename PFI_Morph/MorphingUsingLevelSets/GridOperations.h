@@ -36,6 +36,9 @@ namespace GridOperations {
     void setDefaultBackgroundValue(openvdb::FloatGrid::Ptr&);
     
     
+    /**
+     * Read in a VDB file
+     */
     openvdb::GridBase::Ptr readFile(const std::string file_name) {
         openvdb::io::File file(file_name);
         file.open();
@@ -48,6 +51,9 @@ namespace GridOperations {
         return baseGrid;
     }
     
+    /**
+     * Write a VDB model to a vdb file
+     */
     void writeToFile(const std::string file_name, const openvdb::FloatGrid::Ptr grid_pointer) {
         grid_pointer->setGridClass(openvdb::GRID_LEVEL_SET);
         openvdb::io::File file(file_name);
@@ -57,6 +63,10 @@ namespace GridOperations {
         file.close();
     }
     
+    /**
+     * Write only the surface voxels
+     * This method is currently unused
+     */
     void writeOnlySurface(const openvdb::FloatGrid::Ptr grid_pointer) {
         double bg = grid_pointer->background();
         int surface = 0, non_surface = 0;
@@ -75,6 +85,9 @@ namespace GridOperations {
         GridOperations::writeToFile("only_surface.vdb", grid_pointer);
     }
     
+    /**
+     * Count up the surface voxels by iteration
+     */
     int countSurfaceVoxels(const openvdb::FloatGrid::Ptr grid_pointer) {
         int count = 0;
         for (openvdb::FloatGrid::ValueOnIter iter = grid_pointer->beginValueOn(); iter; ++iter) {
@@ -87,6 +100,9 @@ namespace GridOperations {
         return count;
     } 
     
+    /**
+     * Check if a voxel is on the surface of the grid
+     */
     bool checkIfSurface(openvdb::FloatGrid::ValueOnIter iterator, const openvdb::FloatGrid::Ptr grid_pointer) {
         bool found_positive = false;
         openvdb::Coord coord = iterator.getCoord();
@@ -110,6 +126,13 @@ namespace GridOperations {
         return found_positive;
     }
     
+    /**
+     * Measure the surface area of the grid in world units
+     *
+     * NOTE: openvdb::tools::LevelSetMeasure has a flag to count voxels
+     * instead of world units. I am not sure if this would be faster
+     * than the calculation in GridOperations::countSurfaceVoxels().
+     */
     double measureGrid(const openvdb::FloatGrid::Ptr grid_pointer) {
         openvdb::util::NullInterrupter* interrupt = nullptr;
         openvdb::tools::LevelSetMeasure <openvdb::FloatGrid, openvdb::util::NullInterrupter> ls_measure(*(grid_pointer), interrupt);
@@ -120,6 +143,9 @@ namespace GridOperations {
         return area;
     }
     
+    /**
+     * This is only used in Tests.h
+     */
     double calcPlatonicScale(int face, double radius) {
         double _pi = 3.14159,
         sa_sphere = 4 * _pi * openvdb::math::Pow(radius, 2),
@@ -147,6 +173,9 @@ namespace GridOperations {
         return ret_scale;
     }
     
+    /**
+     * This is also unused
+     */
     void writeActiveVoxelVals() {
         double sphere_radius = 5.0, scale = 5.0, voxel_size = 0.03, half_width = 30.0;
         openvdb::FloatGrid::Ptr grids[6] = {CommonOperations::getSphereVolume(sphere_radius, voxel_size, half_width),
