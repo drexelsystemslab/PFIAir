@@ -395,10 +395,23 @@ namespace MeshOperations {
         MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         calcBoundingBox(vertices, center, axis_lengths, includePCA);
         MeshOperations::translateCenterToOrigin(vertices, center);
+
+        // Morph version
         MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
         //scaling such that length of z component of bounding box = 1
         MeshOperations::adjustScale(vertices, axis_lengths[2]);
+
         MeshOperations::writeOBJ(write_name, vertices, f_list, includePCA);
+
+        /** Mac tools version of the above
+        
+        double max_length = openvdb::math::Max(axis_lengths[0], axis_lengths[1]);
+        max_length = openvdb::math::Max(max_length, axis_lengths[2]);
+        
+        //scaling such that length of z component of bounding box = 1
+        MeshOperations::adjustScale(vertices, max_length);
+        */
+        
         if(calcSkewness(vertices, includePCA) > 0)
             rotateAcrossYAxis(vertices);
         

@@ -17,6 +17,37 @@ const std::string TEMP_OBJ1 = OUTPUT_DIR + "srt1.obj";
 const std::string TEMP_OBJ2 = OUTPUT_DIR + "srt2.obj";
 const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
 
+
+/**
+Main from mac_tools
+int main(int argc, const char * argv[])
+{
+    using namespace openvdb;
+    
+//    PFIAir::Container model = PFIAir::Container();
+//
+//    model.loadMeshModel(argv[1]);
+//    model.computeMeshCenter();
+    
+    MeshOperations::doAllMeshOperations(argv[1], argv[2]);
+    return EXIT_SUCCESS;
+    
+    
+    openvdb::initialize(); 
+    
+//    openvdb::FloatGrid::Ptr source_grid1 = CommonOperations::getSphereVolume(1.5, 0.025, 3);
+//    openvdb::FloatGrid::Ptr target_grid1 = CommonOperations:: getPlatonicVolume(6, 3, 0.025, 10);
+//    std::string table1 = "";
+    
+//    MorphOperations::morphModels(source_grid1, target_grid1, 0.1, "test", table1);
+//    return 0;
+//    MeshOperations::performPCAAndDrawAxis("original_objs/bird.stl.obj", "test.obj");
+//    MeshOperations::doAllMeshOperations("original_objs/beast.stl.obj", "test.obj");
+//    MeshOperations::convertMeshToVolume("test.obj", "test.vdb", "vdbs/", 3, 0.01);
+//    return 0;
+}
+*/
+
 int main()
 {
     openvdb::initialize();
