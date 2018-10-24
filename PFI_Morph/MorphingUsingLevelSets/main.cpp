@@ -1,3 +1,4 @@
+#include <iostream>
 
 #include <openvdb/openvdb.h>
 
@@ -16,6 +17,8 @@ const std::string INPUT_DIR = "original_objs/";
 const std::string TEMP_OBJ1 = OUTPUT_DIR + "srt1.obj";
 const std::string TEMP_OBJ2 = OUTPUT_DIR + "srt2.obj";
 const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
+
+
 
 
 /**
@@ -48,7 +51,10 @@ int main(int argc, const char * argv[])
 }
 */
 
-int main()
+/**
+ * This was the old main() from the morph branch
+ */
+int morph_all()
 {
     openvdb::initialize();
 
@@ -63,13 +69,13 @@ int main()
 //    MeshOperations::doAllMeshOperations("new_objs/table.obj", "srt_table.obj");
     
     //UpdtMeshOperations::performActionForAllObjs();
-    /*UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-1.stl.obj", "test/mushroom-1.stl.obj");
-    UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-2.stl.obj", "test/mushroom-2.stl.obj");
-    UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-3.stl.obj", "test/mushroom-3.stl.obj");
-    UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-4.stl.obj", "test/mushroom-4.stl.obj");
-    UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-5.stl.obj", "test/mushroom-5.stl.obj");
-    UpdtMeshOperations::doAllMeshOperations("original_objs/pendulum.stl.obj", "test/pendulum.stl.obj");
-    return 0;*/
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-1.stl.obj", "test/mushroom-1.stl.obj");
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-2.stl.obj", "test/mushroom-2.stl.obj");
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-3.stl.obj", "test/mushroom-3.stl.obj");
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-4.stl.obj", "test/mushroom-4.stl.obj");
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/mushroom-5.stl.obj", "test/mushroom-5.stl.obj");
+    //UpdtMeshOperations::doAllMeshOperations("original_objs/pendulum.stl.obj", "test/pendulum.stl.obj");
+    //return 0;
     
     DIR *dir;
     struct dirent *ent;
@@ -144,7 +150,7 @@ int main()
         
         // Iterate over the OBJ files
         if ((dir = opendir(INPUT_DIR.c_str())) != NULL) {
-            /* print all the files and directories within directory */
+            // print all the files and directories within directory
             while ((ent = readdir(dir)) != NULL) {
                 ignore = false;
 
@@ -292,11 +298,55 @@ int main()
             HTMLHelper::saveObjectState(obj_pair_vector, morph_obj.curr_name_wo_ext + ".json");
             closedir (dir);
         } else {
-            /* could not open directory */
+            // could not open directory
             perror("Could not open directory");
             return EXIT_FAILURE;
         }
     }
     
     return 0;
+}
+
+void print_help() {
+    std::cout << "PFI_Morph: similartiy using level set morphing" << std::endl
+        << "Usage: PFI_Morph [cmd]" << std::endl
+        << std::endl
+        << "Commands:" << std::endl
+        << "open_mesh\tRun experiment for morphing open meshes" << std::endl
+        << "morph_all\tMorph all pairs of models and generate reports" 
+        << std::endl
+        << "help\t\tPrint this help message and quit" << std::endl;
+}
+
+/**
+ * New main function that allows for multiple experiments
+ * Usage:
+ * ./PFI_Morph help             Print a help message
+ * ./PFI_Morph open_mesh        Perform 
+ * ./PFI_Morph morph_all        Morph all pairs of models (old morph code)
+ */
+int main(int argc, const char * argv[]) { 
+    // Not enough arguments
+    if (argc == 1) {
+        std::cout << "Error: Not enough arguments" << std::endl;
+        print_help();
+        return 1;
+    }
+
+    // Compare the first argument with a pre-defined list of commands
+    std::string cmd(argv[1]);
+    if (cmd == "open_mesh") {
+        std::cout << "TODO: Open Mesh Experiment" << std::endl;
+        return 0;
+    } else if (cmd == "morph_all") {
+        std::cout << "Morph all Meshes:" << std::endl;
+        return morph_all();
+    } else if (cmd == "help") {
+        print_help();
+        return 0;
+    } else {
+        std::cout << "Error: Unknown command " << cmd << std::endl;
+        print_help();
+        return 0;
+    }
 }
