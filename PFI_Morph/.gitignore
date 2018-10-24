@@ -1,8 +1,18 @@
+# Executables
+morph
+PFI_Morph
+
+# Output directories
 build/
 output/
-morph
 morphs/
 JSON/
 DerivedData/
 cmake-build-debug/
 srt.vdb
+
+#CMake stuff
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
