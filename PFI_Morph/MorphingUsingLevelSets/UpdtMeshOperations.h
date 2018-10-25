@@ -318,7 +318,7 @@ namespace UpdtMeshOperations {
     }
     
     /**
-     * Convert an OBJ file to a VDB file
+     * Convert OBJ file to a VDB file
      */
     void convertMeshToVolume(
             std::string obj_filename, 

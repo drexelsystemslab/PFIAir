@@ -128,8 +128,7 @@ namespace PFIAir {
             edges.push_back(edge4);
         }
 
-        typedef adjacency_list<vecS, vecS, undirectedS
-        > Graph;
+        typedef adjacency_list<vecS, vecS, undirectedS> Graph;
 
         Graph g(edges.begin(), edges.end(), edges.size());
 

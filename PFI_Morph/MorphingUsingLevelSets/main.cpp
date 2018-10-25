@@ -319,6 +319,41 @@ void print_help() {
 }
 
 /**
+ * Test of scan-converting a non-watertight model
+ */
+void load_open_mesh() {
+    // This model is a partial vase.
+    const std::string INPUT_OBJ = "open_mesh_objs/362_4_1.obj";
+    const std::string OUTPUT_PATH = "output/open_mesh/";
+    const std::string OUTPUT_VDB = OUTPUT_PATH + "362_4_1.vdb";
+    CommonOperations::makeDirs(OUTPUT_PATH.c_str());
+
+    PFIAir::Container model = PFIAir::Container();
+
+    std::cout << "Loading Mesh" << std::endl;
+    model.loadMeshModel(INPUT_OBJ);
+
+    std::cout << "Adjusting model" << std::endl;
+    
+    // IMPORTANT: Container.computeMeshCenter does not work with open meshes!
+    // It consumes all memory
+    //model.computeMeshCenter(); 
+
+    const float VOXEL_SIZE = 0.01;
+    model.setScale(openvdb::Vec3d(VOXEL_SIZE));
+
+    std::cout << "Converting to VDB" << std::endl;
+    
+    const float BANDWIDTH = 3.0;
+    openvdb::FloatGrid::Ptr field = 
+        model.getUnsignedDistanceField(BANDWIDTH);
+
+    model.exportModel(OUTPUT_VDB, field);
+
+    std::cout << "Converted " << INPUT_OBJ << " -> " << OUTPUT_VDB << std::endl;
+}
+
+/**
  * New main function that allows for multiple experiments
  * Usage:
  * ./PFI_Morph help             Print a help message
@@ -336,7 +371,8 @@ int main(int argc, const char * argv[]) {
     // Compare the first argument with a pre-defined list of commands
     std::string cmd(argv[1]);
     if (cmd == "open_mesh") {
-        std::cout << "TODO: Open Mesh Experiment" << std::endl;
+        std::cout << "Open Mesh Experiment" << std::endl;
+        load_open_mesh();
         return 0;
     } else if (cmd == "morph_all") {
         std::cout << "Morph all Meshes:" << std::endl;
