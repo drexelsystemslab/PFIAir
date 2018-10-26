@@ -87,19 +87,32 @@ namespace UpdtMeshOperations {
         int vertices_size = vertices.cols();
         
         // Write the vertices
+        std::cout << "vertices" << std::endl;
         for(int i = 0; i < vertices_size; i++) {
             file << "v " << vertices(0, i) << " " << vertices(1, i) << " " << vertices(2, i) << "\n";
         }
         
         // Write the face comonents
+        std::cout << "face components" << std::endl;
         for(int i = 0; i < f_list.size(); i++) {
-            file << "f " << f_list[i][2] << " " << f_list[i][3] << " " << f_list[i][4] << "\n";
+            // TODO: not sure why there is an extra space between f and the components
+            if (f_list[i].size() == 5) {
+                file << "f " 
+                    << f_list[i][2] << " " 
+                    << f_list[i][3] << " " 
+                    << f_list[i][4] << std::endl;
+            } else {
+                file << "f " 
+                    << f_list[i][1] << " " 
+                    << f_list[i][2] << " " 
+                    << f_list[i][3] << std::endl;
+            }
         }
         
         // List face elements with normals
         // The last 6 columns are PCA axis information.
-        if(include_axis) {
-            
+        if(include_axis) {   
+            std::cout << "Include PCA info" << std::endl;
             file << "f " << vertices_size - 6 << "//" << vertices_size - 6 << " "
             << vertices_size - 5 << "//" << vertices_size - 5 << " "
             << vertices_size - 4 << "//" << vertices_size - 4 << "\n";
@@ -114,6 +127,7 @@ namespace UpdtMeshOperations {
         }
         
         file.close();
+        std::cout << "Done writing obj" << std::endl;
     }
     
     /**
@@ -554,8 +568,11 @@ namespace UpdtMeshOperations {
         // TODO: Do we need both files?
         // Store the results  to an OBJ file
         UpdtMeshOperations::writeOBJ(temp_obj, mesh_coords, f_list, includePCA);
+        std::cout << "Finished writing object" << std::endl;
         // Convert to a VDB file
         convertMeshToVolume(temp_obj, temp_vdb, "", 3, 0.05);
+
+        std::cout << "Converted to volume" << std::endl;
         
         // Read in the VDB file
         openvdb::FloatGrid::Ptr grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
@@ -590,11 +607,13 @@ namespace UpdtMeshOperations {
         std::vector<double> axis_lengths(3);
         bool includePCA = false;
         
+        std::cout << "coords handler" << std::endl;
         coordsHandler(output_dir, filepath, mesh_coords, vdb_coords, f_list, includePCA);
 
         // Perform PCA on the models to figure out how to orient
         // the model
         //TODO: Use just vdb_coords <-- ???
+        std::cout << "PCA analysis" << std::endl;
         UpdtMeshOperations::performPCA(vdb_coords, rot_mat);
         
         // Orient the model 
@@ -603,11 +622,12 @@ namespace UpdtMeshOperations {
         // Calculate the new bounding box
         calcBoundingBox(mesh_coords, center, axis_lengths, includePCA);
 
-        // Calculate the scale of thhe model
+        // Calculate the scale of the model
         mesh_coords = getScaleMatrix(axis_lengths[2]) * getTranslateMatrix(center) * mesh_coords;
 
         // Write the object to disk
         // TODO: why is this called twice?
+        std::cout << "Writing OBJ" << std::endl;
         UpdtMeshOperations::writeOBJ(write_name, mesh_coords, f_list, includePCA);
 
         //If the skewness is positive, we need to rotate the model 180 degrees

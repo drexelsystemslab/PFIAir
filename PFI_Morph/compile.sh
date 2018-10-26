@@ -1,7 +1,14 @@
 #!/bin/bash
+if [[ "$1" == "release" ]]
+then
+    FLAGS='-DCMAKE_BUILD_TYPE=Release'
+else
+    FLAGS='-DCMAKE_BUILD_TYPE=Debug'
+fi
+
 # Do an out-of-source build using CMake
 cd build
-cmake ..
+cmake $FLAGS ..
 make
 
 # Put the executable in the current directory

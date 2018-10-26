@@ -1,5 +1,8 @@
 #include <iostream>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include <openvdb/openvdb.h>
 
 #include "MorphOperations.h"
@@ -18,7 +21,21 @@ const std::string TEMP_OBJ1 = OUTPUT_DIR + "srt1.obj";
 const std::string TEMP_OBJ2 = OUTPUT_DIR + "srt2.obj";
 const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
 
-
+/**
+ * Some functions in the existing code do not work well with open meshes.
+ * They consume all memory until the process hits the OOM killer.
+ *
+ * This locks up my laptop for several minutes at a time, so I am
+ * limiting memory usage as a precaution.
+ */
+void limit_memory(long megabytes) {
+    rlimit mem_limit;
+    long bytes = megabytes * 1024 * 1024;
+    mem_limit.rlim_cur = bytes;
+    mem_limit.rlim_max = bytes;
+    // Limit the address space
+    setrlimit(RLIMIT_AS, &mem_limit);
+}
 
 
 /**
@@ -125,7 +142,7 @@ int morph_all()
             // Object files go here
             INPUT_DIR, 
             // VDB files go here
-            VDB_DIR);;
+            VDB_DIR);
         
         
         // Make sure the paths exist
@@ -321,17 +338,35 @@ void print_help() {
 /**
  * Test of scan-converting a non-watertight model
  */
-void load_open_mesh() {
+int load_open_mesh(int argc, const char* argv[]) {
+    if (argc < 3) {
+        std::cout << "Missing memory limit" << std::endl;
+        return 1;
+    }
+
+    // Limit memory so my laptop doesn't lock up while testing 
+    // existing code with open meshes
+    limit_memory(std::atol(argv[2])); 
+
     // This model is a partial vase.
     const std::string INPUT_OBJ = "open_mesh_objs/362_4_1.obj";
     const std::string OUTPUT_PATH = "output/open_mesh/";
     const std::string OUTPUT_VDB = OUTPUT_PATH + "362_4_1.vdb";
+    const std::string PREPROCESSED_OBJ = OUTPUT_PATH + "preprocessed.obj";
     CommonOperations::makeDirs(OUTPUT_PATH.c_str());
+
+    /**
+     * Something in here is consuming all of memory
+     */
+    UpdtMeshOperations::doAllMeshOperations(
+        OUTPUT_PATH,
+        INPUT_OBJ,
+        PREPROCESSED_OBJ);
 
     PFIAir::Container model = PFIAir::Container();
 
     std::cout << "Loading Mesh" << std::endl;
-    model.loadMeshModel(INPUT_OBJ);
+    model.loadMeshModel(PREPROCESSED_OBJ);
 
     std::cout << "Adjusting model" << std::endl;
     
@@ -351,7 +386,9 @@ void load_open_mesh() {
     model.exportModel(OUTPUT_VDB, field);
 
     std::cout << "Converted " << INPUT_OBJ << " -> " << OUTPUT_VDB << std::endl;
+    return 0;
 }
+
 
 /**
  * New main function that allows for multiple experiments
@@ -372,8 +409,7 @@ int main(int argc, const char * argv[]) {
     std::string cmd(argv[1]);
     if (cmd == "open_mesh") {
         std::cout << "Open Mesh Experiment" << std::endl;
-        load_open_mesh();
-        return 0;
+        return load_open_mesh(argc, argv);
     } else if (cmd == "morph_all") {
         std::cout << "Morph all Meshes:" << std::endl;
         return morph_all();
