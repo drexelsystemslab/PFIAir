@@ -4,6 +4,7 @@
 #include <sys/resource.h>
 
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/VolumeToMesh.h>
 
 #include "MorphOperations.h"
 #include "MeshOperations.h"
@@ -329,7 +330,7 @@ void print_help() {
         << "Usage: PFI_Morph [cmd]" << std::endl
         << std::endl
         << "Commands:" << std::endl
-        << "open_mesh\tRun experiment for morphing open meshes" << std::endl
+        << "open_mesh mem_limit voxel_size bandwidth\tRun experiment for morphing open meshes" << std::endl
         << "morph_all\tMorph all pairs of models and generate reports" 
         << std::endl
         << "help\t\tPrint this help message and quit" << std::endl;
@@ -339,8 +340,8 @@ void print_help() {
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {
-    if (argc < 3) {
-        std::cout << "Missing memory limit" << std::endl;
+    if (argc < 5) {
+        std::cout << "Missing arguments" << std::endl;
         return 1;
     }
 
@@ -351,41 +352,126 @@ int load_open_mesh(int argc, const char* argv[]) {
     // This model is a partial vase.
     const std::string INPUT_OBJ = "open_mesh_objs/362_4_1.obj";
     const std::string OUTPUT_PATH = "output/open_mesh/";
-    const std::string OUTPUT_VDB = OUTPUT_PATH + "362_4_1.vdb";
+    const std::string OUTPUT_VDB =
+        OUTPUT_PATH + "output" + argv[3] + "_" + argv[4] + ".vdb";
+    const std::string OUTPUT_FIXED_VDB = OUTPUT_PATH + "fixed.vdb";
     const std::string PREPROCESSED_OBJ = OUTPUT_PATH + "preprocessed.obj";
     CommonOperations::makeDirs(OUTPUT_PATH.c_str());
+    const std::string VDB_MAX = OUTPUT_PATH + "max_isoband.vdb";
+    const std::string VDB_MID = OUTPUT_PATH + "mid_isoband.vdb";
 
     /**
      * Something in here is consuming all of memory
+     * I've tracked it down to after get() in Container::ComputeMeshCenter
+     * but still not sure which line is the memory hog.
      */
+    /*
     UpdtMeshOperations::doAllMeshOperations(
         OUTPUT_PATH,
         INPUT_OBJ,
         PREPROCESSED_OBJ);
+    */
 
     PFIAir::Container model = PFIAir::Container();
 
-    std::cout << "Loading Mesh" << std::endl;
-    model.loadMeshModel(PREPROCESSED_OBJ);
+    std::cout << "Loading Open Mesh" << std::endl;
+    model.loadMeshModel(INPUT_OBJ);
 
-    std::cout << "Adjusting model" << std::endl;
-    
     // IMPORTANT: Container.computeMeshCenter does not work with open meshes!
     // It consumes all memory
     //model.computeMeshCenter(); 
 
-    const float VOXEL_SIZE = 0.01;
-    model.setScale(openvdb::Vec3d(VOXEL_SIZE));
+    double voxel_size = std::stod(argv[3]);
+    std::cout << "voxel size" << voxel_size;
+    model.setScale(openvdb::Vec3d(voxel_size));
 
-    std::cout << "Converting to VDB" << std::endl;
-    
-    const float BANDWIDTH = 3.0;
+    // Convert to unsigned distance field
+    std::cout << "Converting to VDB" << std::endl; 
+    double bandwidth = std::stod(argv[4]);
+    std::cout << "bandwidth" << bandwidth;
     openvdb::FloatGrid::Ptr field = 
-        model.getUnsignedDistanceField(BANDWIDTH);
+        model.getUnsignedDistanceField(bandwidth);
 
     model.exportModel(OUTPUT_VDB, field);
 
     std::cout << "Converted " << INPUT_OBJ << " -> " << OUTPUT_VDB << std::endl;
+
+    // Exploring the range of values in the distance field
+    // since the docs do not go into depth
+    int count = 0;
+    double min = 100000.0;
+    double max = -100000.0;
+    double total = 0.0;
+    for (openvdb::FloatGrid::ValueOnIter iter = field->beginValueOn(); iter; ++iter) {
+        if (*iter < min)
+            min = *iter;
+        if (*iter > max)
+            max = *iter;
+        total += *iter;
+        count++;
+        //std::cout << iter.getCoord() << " = " << *iter << std::endl; 
+    }
+    double avg = total / count;
+    double midpoint = (min + max) / 2.0;
+    std::cout << "total count avg midpoint" << std::endl;
+    std::cout << total << " " << count << " " << avg << " " << midpoint << std::endl;
+    std::cout << "min max" << std::endl;
+    std::cout << min << " " << max << std::endl;
+
+    // Attempt to convert unsigned distance field -> mesh
+
+    // Vec3s = single-precision float
+    std::vector<openvdb::Vec3s> points;
+    std::vector<openvdb::Vec3I> triangles;
+    std::vector<openvdb::Vec4I> quads;
+
+    std::cout << "num_points num_triangles num_quads" << std::endl;
+
+    // volumeToMesh has a isovalue 
+    // default of 0.0 generates no quads
+    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads);
+    std::cout << "isovalue = 0.0" << std::endl;
+    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
+
+    // Try the minimum iso value
+    // this generates no quads
+    points.clear();
+    triangles.clear();
+    quads.clear();
+    std::cout << "isovalue = min" << std::endl;
+    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, min);
+    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
+
+    // Try the maximum iso value
+    // This generates the most quads
+    points.clear();
+    triangles.clear();
+    quads.clear();
+    std::cout << "isovalue = max" << std::endl;
+    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, max);
+    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
+
+    // Try the midpoint of max and min iso value
+    points.clear();
+    triangles.clear();
+    quads.clear();
+    std::cout << "isovalue = (min + max) / 2" << std::endl;
+    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, midpoint);
+    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
+    
+    // And now we can create a level set
+    // When this runs on the max or midpoint, I do get a level set, but it
+    // is a rectangular prism... not sure why, I think it has to do with
+    // scaling.
+    /* 
+    openvdb::math::Transform xform;
+    openvdb::FloatGrid::Ptr fixed =
+        openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+            xform, points, triangles, quads);
+
+    model.exportModel(VDB_MID, fixed);
+    */
+
     return 0;
 }
 

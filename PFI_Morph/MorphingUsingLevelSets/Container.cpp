@@ -184,6 +184,8 @@ namespace PFIAir {
     void Container::computeMeshCenter() {
         using namespace boost;
 
+        std::cout << "Start computing mesh center" << std::endl;
+
         typedef boost::property<boost::edge_weight_t, double> EdgeWeightProperty;
 //        typedef adjacency_list<vecS, vecS, undirectedS,boost::no_property, EdgeWeightProperty
 //        > Graph;
@@ -247,6 +249,8 @@ namespace PFIAir {
                 edges.push_back(std::pair<int, int>(point4, point1));
             }
         }
+
+        std::cout << " Done with quad indices " << std::endl;
         
         for (int i = 0; i < _indicesTri.size(); i++) {
             int point1 = _indicesTri[i].x();
@@ -287,11 +291,15 @@ namespace PFIAir {
                 edges.push_back(std::pair<int, int>(point2, point3));
             }
         }
+
+        std::cout << "after triangles" << std::endl;
         
 //        shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
 //        centrality_map(num_vertices(g), get(boost::vertex_index, g));
 //        
         property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
+
+        std::cout << "after get" << std::endl;
 //
 //        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
         
@@ -304,8 +312,13 @@ namespace PFIAir {
         DistanceMatrix distances(num_vertices(g));
         DistanceMatrixMap dm(distances, g);
         ECCWeightMap wm(1);
+
+        std::cout << "before warshall" << std::endl;
+
         //floyd_warshall_all_pairs_shortest_paths(g, dm, w);
         floyd_warshall_all_pairs_shortest_paths(g, dm, weight_map(w));
+
+        std::cout << "after floyd_warshall" << std::endl;
         
         typedef boost::exterior_vertex_property<Graph, double> EccentricityProperty;
         typedef EccentricityProperty::container_type EccentricityContainer;

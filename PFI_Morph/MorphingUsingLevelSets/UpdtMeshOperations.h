@@ -340,14 +340,14 @@ namespace UpdtMeshOperations {
             std::string write_path, 
             float bandwidth, 
             double voxel_size) {
-        
+
         // Wrapper for the model
         PFIAir::Container model = PFIAir::Container();
         
         // Load the mesh and compute its center point
         model.loadMeshModel(obj_filename);
         model.computeMeshCenter();
-        
+
         // pre-scale the model
         model.setScale(openvdb::Vec3d(voxel_size));
         
@@ -562,6 +562,7 @@ namespace UpdtMeshOperations {
 
         // Temporary model files
         // TODO: What does SRT stand for?
+        // Scale, Rotate, Translate? Though there's no rotation yet
         std::string temp_obj = output_dir + "srt.obj";
         std::string temp_vdb = output_dir + "srt.vdb";
         
@@ -569,6 +570,9 @@ namespace UpdtMeshOperations {
         // Store the results  to an OBJ file
         UpdtMeshOperations::writeOBJ(temp_obj, mesh_coords, f_list, includePCA);
         std::cout << "Finished writing object" << std::endl;
+
+        // Resample the mesh ==============================================
+
         // Convert to a VDB file
         convertMeshToVolume(temp_obj, temp_vdb, "", 3, 0.05);
 
