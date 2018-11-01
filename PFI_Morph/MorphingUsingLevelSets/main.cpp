@@ -340,7 +340,7 @@ void print_help() {
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {
-    if (argc < 5) {
+    if (argc < 6) {
         std::cout << "Missing arguments" << std::endl;
         return 1;
     }
@@ -350,7 +350,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     limit_memory(std::atol(argv[2])); 
 
     // This model is a partial vase.
-    const std::string INPUT_OBJ = "open_mesh_objs/362_4_1.obj";
+    const std::string INPUT_OBJ = argv[5]; //"open_mesh_objs/vase_simplified2.obj";
     const std::string OUTPUT_PATH = "output/open_mesh/";
     const std::string OUTPUT_VDB =
         OUTPUT_PATH + "output" + argv[3] + "_" + argv[4] + ".vdb";
@@ -365,12 +365,10 @@ int load_open_mesh(int argc, const char* argv[]) {
      * I've tracked it down to after get() in Container::ComputeMeshCenter
      * but still not sure which line is the memory hog.
      */
-    /*
     UpdtMeshOperations::doAllMeshOperations(
         OUTPUT_PATH,
         INPUT_OBJ,
         PREPROCESSED_OBJ);
-    */
 
     PFIAir::Container model = PFIAir::Container();
 

@@ -27,6 +27,8 @@ namespace PFIAir {
         vector<Vec4I> _indicesQuad = vector<Vec4I>();
         
         math::Transform _scale = math::Transform();
+
+        
         
     protected:
         double getEuclideanFromIndices(int p1, int p2);
