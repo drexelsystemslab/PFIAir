@@ -336,6 +336,19 @@ void print_help() {
         << "help\t\tPrint this help message and quit" << std::endl;
 }
 
+void dist_field_to_level_set(
+        openvdb::FloatGrid::Ptr& dist_field, 
+        double bandwidth, 
+        double voxel_size) {
+
+    for (openvdb::FloatGrid::ValueAllIter iter = dist_field->beginValueAll(); iter; ++iter) {
+        double current_val = *iter;
+        double new_val = 0.5 * bandwidth * voxel_size - current_val;
+        std::cout << current_val << " " << new_val << std::endl;
+        iter.setValue(new_val);
+    }
+}
+
 /**
  * Test of scan-converting a non-watertight model
  */
@@ -354,6 +367,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string OUTPUT_PATH = "output/open_mesh/";
     const std::string OUTPUT_VDB =
         OUTPUT_PATH + "output" + argv[3] + "_" + argv[4] + ".vdb";
+    const std::string LS_VDB = OUTPUT_PATH + "level_set.vdb";
     const std::string OUTPUT_FIXED_VDB = OUTPUT_PATH + "fixed.vdb";
     const std::string PREPROCESSED_OBJ = OUTPUT_PATH + "preprocessed.obj";
     CommonOperations::makeDirs(OUTPUT_PATH.c_str());
@@ -361,14 +375,20 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string VDB_MID = OUTPUT_PATH + "mid_isoband.vdb";
 
     /**
-     * Something in here is consuming all of memory
-     * I've tracked it down to after get() in Container::ComputeMeshCenter
-     * but still not sure which line is the memory hog.
+     * NOTE: if eccentricity is used to find the mesh center,
+     * this runs in O(V^3) time so only is feasible for very small meshes.
+     * This is due to Container::computeMeshCenter(). Right now, I have
+     * commented this out.
+     *
+     * I'm running into issues with NaNs when running this with open meshes,
+     * I will look into this soon.
      */
+    /*
     UpdtMeshOperations::doAllMeshOperations(
         OUTPUT_PATH,
         INPUT_OBJ,
         PREPROCESSED_OBJ);
+    */
 
     PFIAir::Container model = PFIAir::Container();
 
@@ -393,6 +413,10 @@ int load_open_mesh(int argc, const char* argv[]) {
     model.exportModel(OUTPUT_VDB, field);
 
     std::cout << "Converted " << INPUT_OBJ << " -> " << OUTPUT_VDB << std::endl;
+
+    // Convert distance field to level set
+    dist_field_to_level_set(field, bandwidth, voxel_size);
+    model.exportModel(LS_VDB, field);
 
     // Exploring the range of values in the distance field
     // since the docs do not go into depth

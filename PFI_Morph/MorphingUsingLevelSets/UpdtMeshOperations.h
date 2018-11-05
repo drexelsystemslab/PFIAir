@@ -346,7 +346,12 @@ namespace UpdtMeshOperations {
         
         // Load the mesh and compute its center point
         model.loadMeshModel(obj_filename);
-        model.computeMeshCenter();
+
+        // Commenting this out because it takes O(V^3) time and
+        // the result is not even used.
+        // There might be a better way to do this using the 
+        // VDB data structure to get the point of inaccessibility.
+        //model.computeMeshCenter();
 
         // pre-scale the model
         model.setScale(openvdb::Vec3d(voxel_size));

@@ -66,8 +66,11 @@ namespace PFIAir {
                 if (tokens.size() > 0) {
                     // vertices
                     if (!tokens[0].compare("v")) {
-                        // TODO: The new open meshes are different somehow
-                        assert(tokens.size() == 4);
+                        // Simple:
+                        // v x y z
+                        // Meshlab has colors:
+                        // v x y z r g b
+                        assert(tokens.size() == 4 || tokens.size() == 7);
 
                         this -> _points.push_back(Vec3s(stof(tokens[1]),stof(tokens[2]),stof(tokens[3])));
                         continue;
@@ -217,6 +220,8 @@ namespace PFIAir {
      * Space complexity: not sure, my guess is Omega(V^2)
      * Be careful with large meshes (on the order of 10k+ vertices), this
      * may chew up 8GB+ of RAM. 
+     *
+     * Also note: The result of this method is not currently used!
      */
     void Container::computeMeshCenter() {
         using namespace boost;
