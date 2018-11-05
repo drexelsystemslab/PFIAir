@@ -204,18 +204,12 @@ namespace PFIAir {
     /**
      * Overall time complexity: 
      * 
-     * construct graph + compute distances + compute eccentricity + sort results
-     * O(num_faces * log(V + E)) + O(V^3) + O(V^2) + O(V^2 log V)
+     * construct graph + compute distances + compute eccentricity + find min
+     * O(num_faces * log(V + E)) + O(V^3) + O(V^2) + O(V)
      *
      * The biggest time hog is the Floyd-Warshall algorithm for computing
      * distances. For all but the smallest meshes, this is impractically
      * slow (well over 20 min for one model!).
-     * 
-     * Some of the smaller terms could be handled more efficiently
-     * (in particular, that last O(V^2 log V) sort routine should
-     * be O(V log V) instead, or even better: just find the minimum
-     * in O(V) time. Also, I think the graph might be better off with
-     * a hash table structure so insertions are faster.
      * 
      * Space complexity: not sure, my guess is Omega(V^2)
      * Be careful with large meshes (on the order of 10k+ vertices), this
@@ -382,8 +376,6 @@ namespace PFIAir {
             }
         }
 
-        std::cout << "after triangles" << std::endl;
-        
 //        shared_array_property_map<double, property_map<Graph, vertex_index_t>::const_type>
 //        centrality_map(num_vertices(g), get(boost::vertex_index, g));
 //        
@@ -392,11 +384,8 @@ namespace PFIAir {
         // graph algorithms.
         property_map<Graph, edge_weight_t>::type w = get(edge_weight, g);
 
-        std::cout << "after get" << std::endl;
-//
 //        brandes_betweenness_centrality(g, boost::centrality_map(centrality_map).weight_map(w));
         
-        // Get the 
         typedef graph_traits<Graph>::edge_descriptor Edge;
         typedef exterior_vertex_property<Graph, double> DistanceProperty;
         typedef DistanceProperty::matrix_type DistanceMatrix;
@@ -415,24 +404,20 @@ namespace PFIAir {
         // 43.7k items * 43.7k = 1.9G items. If there were V x V elements
         // of 4 bytes each, that is already 7.6 GB of memory! 
         DistanceMatrix distances(num_vertices(g));
-        std::cout << sizeof(distances) << std::endl;
-
-        std::cout << "constructed distance matrix" << std::endl;
 
         DistanceMatrixMap dm(distances, g);
 
-        std::cout << "constructed Distance Matrix Map" << std::endl; 
         // Weight map for the eccentricity
         ECCWeightMap wm(1);
 
-        std::cout << "before warshall" << std::endl;
+        std::cout << "Starting Floyd-Warshall (This takes a while)" << std::endl;
 
         // Floyd Warshall is expensive, at O(V^3), yikes!
         // TODO: Can we use another algorithm?
         //floyd_warshall_all_pairs_shortest_paths(g, dm, w);
         floyd_warshall_all_pairs_shortest_paths(g, dm, weight_map(w));
 
-        std::cout << "after floyd_warshall" << std::endl;
+        std::cout << "Done!" << std::endl;
         
         // Compute the eccentricity information given the 
         typedef boost::exterior_vertex_property<Graph, double> EccentricityProperty;
@@ -445,11 +430,28 @@ namespace PFIAir {
 
         // This is another O(V^2) operation.
         boost::tie(r, d) = all_eccentricities(g, dm, em);
+
+
+        // Find the vertex with the minimum eccentricity and return it.
+        map<int, vertex_t>::iterator it;
+        int c = 0;
+        double min_eccentricity = 1.0e15;
+        for (it = m.begin(); it != m.end(); it++) {
+            if (em[c] < min_eccentricity) {
+                min_eccentricity = em[c];
+                _center = _points[ver.at(c)];
+            }
+            c++;
+        }
+
+        std::cout << "Computed Center" << _center << std::endl;
+
         
         // Construct a sorted list of vertices by eccentricity
         // TODO: It would be better to just dump everything into
         // a vector and sort at the end in O(V log V) time.
         // NOTE: This is no longer used.
+        /*
         Result sorted_result;
         map<int, vertex_t>::iterator it;
         int c = 0;
@@ -462,8 +464,9 @@ namespace PFIAir {
                 std::pair<double, Vec3s>(em[c], _points[ver.at(c)])); 
             c++;
         }
+        */
         
-        return;
+        //return;
         
 
 //        Result sorted_result;

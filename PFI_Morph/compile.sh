@@ -9,7 +9,7 @@ fi
 # Do an out-of-source build using CMake
 cd build
 cmake $FLAGS ..
-make
+make -j 4
 
 # Put the executable in the current directory
 cp PFI_Morph ..

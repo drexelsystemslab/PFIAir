@@ -22,7 +22,11 @@ namespace UpdtMeshOperations {
     Eigen::Matrix4d getTranslateMatrix(openvdb::Vec3d);
     Eigen::Matrix4d getScaleMatrix(double);
     void normalizeHomogenousCoords(Eigen::MatrixXd&);
-    void convertMeshToVolume(std::string, std::string, std::string, float, double);
+    void convertMeshToVolume(std::string, std::string, std::string, float, double, bool closed_mesh=true);
+    void dist_field_to_level_set(
+            openvdb::FloatGrid::Ptr& dist_field, 
+            double bandwidth, 
+            double voxel_size);
     
     /**
      * Read a .obj model into a list of vectors
@@ -87,13 +91,11 @@ namespace UpdtMeshOperations {
         int vertices_size = vertices.cols();
         
         // Write the vertices
-        std::cout << "vertices" << std::endl;
         for(int i = 0; i < vertices_size; i++) {
             file << "v " << vertices(0, i) << " " << vertices(1, i) << " " << vertices(2, i) << "\n";
         }
         
         // Write the face comonents
-        std::cout << "face components" << std::endl;
         for(int i = 0; i < f_list.size(); i++) {
             // TODO: not sure why there is an extra space between f and the components
             if (f_list[i].size() == 5) {
@@ -112,7 +114,6 @@ namespace UpdtMeshOperations {
         // List face elements with normals
         // The last 6 columns are PCA axis information.
         if(include_axis) {   
-            std::cout << "Include PCA info" << std::endl;
             file << "f " << vertices_size - 6 << "//" << vertices_size - 6 << " "
             << vertices_size - 5 << "//" << vertices_size - 5 << " "
             << vertices_size - 4 << "//" << vertices_size - 4 << "\n";
@@ -127,7 +128,6 @@ namespace UpdtMeshOperations {
         }
         
         file.close();
-        std::cout << "Done writing obj" << std::endl;
     }
     
     /**
@@ -330,6 +330,37 @@ namespace UpdtMeshOperations {
             vertices(3, i) /= vertices(3, i);
         }
     }
+
+    
+    /**
+     * Convert an unsigned distance field to a level set.
+     *
+     * note that the bandwidth is the bandwidth of the UNSIGNED
+     * distance field.
+     */
+    void dist_field_to_level_set(
+            openvdb::FloatGrid::Ptr& dist_field, 
+            double bandwidth, 
+            double voxel_size) {
+
+        // Iterate over all values 
+        typedef openvdb::FloatGrid::ValueAllIter AllIter;
+        // Half the bandwidth is the new 0 point
+        double zero_point = 0.5 * bandwidth * voxel_size;
+        for (AllIter iter = dist_field->beginValueAll(); iter; ++iter) {
+            double current_val = *iter;
+            double new_val = zero_point - current_val;
+            iter.setValue(new_val);
+        }
+
+        // Now the outer surface will have a distance of + half bandwidth
+        // which is the same as the distance we used to set the zero point.
+        // Update the background value for consistency.
+        openvdb::tools::changeBackground(dist_field->tree(), zero_point);
+
+        // Mark this grid as a level set so OpenVDB doesn't complain.
+        dist_field->setGridClass(openvdb::GRID_LEVEL_SET);
+    }
     
     /**
      * Convert OBJ file to a VDB file
@@ -339,28 +370,36 @@ namespace UpdtMeshOperations {
             std::string vdb_filename, 
             std::string write_path, 
             float bandwidth, 
-            double voxel_size) {
+            double voxel_size,
+            bool closed_mesh) {
 
         // Wrapper for the model
         PFIAir::Container model = PFIAir::Container();
         
-        // Load the mesh and compute its center point
+        // Load the mesh
         model.loadMeshModel(obj_filename);
 
-        // Commenting this out because it takes O(V^3) time and
-        // the result is not even used.
-        // There might be a better way to do this using the 
-        // VDB data structure to get the point of inaccessibility.
-        //model.computeMeshCenter();
+        // Compute Mesh Center. Note that this runs in O(V^3) time!
+        // And I think about O(V^2) space
+        model.computeMeshCenter();
 
         // pre-scale the model
         model.setScale(openvdb::Vec3d(voxel_size));
-        
+
         // Make a level set from the model
-        auto shape = model.getWaterTightLevelSetWithBandWidth(bandwidth);
+        openvdb::FloatGrid::Ptr dist_field;
+        if (closed_mesh) {
+            dist_field = model.getWaterTightLevelSetWithBandWidth(bandwidth);
+        } else {
+            // The unsigned -> signed distance conversions require us
+            // to have double the bandwidth for the original field, since
+            // we are implicitly inflating the mesh.
+            dist_field = model.getUnsignedDistanceField(2.0 * bandwidth);
+            dist_field_to_level_set(dist_field, 2.0 * bandwidth, voxel_size);
+        }
         
         //Export the model to a VDB file
-        model.exportModel(write_path + vdb_filename, shape);
+        model.exportModel(write_path + vdb_filename, dist_field);
     }
     
     /**
@@ -526,7 +565,8 @@ namespace UpdtMeshOperations {
             Eigen::MatrixXd& mesh_coords, 
             Eigen::MatrixXd& vdb_coords, 
             std::vector<std::vector<std::string>>& f_list, 
-            bool includePCA) {
+            bool includePCA,
+            bool closed_mesh) {
         std::vector<std::vector<std::string>> v_list;
         std::vector<std::vector<std::string>> vn_list;
         std::set<openvdb::Vec3d> vertices_set;
@@ -534,12 +574,35 @@ namespace UpdtMeshOperations {
         
         // Read the input object file
         UpdtMeshOperations::readOBJ(filepath, v_list, vn_list, f_list);
+
+        // Don't do anything for an empty mesh
+        if (v_list.size() == 0)
+            return;
+
+        // Make a matrix for the vertices.
+        mesh_coords.resize(4, v_list.size());
+
+        // The existing string splitting code does
+        // not filter out empty strings. skip spaces for
+        // until we find the x coordinate.
+        int x_index = 1;
+        while(v_list[0][x_index] == "")
+            x_index++;
+
+        // Populate the matrix.
+        for (int i = 0; i < v_list.size(); i++) {
+            mesh_coords(0, i) = std::stod(v_list[i][x_index]);
+            mesh_coords(1, i) = std::stod(v_list[i][x_index + 1]);
+            mesh_coords(2, i) = std::stod(v_list[i][x_index + 2]);
+            mesh_coords(3, i) = 1.0;
+        }
         
+        /*
         // Get the number of elements.
         size_t no_elem;
         if(v_list.size() > 0) no_elem = v_list[0].size();
         else return;
-        
+
         //Convert the vertices into a matrix 
         mesh_coords.resize(4, v_list.size()); 
         for(int i = 0; i < v_list.size(); i++) {
@@ -548,22 +611,31 @@ namespace UpdtMeshOperations {
             mesh_coords(2, i) = std::stod(v_list[i][no_elem - 1]);
             mesh_coords(3, i) = 1.0;
         }
+        */
         
         // Translate the mesh so the center is at the origin. 
         calcCentroid(mesh_coords, centroid);
         mesh_coords = getTranslateMatrix(centroid) * mesh_coords;
-        
+
         // Using the bounding box, pick the maximum dimension
         std::vector<double> axis_lengths(3);
         calcBoundingBox(mesh_coords, center, axis_lengths);
         double max_length = openvdb::math::Max(
             axis_lengths[0], axis_lengths[1]);
         max_length = openvdb::math::Max(max_length, axis_lengths[2]);
+
+
+
+        // TODO: max_length is somehow 0 which causes the infs/NaNs...
+
+        std::cout << max_length << std::endl;;
         
         // If the principal axis is smaller than 1, scale it up
         if(max_length < 1.0) {
             mesh_coords = getScaleMatrix(max_length) * mesh_coords;
         }
+
+        std::cout << mesh_coords.block<4, 3>(0, 0) << std::endl;
 
         // Temporary model files
         // TODO: What does SRT stand for?
@@ -574,14 +646,11 @@ namespace UpdtMeshOperations {
         // TODO: Do we need both files?
         // Store the results  to an OBJ file
         UpdtMeshOperations::writeOBJ(temp_obj, mesh_coords, f_list, includePCA);
-        std::cout << "Finished writing object" << std::endl;
 
         // Resample the mesh ==============================================
 
         // Convert to a VDB file
-        convertMeshToVolume(temp_obj, temp_vdb, "", 3, 0.05);
-
-        std::cout << "Converted to volume" << std::endl;
+        convertMeshToVolume(temp_obj, temp_vdb, "", 3, 0.05, closed_mesh);
         
         // Read in the VDB file
         openvdb::FloatGrid::Ptr grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
@@ -606,7 +675,8 @@ namespace UpdtMeshOperations {
     void doAllMeshOperations(
             std::string output_dir,
             std::string filepath, 
-            std::string write_name) {
+            std::string write_name, 
+            bool closed_mesh=true) {
         if(write_name == "test/.DS_Store") return;
         
         openvdb::Vec3d center(0, 0, 0), centroid(0, 0, 0);
@@ -616,13 +686,18 @@ namespace UpdtMeshOperations {
         std::vector<double> axis_lengths(3);
         bool includePCA = false;
         
-        std::cout << "coords handler" << std::endl;
-        coordsHandler(output_dir, filepath, mesh_coords, vdb_coords, f_list, includePCA);
+        coordsHandler(
+            output_dir, 
+            filepath, 
+            mesh_coords, 
+            vdb_coords,
+            f_list, 
+            includePCA, 
+            closed_mesh);
 
         // Perform PCA on the models to figure out how to orient
         // the model
         //TODO: Use just vdb_coords <-- ???
-        std::cout << "PCA analysis" << std::endl;
         UpdtMeshOperations::performPCA(vdb_coords, rot_mat);
         
         // Orient the model 
@@ -636,7 +711,6 @@ namespace UpdtMeshOperations {
 
         // Write the object to disk
         // TODO: why is this called twice?
-        std::cout << "Writing OBJ" << std::endl;
         UpdtMeshOperations::writeOBJ(write_name, mesh_coords, f_list, includePCA);
 
         //If the skewness is positive, we need to rotate the model 180 degrees

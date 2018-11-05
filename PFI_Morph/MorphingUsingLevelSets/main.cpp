@@ -336,23 +336,24 @@ void print_help() {
         << "help\t\tPrint this help message and quit" << std::endl;
 }
 
-void dist_field_to_level_set(
-        openvdb::FloatGrid::Ptr& dist_field, 
-        double bandwidth, 
-        double voxel_size) {
 
-    for (openvdb::FloatGrid::ValueAllIter iter = dist_field->beginValueAll(); iter; ++iter) {
-        double current_val = *iter;
-        double new_val = 0.5 * bandwidth * voxel_size - current_val;
-        std::cout << current_val << " " << new_val << std::endl;
-        iter.setValue(new_val);
-    }
+/**
+ * Check if a file exists. I use this for
+ * caching the centroid calculation
+ */
+bool file_exists(std::string fname) {
+    std::ifstream file(fname);
+    if (file)
+        return true;
+    else
+        return false;
 }
 
 /**
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {
+    /*
     if (argc < 6) {
         std::cout << "Missing arguments" << std::endl;
         return 1;
@@ -374,26 +375,65 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string VDB_MAX = OUTPUT_PATH + "max_isoband.vdb";
     const std::string VDB_MID = OUTPUT_PATH + "mid_isoband.vdb";
 
-    /**
-     * NOTE: if eccentricity is used to find the mesh center,
-     * this runs in O(V^3) time so only is feasible for very small meshes.
-     * This is due to Container::computeMeshCenter(). Right now, I have
-     * commented this out.
-     *
-     * I'm running into issues with NaNs when running this with open meshes,
-     * I will look into this soon.
-     */
-    /*
-    UpdtMeshOperations::doAllMeshOperations(
-        OUTPUT_PATH,
-        INPUT_OBJ,
-        PREPROCESSED_OBJ);
+    const std::string MESH_CENTER_CACHE_FILE = OUTPUT_PATH + "cache_center.txt";
     */
 
+    const std::string INPUT_PATH = "open_mesh_objs/";
+    const std::string OUTPUT_PATH = "output/open_mesh/";
+    // Original OBJ files
+    const std::string SOURCE_OBJ = INPUT_PATH + "source.obj";
+    const std::string TARGET_OBJ = INPUT_PATH + "target.obj";
+
+    // After mesh pre-processing.
+    const std::string SOURCE_OBJ_PROCESSED = 
+        OUTPUT_PATH + "source_processed.obj";
+    const std::string TARGET_OBJ_PROCESSED =
+        OUTPUT_PATH + "target_processed.obj";
+
+
+    // Limit memory usage to 1 GB as a safety precaution. I don't want to 
+    // lock up my laptop again.
+    limit_memory(1000);
+
+    /**
+     * Pre-process meshes. The results are saved to a file for two reasons:
+     * 1. I can inspect the results
+     * 2. I can cache the results
+     *
+     * To force a pre-processing, delete the processed OBJS in the output
+     * directory.
+     * 
+     * NOTE: if eccentricity is used to find the mesh center,
+     * this runs in O(V^3) time so only is feasible for very small meshes.
+     */
+    if (!file_exists(SOURCE_OBJ_PROCESSED)) {
+        std::cout << "Pre-processing source object (SLOW)" << std::endl;
+        UpdtMeshOperations::doAllMeshOperations(
+            OUTPUT_PATH,
+            SOURCE_OBJ,
+            SOURCE_OBJ_PROCESSED,
+            // Explicitly specifiy that thi is an open mesh
+            // TODO: Is there an easy way to check if a mesh is closed?
+            false);
+    }
+    if (!file_exists(TARGET_OBJ_PROCESSED)) {
+        std::cout << "Pre-processing target object (SLOW)" << std::endl;
+        UpdtMeshOperations::doAllMeshOperations(
+            OUTPUT_PATH,
+            TARGET_OBJ,
+            TARGET_OBJ_PROCESSED,
+            false);
+    }
+
+
+    /*
     PFIAir::Container model = PFIAir::Container();
 
     std::cout << "Loading Open Mesh" << std::endl;
     model.loadMeshModel(INPUT_OBJ);
+
+    openvdb::Vec3s center = model.computeMeshCenter();
+    std::cout << "Center " << center << std::endl;
 
     // IMPORTANT: Container.computeMeshCenter does not work with open meshes!
     // It consumes all memory
@@ -480,6 +520,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "isovalue = (min + max) / 2" << std::endl;
     openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, midpoint);
     std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
+    */
     
     // And now we can create a level set
     // When this runs on the max or midpoint, I do get a level set, but it

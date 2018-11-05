@@ -28,7 +28,7 @@ namespace PFIAir {
         
         math::Transform _scale = math::Transform();
 
-        
+        Vec3s _center; 
         
     protected:
         double getEuclideanFromIndices(int p1, int p2);
