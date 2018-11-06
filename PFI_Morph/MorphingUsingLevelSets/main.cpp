@@ -425,6 +425,46 @@ int load_open_mesh(int argc, const char* argv[]) {
             false);
     }
 
+    // Create an object for morphing.
+    MorphOperations::Morph morph_obj = MorphOperations::Morph(SOURCE_OBJ);
+        
+    // Convert meshes to volumes
+    const std::string SOURCE_VDB = "source.vdb";
+    const std::string TARGET_VDB = "target.vdb";
+    const double BANDWIDTH = 3.0;
+    const double VOXEL_SIZE = 0.05;
+
+    std::cout << "Converting source object to volume (SLOW)" << std::endl; 
+    UpdtMeshOperations::convertMeshToVolume(
+        SOURCE_OBJ_PROCESSED,
+        SOURCE_VDB,
+        OUTPUT_PATH,
+        BANDWIDTH,
+        VOXEL_SIZE,
+        false);
+    std::cout << "Converting target object to volume (SLOW)" << std::endl; 
+    UpdtMeshOperations::convertMeshToVolume(
+        TARGET_OBJ_PROCESSED,
+        TARGET_VDB,
+        OUTPUT_PATH,
+        BANDWIDTH,
+        VOXEL_SIZE,
+        false);
+
+    std::cout << "Reading VDB files" << std::endl;
+    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+        GridOperations::readFile(OUTPUT_PATH + SOURCE_VDB));
+    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
+        GridOperations::readFile(OUTPUT_PATH + TARGET_VDB));
+
+    // Set the morph output directory
+    morph_obj.morph_path = OUTPUT_PATH + "source-target";
+                
+    // Generate a Table Row
+    HTMLHelper::TableRow row;    
+    std::cout << "Morphing models" << std::endl;
+    double energy = morph_obj.morphModels(row);
+    std::cout << "Energy: " << energy << std::endl;
 
     /*
     PFIAir::Container model = PFIAir::Container();

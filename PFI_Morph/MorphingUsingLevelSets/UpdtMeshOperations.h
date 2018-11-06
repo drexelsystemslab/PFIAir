@@ -650,6 +650,8 @@ namespace UpdtMeshOperations {
         // Resample the mesh ==============================================
 
         // Convert to a VDB file
+        // 3 is the bandwidth
+        // 0.05 is the voxel size.
         convertMeshToVolume(temp_obj, temp_vdb, "", 3, 0.05, closed_mesh);
         
         // Read in the VDB file

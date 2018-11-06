@@ -330,8 +330,6 @@ namespace PFIAir {
             }
         }
 
-        std::cout << "Done with quad indices " << std::endl;
-        
         // Do the same for the triangles
         // O(num_triangles * (log V + E)
         for (int i = 0; i < _indicesTri.size(); i++) {
