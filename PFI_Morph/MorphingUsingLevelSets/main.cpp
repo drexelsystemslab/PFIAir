@@ -15,6 +15,8 @@
 
 #include "UpdtMeshOperations.h"
 
+#include "Mesh.h"
+
 //const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
 const std::string OUTPUT_DIR = "output/";
 const std::string INPUT_DIR = "original_objs/";
@@ -390,10 +392,15 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string TARGET_OBJ_PROCESSED =
         OUTPUT_PATH + "target_processed.obj";
 
-
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
     // lock up my laptop again.
     limit_memory(1000);
+
+
+    // New style of pre-processing meshes with a much simpler interface.
+    Mesh mesh(SOURCE_OBJ, true);
+    mesh.preprocess_mesh();
+    mesh.save_obj(OUTPUT_DIR + "source_processed.obj");
 
     /**
      * Pre-process meshes. The results are saved to a file for two reasons:
