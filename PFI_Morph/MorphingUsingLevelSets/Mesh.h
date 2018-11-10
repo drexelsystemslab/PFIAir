@@ -34,7 +34,7 @@ class Mesh {
      * The geometric centroid of the current mesh vertices.
      * This gets transformed whenever the mesh is transformed.
      */
-    Eigen::Vector3f centroid;
+    Eigen::Vector4d centroid;
     
     /**
      * The "most central vertex". There are different ways to compute this
@@ -42,7 +42,7 @@ class Mesh {
      * Floyd-Warshall in O(V^3) time), or closest vertex to centroid (less
      * accurate, but runs in O(V) time.
      */
-    Eigen::Vector3f central_vertex;
+    Eigen::Vector4d central_vertex;
 
     /**
      * The current bounding box for this model.

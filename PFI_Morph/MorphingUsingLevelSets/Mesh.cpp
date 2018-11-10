@@ -91,11 +91,39 @@ void Mesh::preprocess_closed_mesh() {
 }
 
 void Mesh::calc_matrix() {
-    std::cout << "TODO: Fill out calc_matrix" << std::endl;
+    if (!vertices_valid)
+        throw std::runtime_error("Cannot build matrix from invalid vertices!");
+
+    // Initialize the matrix.
+    geometry = Eigen::MatrixXd(4, vertices.size()); 
+    for (unsigned int i = 0; i < vertices.size(); i++) {
+        // Store the vector in homogeneous coordinates.
+        openvdb::Vec3s vertex = vertices[i];
+        geometry(0, i) = vertex.x();
+        geometry(1, i) = vertex.y();
+        geometry(2, i) = vertex.z();
+        geometry(3, i) = 1.0;
+    }
+
+    // Mark the matrix field as valid
+    matrix_valid = true;
 }
 
 void Mesh::calc_centroid() {
-    std::cout << "TODO: Fill out calc_centroid" << std::endl;
+    if (!matrix_valid)
+        throw std::runtime_error("Matrix must be valid to compute centroid");
+
+    int N = geometry.cols();
+    centroid = geometry.rowwise().sum() / N;
+
+    // Sums of homogeneous coordinates should not modify the w-component.
+    // Set the w component back to 1
+    centroid(3) = 1.0;
+
+    // Mark the centroid as valid.
+    centroid_valid = true;
+
+    std::cout << centroid << std::endl;
 }
 
 void Mesh::center_on_centroid() {
