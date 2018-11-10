@@ -105,7 +105,6 @@ public:
      * Save the OBJ file to disk. This is useful for debugging.
      */
     void save_obj(std::string filename);
-
 private:
 
     /**
@@ -216,7 +215,7 @@ private:
      * v x y z ...
      * populating the vertex list
      */
-    void parse_obj_vertex(std::string line);
+    void parse_obj_vertex(std::vector<std::string> tokens);
     /**
      * Handle OBJ lines of the form
      * f a b c
@@ -229,7 +228,7 @@ private:
      * Note: Any texture coordinates or normals are discarded
      * for this method.
      */
-    void parse_obj_face(std::string line);
+    void parse_obj_face(std::vector<std::string> tokens);
 
     // Methods for saving an OBJ file ==================================
 

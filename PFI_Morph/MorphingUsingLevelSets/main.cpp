@@ -398,9 +398,13 @@ int load_open_mesh(int argc, const char* argv[]) {
 
 
     // New style of pre-processing meshes with a much simpler interface.
+    std::cout << "Process new-style mesh" << std::endl;
     Mesh mesh(SOURCE_OBJ, true);
     mesh.preprocess_mesh();
-    mesh.save_obj(OUTPUT_DIR + "source_processed.obj");
+    mesh.save_obj(OUTPUT_PATH + "new_style_mesh.obj");
+    std::cout << "Done!" << std::endl;
+
+    return 0;
 
     /**
      * Pre-process meshes. The results are saved to a file for two reasons:
