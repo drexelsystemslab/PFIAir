@@ -16,6 +16,15 @@
  * an easier to use class
  */
 class Mesh {
+    // Index of the w-component of a vector
+    static const int X = 0;
+    static const int Y = 1;
+    static const int Z = 2;
+    static const int W = 3;
+
+    // Homogeneous coordinates require size 4 vectors
+    static const int VECTOR_SIZE = 4;
+
     /**
      * List of vertices and faces from the .obj
      * file stored as OpenVDB vectors.
@@ -160,7 +169,7 @@ private:
      * Apply a transformation to the matrix representation and
      * any vectors computed so far. The vertex list is invalidated
      */
-    void transform(Eigen::MatrixXd& xform);
+    void apply_transform(const Eigen::Matrix4d& xform);
 
     /**
      * Translate this mesh so its geometric centroid is now the origin

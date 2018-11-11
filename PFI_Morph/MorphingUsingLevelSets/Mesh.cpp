@@ -3,6 +3,13 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#include <eigen3/Eigen/Geometry>
+
+const int Mesh::X;
+const int Mesh::Y;
+const int Mesh::Z;
+const int Mesh::W;
+const int Mesh::VECTOR_SIZE;
 
 Mesh::Mesh(std::string filename, bool is_open_mesh):
         is_open_mesh(is_open_mesh) {
@@ -95,14 +102,14 @@ void Mesh::calc_matrix() {
         throw std::runtime_error("Cannot build matrix from invalid vertices!");
 
     // Initialize the matrix.
-    geometry = Eigen::MatrixXd(4, vertices.size()); 
+    geometry = Eigen::MatrixXd(VECTOR_SIZE, vertices.size()); 
     for (unsigned int i = 0; i < vertices.size(); i++) {
         // Store the vector in homogeneous coordinates.
         openvdb::Vec3s vertex = vertices[i];
-        geometry(0, i) = vertex.x();
-        geometry(1, i) = vertex.y();
-        geometry(2, i) = vertex.z();
-        geometry(3, i) = 1.0;
+        geometry(X, i) = vertex.x();
+        geometry(Y, i) = vertex.y();
+        geometry(Z, i) = vertex.z();
+        geometry(W, i) = 1.0;
     }
 
     // Mark the matrix field as valid
@@ -117,8 +124,7 @@ void Mesh::calc_centroid() {
     centroid = geometry.rowwise().sum() / N;
 
     // Sums of homogeneous coordinates should not modify the w-component.
-    // Set the w component back to 1
-    centroid(3) = 1.0;
+    centroid(W) = 1.0;
 
     // Mark the centroid as valid.
     centroid_valid = true;
@@ -126,8 +132,42 @@ void Mesh::calc_centroid() {
     std::cout << centroid << std::endl;
 }
 
+void Mesh::apply_transform(const Eigen::Matrix4d& xform) {
+    // Apply the transformation to the geometry matrix
+    geometry = xform * geometry;
+
+    // Also apply it to the centroid and/or central vertex if they exist
+    if (centroid_valid) {
+        // Apply the transformation and re-normalize the homogeneous coords
+        centroid = xform * centroid;
+        centroid /= centroid(W);
+        std::cout << centroid << std::endl;
+    }
+
+    if (central_vertex_valid) {
+        // Apply the transformation and re-normalize the homogeneous coords
+        central_vertex = xform * central_vertex;
+        central_vertex /= central_vertex(W);
+    }
+
+    // The vertices and bounding box are no longer valid
+    vertices_valid = false;
+    bbox_valid = false;
+
+
+    std::cout << geometry.block<4, 4>(0, 0) << std::endl;
+}
+
 void Mesh::center_on_centroid() {
-    std::cout << "TODO: Fill out center_on_centroid" << std::endl;
+    if (!centroid_valid)
+        throw std::runtime_error("Cannot center model on invalid centroid");
+
+    Eigen::Vector3d delta = -centroid.head(VECTOR_SIZE - 1);
+    Eigen::Translation3d translate(delta);
+    Eigen::Affine3d xform(translate);
+
+    // Apply the transformation to the matrix
+    apply_transform(xform.matrix());
 }
 
 void Mesh::calc_bounding_box() {
