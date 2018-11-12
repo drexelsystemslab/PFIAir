@@ -624,12 +624,6 @@ namespace UpdtMeshOperations {
             axis_lengths[0], axis_lengths[1]);
         max_length = openvdb::math::Max(max_length, axis_lengths[2]);
 
-
-
-        // TODO: max_length is somehow 0 which causes the infs/NaNs...
-
-        std::cout << max_length << std::endl;;
-        
         // If the principal axis is smaller than 1, scale it up
         if(max_length < 1.0) {
             mesh_coords = getScaleMatrix(max_length) * mesh_coords;

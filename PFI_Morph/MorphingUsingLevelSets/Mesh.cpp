@@ -154,7 +154,6 @@ void Mesh::apply_transform(const Eigen::Matrix4d& xform) {
     vertices_valid = false;
     bbox_valid = false;
 
-
     std::cout << geometry.block<4, 4>(0, 0) << std::endl;
 }
 
@@ -171,11 +170,40 @@ void Mesh::center_on_centroid() {
 }
 
 void Mesh::calc_bounding_box() {
-    std::cout << "TODO: Fill out bounding_box" << std::endl;
+    if (!matrix_valid)
+        throw std::runtime_error(
+            "Matrix must be valid to compute bounding box");
+
+    // Scan across the matrix and compute maximmum and minimum
+    // coordinates on each axis.
+    Eigen::Vector4d max_coords = geometry.rowwise().maxCoeff();
+    Eigen::Vector4d min_coords = geometry.rowwise().minCoeff();
+
+    // Build a bounding box
+    // from (x, y, z) ignoring w
+    bbox = BoundingBox(
+        min_coords.head(VECTOR_SIZE - 1), 
+        max_coords.head(VECTOR_SIZE - 1));
+    bbox_valid = true;
+
+    std::cout << "Bounding box: " << bbox << std::endl;
 }
 
 void Mesh::scale_up_small_mesh() {
-    std::cout << "TODO: Fill out scale_up_small_mesh" << std::endl;
+    if (!bbox_valid)
+        throw std::runtime_error("Cannot scale meshes without bounding box!");
+
+    // If the max length is less than 1, scale up the mesh to 1
+    double max_length = bbox.get_max_length();
+    if (max_length < 1.0) {
+        Eigen::UniformScaling<double> inv_scale = 
+            Eigen::Scaling(1.0 / max_length);
+        Eigen::Affine3d xform(inv_scale);
+        apply_transform(xform.matrix());
+    } else {
+        // TODO: Remove this
+        std::cout << "No scaling needed" << std::endl;
+    }
 }
 
 void Mesh::calc_central_vertex(ClosestToCentroid& center_finder) {
