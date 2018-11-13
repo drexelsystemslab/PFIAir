@@ -629,8 +629,6 @@ namespace UpdtMeshOperations {
             mesh_coords = getScaleMatrix(max_length) * mesh_coords;
         }
 
-        std::cout << mesh_coords.block<4, 3>(0, 0) << std::endl;
-
         // Temporary model files
         // TODO: What does SRT stand for?
         // Scale, Rotate, Translate? Though there's no rotation yet

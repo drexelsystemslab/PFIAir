@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <eigen3/Eigen/Geometry>
+#include "PCACalculator.h"
 
 const int Mesh::X;
 const int Mesh::Y;
@@ -128,8 +129,6 @@ void Mesh::calc_centroid() {
 
     // Mark the centroid as valid.
     centroid_valid = true;
-
-    std::cout << centroid << std::endl;
 }
 
 void Mesh::apply_transform(const Eigen::Matrix4d& xform) {
@@ -141,7 +140,6 @@ void Mesh::apply_transform(const Eigen::Matrix4d& xform) {
         // Apply the transformation and re-normalize the homogeneous coords
         centroid = xform * centroid;
         centroid /= centroid(W);
-        std::cout << centroid << std::endl;
     }
 
     if (central_vertex_valid) {
@@ -153,8 +151,6 @@ void Mesh::apply_transform(const Eigen::Matrix4d& xform) {
     // The vertices and bounding box are no longer valid
     vertices_valid = false;
     bbox_valid = false;
-
-    std::cout << geometry.block<4, 4>(0, 0) << std::endl;
 }
 
 void Mesh::center_on_centroid() {
@@ -185,8 +181,6 @@ void Mesh::calc_bounding_box() {
         min_coords.head(VECTOR_SIZE - 1), 
         max_coords.head(VECTOR_SIZE - 1));
     bbox_valid = true;
-
-    std::cout << "Bounding box: " << bbox << std::endl;
 }
 
 void Mesh::scale_up_small_mesh() {
@@ -200,9 +194,6 @@ void Mesh::scale_up_small_mesh() {
             Eigen::Scaling(1.0 / max_length);
         Eigen::Affine3d xform(inv_scale);
         apply_transform(xform.matrix());
-    } else {
-        // TODO: Remove this
-        std::cout << "No scaling needed" << std::endl;
     }
 }
 
@@ -215,7 +206,11 @@ void Mesh::resample() {
 }
 
 void Mesh::perform_pca() {
-    std::cout << "TODO: Fill out perform_pca" << std::endl;
+    if (!matrix_valid)
+        throw std::runtime_error("Matrix must be valid to perform PCA");
+
+    PCACalculator calc;
+    Eigen::Matrix4d rotation = calc.perform_pca(geometry);
 }
 
 void Mesh::normalize_scale() {
@@ -227,7 +222,15 @@ void Mesh::normalize_skewness() {
 }
 
 void Mesh::center_on_central_vertex() {
-    std::cout << "TODO: Fill out center_on_central_vertex" << std::endl;
+    if (!central_vertex_valid)
+        throw std::runtime_error("Cannot center model on invalid centroid");
+
+    Eigen::Vector3d delta = -central_vertex.head(VECTOR_SIZE - 1);
+    Eigen::Translation3d translate(delta);
+    Eigen::Affine3d xform(translate);
+
+    // Apply the transformation to the matrix
+    apply_transform(xform.matrix());
 }
 
 void Mesh::parse_obj_file(std::string filename) {
