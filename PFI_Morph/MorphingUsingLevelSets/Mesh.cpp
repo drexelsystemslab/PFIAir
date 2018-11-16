@@ -1,7 +1,9 @@
 #include "Mesh.h"
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <eigen3/Eigen/Geometry>
 #include "PCACalculator.h"
@@ -29,6 +31,10 @@ void Mesh::preprocess_mesh() {
 }
 
 void Mesh::save_obj(std::string filename) {
+    // Quietly recompute vertices from matrix
+    if (!vertices_valid)
+        calc_vertices();
+
     std::ofstream obj_file(filename);
 
     if (!obj_file.is_open())
@@ -66,9 +72,7 @@ void Mesh::preprocess_open_mesh() {
     scale_up_small_mesh();
 
     // Find the "most central vertex" one way or another
-    ClosestToCentroid center_finder;
-    //MostCentralVertex center_finder;
-    calc_central_vertex(center_finder);
+    calc_central_vertex();
 
     // convert to a VDB and perform a morphological opening to
     // smooth out the mesh.
@@ -96,6 +100,22 @@ void Mesh::preprocess_open_mesh() {
 
 void Mesh::preprocess_closed_mesh() {
     std::cout << "TODO: Fill out preprocess_closed_mesh" << std::endl;
+}
+
+void Mesh::calc_vertices() {
+    if (!matrix_valid)
+        throw std::runtime_error("Cannot read vertices from invalid matrix!");
+
+    vertices.clear();
+    for (unsigned int i = 0; i < geometry.cols(); i++) {
+        double x = geometry(X, i);
+        double y = geometry(Y, i);
+        double z = geometry(Z, i);
+        openvdb::Vec3s vertex(x, y, z);
+        vertices.push_back(vertex);
+    }
+
+    vertices_valid = true;
 }
 
 void Mesh::calc_matrix() {
@@ -197,12 +217,61 @@ void Mesh::scale_up_small_mesh() {
     }
 }
 
-void Mesh::calc_central_vertex(ClosestToCentroid& center_finder) {
-    std::cout << "TODO: Fill out calc_central_vertex" << std::endl;
+void Mesh::calc_central_vertex() {
+    if (!centroid_valid) {
+        throw std::runtime_error(
+            "Cannot compute nearest-vertex-to-centroid without centroid!");
+    }
+    if (!matrix_valid) {
+        throw std::runtime_error(
+            "Matrix must be valid to compute nearest-vertex-to-centroid");
+    }
+
+    // Slice out the first 3 components of the center
+    Eigen::Vector3d center = centroid.head(VECTOR_SIZE - 1);
+
+    // Compute the minimum distance to the center
+    double min_dist_squared = std::numeric_limits<double>::infinity();
+    for (int i = 0; i < geometry.cols(); i++) {
+        // Slice out the vertex
+        Eigen::Vector3d vertex = geometry.block<VECTOR_SIZE - 1, 1>(0, i);
+        double dist = (vertex - center).squaredNorm();
+
+        // Update the minimum distance and store the vertex in
+        // central_vertex
+        if (dist < min_dist_squared) {
+            central_vertex.head(VECTOR_SIZE - 1) = vertex;
+            min_dist_squared = dist;
+        }
+    }
+
+    // Make sure we set the w component to 1
+    central_vertex(W) = 1;
+
+    // Mark central vertex valid
+    central_vertex_valid = true;
 }
 
 void Mesh::resample() {
     std::cout << "TODO: Fill out resample" << std::endl;
+    /**
+    Desired Interface:
+
+    // Recompute vertices from the matrix.
+    calc_vertices();
+
+    // Filter out noise
+    LevelSet level_set = to_level_set();
+    level_set.morphological_opening();
+
+    // Find a point inside the level set nearest to the centroid
+    // TODO: Do I want to do this here or elsewhere?
+    central_vertex = level_set.find_center(centroid);
+
+    LevelSet level_set(vertices, indices_tri, indices_quad, is_open_mesh);
+    level_set.morphological_opening();
+    level_set.to_mesh()
+    */
 }
 
 void Mesh::perform_pca() {
@@ -211,14 +280,59 @@ void Mesh::perform_pca() {
 
     PCACalculator calc;
     Eigen::Matrix4d rotation = calc.perform_pca(geometry);
+    
+    apply_transform(rotation);
 }
 
 void Mesh::normalize_scale() {
-    std::cout << "TODO: Fill out normalize_scale" << std::endl;
+    if (!bbox_valid)
+        throw std::runtime_error("Bounding box must be valid to fix scaling");
+
+    // Scale the mesh so the max length is 1
+    double max_length = bbox.get_max_length();
+    Eigen::UniformScaling<double> inv_scale = Eigen::Scaling(1.0 / max_length);
+    Eigen::Affine3d xform(inv_scale);
+    apply_transform(xform.matrix());
 }
 
 void Mesh::normalize_skewness() {
-    std::cout << "TODO: Fill out normalize_skewness" << std::endl;
+    if (!matrix_valid)
+        throw std::runtime_error("Matrix must be valid to compute skewness");
+
+    // One way of measuring skewness is 
+    // 3(mean - median) / stddev
+    // However, all we need is the *sign* of the skewness, so
+    // (mean - median) will do.
+
+    // The mean is easy to compute with built-in Eigen operations
+    double mean = geometry.row(Z).mean();
+
+    // Compute the median.
+    // This runs in O(V log V) time. It would be faster
+    // to use a linear 
+    int N = geometry.cols();
+    double z_values[N];
+    for (unsigned int i = 0; i < N; i++)
+        z_values[i] = geometry(Z, i);
+
+    std::sort(z_values, z_values + N);
+    double median;
+    if(N % 2 == 0)
+        median = (z_values[N/2] + z_values[N/2 - 1]) / 2;
+    else 
+        median = z_values[N/2];
+
+    double skewness = mean - median;
+
+    // We want the skewness to be negative. If it is not,,
+    // rotate the model 180 degrees around the Y axis
+    if (skewness > 0) { 
+        // 180 degree rotation around the y-axis
+        Eigen::Affine3d flip(
+            Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY()));
+        apply_transform(flip.matrix());
+    }
+
 }
 
 void Mesh::center_on_central_vertex() {

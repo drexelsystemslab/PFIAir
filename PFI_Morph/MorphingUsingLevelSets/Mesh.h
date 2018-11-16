@@ -130,6 +130,11 @@ private:
 
     // Populate optional fields ======================================
 
+    /** 
+     * Recompute vertices from matrix.
+     */
+    void calc_vertices();
+
     /**
      * Populate the matrix representation of this object
      */
@@ -150,13 +155,13 @@ private:
      * Compute the central vertex by finding the vertex with lowest
      * eccentricity. This is more accurate, but slow, taking O(V^3) time.
      */
-    void calc_central_vertex(MostCentralVertex& center_finder);
+    //void calc_central_vertex(MostCentralVertex& center_finder);
 
     /**
      * Compute the most central vertex by finding the closest vertex
      * to the centroid. This takes O(V) time.
      */
-    void calc_central_vertex(ClosestToCentroid& center_finder);
+    void calc_central_vertex();
 
     /**
      * Calculate the bounding box for this mesh.
