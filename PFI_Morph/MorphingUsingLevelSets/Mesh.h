@@ -6,9 +6,10 @@
 #include <eigen3/Eigen/Dense>
 #include <openvdb/openvdb.h>
 
-#include "MostCentralVertex.h"
-#include "ClosestToCentroid.h"
 #include "BoundingBox.h"
+#include "LevelSet.h"
+
+class LevelSet;
 
 /**
  * This new Mesh class consolidates the code
@@ -110,10 +111,16 @@ public:
      */
     void preprocess_mesh();
 
+    /*
+     * Get a LevelSet (VDB) object representation of this model
+     */
+    LevelSet to_level_set();
+
     /**
      * Save the OBJ file to disk. This is useful for debugging.
      */
     void save_obj(std::string filename);
+
 private:
 
     /**
@@ -150,12 +157,6 @@ private:
      * Compute the centroid of this mesh's vertices.
      */
     void calc_centroid();
-
-    /**
-     * Compute the central vertex by finding the vertex with lowest
-     * eccentricity. This is more accurate, but slow, taking O(V^3) time.
-     */
-    //void calc_central_vertex(MostCentralVertex& center_finder);
 
     /**
      * Compute the most central vertex by finding the closest vertex

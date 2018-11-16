@@ -30,6 +30,12 @@ void Mesh::preprocess_mesh() {
         preprocess_closed_mesh();
 }
 
+LevelSet Mesh::to_level_set() { 
+    // Build a LevelSet object. Passing in the is_open_mesh flag is enough
+    // to ensure the right method gets called.
+    return LevelSet(vertices, indices_tri, indices_quad, is_open_mesh);
+}
+
 void Mesh::save_obj(std::string filename) {
     // Quietly recompute vertices from matrix
     if (!vertices_valid)
@@ -79,6 +85,7 @@ void Mesh::preprocess_open_mesh() {
     resample();
 
     // re-center the mesh before performing PCA
+    calc_matrix();
     calc_centroid();
     center_on_centroid();
 
@@ -253,25 +260,32 @@ void Mesh::calc_central_vertex() {
 }
 
 void Mesh::resample() {
-    std::cout << "TODO: Fill out resample" << std::endl;
-    /**
-    Desired Interface:
-
-    // Recompute vertices from the matrix.
+    // Recompute vertex list since this is what OpenVDB needs
     calc_vertices();
 
     // Filter out noise
     LevelSet level_set = to_level_set();
     level_set.morphological_opening();
 
-    // Find a point inside the level set nearest to the centroid
-    // TODO: Do I want to do this here or elsewhere?
-    central_vertex = level_set.find_center(centroid);
+    // Update the vertices
+    level_set.to_mesh(vertices, indices_tri, indices_quad);
+    vertices_valid = true;
 
-    LevelSet level_set(vertices, indices_tri, indices_quad, is_open_mesh);
-    level_set.morphological_opening();
-    level_set.to_mesh()
-    */
+    // After updating the vertices, we now have a closed mesh
+    is_open_mesh = true;
+
+    // The matrix is now invalid
+    matrix_valid = false;
+
+    // The centroid and bounding boxes will be computed again
+    // for the re-sampled mesh
+    centroid_valid = false;
+    bbox_valid = false;
+
+    // Note: the most central vertex is NOT marked invalid.
+    // This is because we want to use the same
+    // point for centering later
+
 }
 
 void Mesh::perform_pca() {
