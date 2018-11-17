@@ -14,8 +14,8 @@
 #include "HTMLHelper.h"
 
 #include "UpdtMeshOperations.h"
-
 #include "Mesh.h"
+#include "Timer.h"
 
 //const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
 const std::string OUTPUT_DIR = "output/";
@@ -355,36 +355,13 @@ bool file_exists(std::string fname) {
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {
-    /*
-    if (argc < 6) {
-        std::cout << "Missing arguments" << std::endl;
-        return 1;
-    }
-
-    // Limit memory so my laptop doesn't lock up while testing 
-    // existing code with open meshes
-    limit_memory(std::atol(argv[2])); 
-
-    // This model is a partial vase.
-    const std::string INPUT_OBJ = argv[5]; //"open_mesh_objs/vase_simplified2.obj";
-    const std::string OUTPUT_PATH = "output/open_mesh/";
-    const std::string OUTPUT_VDB =
-        OUTPUT_PATH + "output" + argv[3] + "_" + argv[4] + ".vdb";
-    const std::string LS_VDB = OUTPUT_PATH + "level_set.vdb";
-    const std::string OUTPUT_FIXED_VDB = OUTPUT_PATH + "fixed.vdb";
-    const std::string PREPROCESSED_OBJ = OUTPUT_PATH + "preprocessed.obj";
-    CommonOperations::makeDirs(OUTPUT_PATH.c_str());
-    const std::string VDB_MAX = OUTPUT_PATH + "max_isoband.vdb";
-    const std::string VDB_MID = OUTPUT_PATH + "mid_isoband.vdb";
-
-    const std::string MESH_CENTER_CACHE_FILE = OUTPUT_PATH + "cache_center.txt";
-    */
-
     const std::string INPUT_PATH = "open_mesh_objs/";
     const std::string OUTPUT_PATH = "output/open_mesh/";
     // Original OBJ files
     const std::string SOURCE_OBJ = INPUT_PATH + "source.obj";
     const std::string TARGET_OBJ = INPUT_PATH + "target.obj";
+
+    CommonOperations::makeDirs(OUTPUT_DIR.c_str());
 
     // After mesh pre-processing.
     const std::string SOURCE_OBJ_PROCESSED = 
@@ -404,6 +381,10 @@ int load_open_mesh(int argc, const char* argv[]) {
 
     // Read in the two open meshes and preprocess them ====================
 
+    Timer time_overall("Open Mesh Experiment");
+
+    Timer time_preprocess("Preprocessing meshes");
+
     std::cout << "Preprocess source mesh" << std::endl;
     // boolean flag is to mark this as an open mesh
     Mesh source_mesh(SOURCE_OBJ, true);
@@ -413,7 +394,11 @@ int load_open_mesh(int argc, const char* argv[]) {
     Mesh target_mesh(TARGET_OBJ, true);
     target_mesh.preprocess_mesh();
 
+    time_preprocess.stop();
+
     // Optional: Save processed meshes ==================================
+
+    Timer time_save_obj("(Optional) Saving OBJ files");
 
     std::cout << "Saving source mesh to " << SOURCE_OBJ_PROCESSED << std::endl;
     source_mesh.save_obj(SOURCE_OBJ_PROCESSED); 
@@ -421,7 +406,11 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "Saving target mesh to " << TARGET_OBJ_PROCESSED << std::endl;
     target_mesh.save_obj(TARGET_OBJ_PROCESSED);
 
+    time_save_obj.stop();
+
     // Convert to level sets ===========================================
+
+    Timer time_convert("Converting meshes -> level sets");
 
     std::cout << "Converting source mesh to level set" << std::endl;
     LevelSet source_ls = source_mesh.to_level_set();
@@ -429,7 +418,11 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "Converting target mesh to level set" << std::endl;
     LevelSet target_ls = target_mesh.to_level_set();
 
+    time_convert.stop();
+
     // Optional: Save level sets ======================================
+
+    Timer time_save_vdb("(Optional) Saving VDBs");
 
     std::cout << "Saving source mesh to " << SOURCE_VDB_PROCESSED << std::endl;
     source_ls.save(SOURCE_VDB_PROCESSED); 
@@ -437,13 +430,16 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "Saving target mesh to " << TARGET_VDB_PROCESSED << std::endl;
     target_ls.save(TARGET_VDB_PROCESSED);
 
+    time_save_vdb.stop();
+
     // Morph the two models ============================================
 
-    // Create an object for morphing.
+    Timer time_morph("Morphing Models");
 
     // Set the morph output directory
     MorphOperations::Morph morph_obj = MorphOperations::Morph(SOURCE_OBJ);
     morph_obj.morph_path = OUTPUT_PATH + "source-target";
+    CommonOperations::makeDirs(morph_obj.morph_path.c_str());
 
     // Attach the underlying grids
     morph_obj.source_grid = source_ls.get_level_set();
@@ -451,205 +447,12 @@ int load_open_mesh(int argc, const char* argv[]) {
                 
     // Generate a Table Row
     HTMLHelper::TableRow row;    
-    std::cout << "Morphing models" << std::endl;
     double energy = morph_obj.morphModels(row);
     std::cout << "Energy: " << energy << std::endl;
 
-/*
-    // New style of pre-processing meshes with a much simpler interface.
-    std::cout << "Process new-style mesh" << std::endl;
-    Mesh mesh(SOURCE_OBJ, true);
-    mesh.preprocess_mesh();
-    mesh.save_obj(OUTPUT_PATH + "new_style_mesh.obj");
+    time_morph.stop();
 
-    std::cout << "Save VDB equivalent" << std::endl;
-    mesh.to_level_set().save(OUTPUT_PATH + "new_style_mesh.vdb");
-    std::cout << "Done!" << std::endl;
-    */
-
-    return 0;
-
-    /**
-     * Pre-process meshes. The results are saved to a file for two reasons:
-     * 1. I can inspect the results
-     * 2. I can cache the results
-     *
-     * To force a pre-processing, delete the processed OBJS in the output
-     * directory.
-     * 
-     * NOTE: if eccentricity is used to find the mesh center,
-     * this runs in O(V^3) time so only is feasible for very small meshes.
-     */
-     /*
-    if (!file_exists(SOURCE_OBJ_PROCESSED)) {
-        std::cout << "Pre-processing source object (SLOW)" << std::endl;
-        UpdtMeshOperations::doAllMeshOperations(
-            OUTPUT_PATH,
-            SOURCE_OBJ,
-            SOURCE_OBJ_PROCESSED,
-            // Explicitly specifiy that thi is an open mesh
-            // TODO: Is there an easy way to check if a mesh is closed?
-            false);
-    }
-    if (!file_exists(TARGET_OBJ_PROCESSED)) {
-        std::cout << "Pre-processing target object (SLOW)" << std::endl;
-        UpdtMeshOperations::doAllMeshOperations(
-            OUTPUT_PATH,
-            TARGET_OBJ,
-            TARGET_OBJ_PROCESSED,
-            false);
-    }
-
-    // Create an object for morphing.
-    MorphOperations::Morph morph_obj = MorphOperations::Morph(SOURCE_OBJ);
-        
-    // Convert meshes to volumes
-    const std::string SOURCE_VDB = "source.vdb";
-    const std::string TARGET_VDB = "target.vdb";
-    const double BANDWIDTH = 3.0;
-    const double VOXEL_SIZE = 0.05;
-
-    std::cout << "Converting source object to volume (SLOW)" << std::endl; 
-    UpdtMeshOperations::convertMeshToVolume(
-        SOURCE_OBJ_PROCESSED,
-        SOURCE_VDB,
-        OUTPUT_PATH,
-        BANDWIDTH,
-        VOXEL_SIZE,
-        false);
-    std::cout << "Converting target object to volume (SLOW)" << std::endl; 
-    UpdtMeshOperations::convertMeshToVolume(
-        TARGET_OBJ_PROCESSED,
-        TARGET_VDB,
-        OUTPUT_PATH,
-        BANDWIDTH,
-        VOXEL_SIZE,
-        false);
-
-    std::cout << "Reading VDB files" << std::endl;
-    morph_obj.source_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
-        GridOperations::readFile(OUTPUT_PATH + SOURCE_VDB));
-    morph_obj.target_grid = openvdb::gridPtrCast<openvdb::FloatGrid>(
-        GridOperations::readFile(OUTPUT_PATH + TARGET_VDB));
-
-    // Set the morph output directory
-    morph_obj.morph_path = OUTPUT_PATH + "source-target";
-                
-    // Generate a Table Row
-    HTMLHelper::TableRow row;    
-    std::cout << "Morphing models" << std::endl;
-    double energy = morph_obj.morphModels(row);
-    std::cout << "Energy: " << energy << std::endl;
-    */
-
-    /*
-    PFIAir::Container model = PFIAir::Container();
-
-    std::cout << "Loading Open Mesh" << std::endl;
-    model.loadMeshModel(INPUT_OBJ);
-
-    openvdb::Vec3s center = model.computeMeshCenter();
-    std::cout << "Center " << center << std::endl;
-
-    // IMPORTANT: Container.computeMeshCenter does not work with open meshes!
-    // It consumes all memory
-    //model.computeMeshCenter(); 
-
-    double voxel_size = std::stod(argv[3]);
-    std::cout << "voxel size" << voxel_size;
-    model.setScale(openvdb::Vec3d(voxel_size));
-
-    // Convert to unsigned distance field
-    std::cout << "Converting to VDB" << std::endl; 
-    double bandwidth = std::stod(argv[4]);
-    std::cout << "bandwidth" << bandwidth;
-    openvdb::FloatGrid::Ptr field = 
-        model.getUnsignedDistanceField(bandwidth);
-
-    model.exportModel(OUTPUT_VDB, field);
-
-    std::cout << "Converted " << INPUT_OBJ << " -> " << OUTPUT_VDB << std::endl;
-
-    // Convert distance field to level set
-    dist_field_to_level_set(field, bandwidth, voxel_size);
-    model.exportModel(LS_VDB, field);
-
-    // Exploring the range of values in the distance field
-    // since the docs do not go into depth
-    int count = 0;
-    double min = 100000.0;
-    double max = -100000.0;
-    double total = 0.0;
-    for (openvdb::FloatGrid::ValueOnIter iter = field->beginValueOn(); iter; ++iter) {
-        if (*iter < min)
-            min = *iter;
-        if (*iter > max)
-            max = *iter;
-        total += *iter;
-        count++;
-        //std::cout << iter.getCoord() << " = " << *iter << std::endl; 
-    }
-    double avg = total / count;
-    double midpoint = (min + max) / 2.0;
-    std::cout << "total count avg midpoint" << std::endl;
-    std::cout << total << " " << count << " " << avg << " " << midpoint << std::endl;
-    std::cout << "min max" << std::endl;
-    std::cout << min << " " << max << std::endl;
-
-    // Attempt to convert unsigned distance field -> mesh
-
-    // Vec3s = single-precision float
-    std::vector<openvdb::Vec3s> points;
-    std::vector<openvdb::Vec3I> triangles;
-    std::vector<openvdb::Vec4I> quads;
-
-    std::cout << "num_points num_triangles num_quads" << std::endl;
-
-    // volumeToMesh has a isovalue 
-    // default of 0.0 generates no quads
-    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads);
-    std::cout << "isovalue = 0.0" << std::endl;
-    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
-
-    // Try the minimum iso value
-    // this generates no quads
-    points.clear();
-    triangles.clear();
-    quads.clear();
-    std::cout << "isovalue = min" << std::endl;
-    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, min);
-    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
-
-    // Try the maximum iso value
-    // This generates the most quads
-    points.clear();
-    triangles.clear();
-    quads.clear();
-    std::cout << "isovalue = max" << std::endl;
-    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, max);
-    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
-
-    // Try the midpoint of max and min iso value
-    points.clear();
-    triangles.clear();
-    quads.clear();
-    std::cout << "isovalue = (min + max) / 2" << std::endl;
-    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(*field, points, triangles, quads, midpoint);
-    std::cout << points.size() << " " << triangles.size() << " " << quads.size() << std::endl;
-    */
-    
-    // And now we can create a level set
-    // When this runs on the max or midpoint, I do get a level set, but it
-    // is a rectangular prism... not sure why, I think it has to do with
-    // scaling.
-    /* 
-    openvdb::math::Transform xform;
-    openvdb::FloatGrid::Ptr fixed =
-        openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
-            xform, points, triangles, quads);
-
-    model.exportModel(VDB_MID, fixed);
-    */
+    time_overall.stop();
 
     return 0;
 }
@@ -673,7 +476,6 @@ int main(int argc, const char * argv[]) {
     // Compare the first argument with a pre-defined list of commands
     std::string cmd(argv[1]);
     if (cmd == "open_mesh") {
-        std::cout << "Open Mesh Experiment" << std::endl;
         return load_open_mesh(argc, argv);
     } else if (cmd == "morph_all") {
         std::cout << "Morph all Meshes:" << std::endl;
