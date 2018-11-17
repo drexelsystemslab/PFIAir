@@ -89,9 +89,11 @@ namespace MorphOperations {
             GridOperations::performMorphologicalOpening(source_grid);
             GridOperations::performMorphologicalOpening(target_grid);
             
+            // Time step
             double dt = this->dt;
             std::string file_path = this->morph_path;
             
+            // Make sure the grids are both level sets before morphing.
             //getGridClass == 1 -> openvdb::GRID_LEVEL_SET
             if(source_grid->getGridClass() != 1 && target_grid->getGridClass() != 1) {
                 std::cout<< "Grids are not level sets";
@@ -104,12 +106,14 @@ namespace MorphOperations {
             row.abs_diff_count = openvdb::math::Abs(row.source_surface_count - row.target_surface_count);
             row.src_tar_avg = (row.source_surface_count + row.target_surface_count) / 2;
             
+            // Create a level set morphing object
             openvdb::util::NullInterrupter* interrupt = nullptr;
             openvdb::tools::LevelSetMorphing <openvdb::FloatGrid, openvdb::util::NullInterrupter> ls_morph(*(source_grid), *(target_grid), interrupt);
                         
             //solved artifacts issue
             ls_morph.setNormCount(5);
             
+            //TODO: These stats should be moved to a MorphStats struct
             size_t CFL_count = 0.0;
             double time = 0.0;
             double time_inc = dt;
@@ -125,15 +129,23 @@ namespace MorphOperations {
             
             std::string file_name = "";
             
+            // Make sure the output directory exists
             const char *path = file_path.c_str();
             CommonOperations::makeDirs(path);
             
+            // Save the source and target grids
+            // TODO: If the source and target files are renamed
+            // frame0000.vdb and frame<n-1>.vdb and all the advectXXX.vdb
+            // are renamed frameXXXX.vdb, it will be easier to view the
+            // animation in Houdini (which detects such ranges of frame
+            // numbers)
             file_name = file_path + "/_source.vdb";
             GridOperations::writeToFile(file_name, source_grid);
             
             file_name = file_path + "/_target.vdb";
             GridOperations::writeToFile(file_name, target_grid);
             
+            // TODO: count could be renamed to frame_count
             int count = 0;
             while(true) {
                 openvdb::FloatGrid::Ptr before_advect = openvdb::deepCopyTypedGrid<openvdb::FloatGrid>(source_grid);
@@ -142,33 +154,50 @@ namespace MorphOperations {
                 // Courrant-Friedrrichs-Lewy iterations
                 CFL_count += ls_morph.advect(time, time + time_inc);
                 
+                // Increment the frame number
                 count++;
+
+                // Update
                 source_surface_count_sum += GridOperations::countSurfaceVoxels(source_grid);
                 
-                //source_grid has been updated after advection
+                // Calculate the energy used for this frame and update stats
+                // Note: source_grid has been updated after advection
                 this->calculateEnergy(before_advect, source_grid, mc_sum, val_sum, max_curv);
                 energy_consumed = mc_sum + val_sum;
                 total_energy += energy_consumed;
                 total_curv += mc_sum;
                 total_val += val_sum;
                 
+                // TODO: Again, maybe use a numbering scheme that includes
+                // source and target frames for easier viewing in Houdini.
+                // TODO: Consider making these VDB files optional. They are
+                // helpful for debugging and for making morph animations,
+                // but not necessary for computing the energy
                 file_name = file_path + "/advect_" + std::to_string((int)(time/time_inc)) + ".vdb";
                 GridOperations::writeToFile(file_name, source_grid);
                 
+                // Print a summary of this frame to the console
                 std::cout << "CFL iterations - " << CFL_count << std::endl;
                 std::cout << "File created - " << file_name << std::endl;
                 std::cout << "Energy - " << (mc_sum + val_sum) << std::endl;
-                
-                
+                 
+                // Step forward in time
                 time += time_inc;
                 
+                // TODO: a new Morph class should check these conditions
+                // at the top of the loop.
+                // it looks like there is a limit of 500 frames to this
+                // animation. be more explicit about this with a for loop
                 if((int)(time/time_inc) > 500) break;
                 if(energy_consumed < 10) break;
                 if(this->checkStopMorph(source_grid, target_grid)) break;
             }
             
+            // Average the number of surface voxels over the maximum
+            // number of frames in the animation
             double source_surface_count_avg = source_surface_count_sum / ((int)(time/time_inc) + 1);
             
+            // Update the stats object
             row.CFL_count = CFL_count;
             row.time_steps = (int)(time/time_inc);
             row.total_curv = total_curv;
@@ -185,12 +214,13 @@ namespace MorphOperations {
             double threshold = target_grid->voxelSize()[0], max_diff = 0.0, curr_diff;
             openvdb::Vec3d coord1, coord2;
             openvdb::FloatGrid::Accessor target_acc = target_grid->getAccessor();
-            
-            
+             
             
             for (openvdb::FloatGrid::ValueOnIter iter = source_grid->beginValueOn(); iter; ++iter) {
+                // Iterate over active values on the surface only
                 if(iter.getValue() < 0) {
                     if(GridOperations::checkIfSurface(iter, source_grid)) {
+                        // Compare the source and target distance values at this position
                         curr_diff = openvdb::math::Abs(iter.getValue() - target_acc.getValue(iter.getCoord()));
                         if(curr_diff > max_diff) max_diff = curr_diff;
                     }
@@ -202,6 +232,14 @@ namespace MorphOperations {
         
         
         void calculateEnergy(const openvdb::FloatGrid::Ptr& grid_t1, const openvdb::FloatGrid::Ptr& grid_t2, double& mc_sum, double& val_sum, double& max_curv) {
+            /**
+             * Mean curvature is defined in OpenVDB as
+             *
+             * div((grad phi)/|grad phi|)
+             *
+             * alpha = grad phi
+             * beta = |grad phi|
+             */
             double alpha, beta, mc_1, mc_2, abs_sum_mc_diff = 0.0, voxel_size = grid_t1->voxelSize()[0];
             int count = 0;
             int coord_diff_count = 0;
@@ -217,6 +255,8 @@ namespace MorphOperations {
             for (openvdb::FloatGrid::ValueOnIter iter = grid_t1->beginValueOn(); iter; ++iter) {
                 if(iter.getValue() < 0 && GridOperations::checkIfSurface(iter, grid_t1)) {
                     
+                    // Compute mean curvature at this point on the source
+                    // grid
                     count++;
                     mean_curv.compute(*map1, g1_accessor, iter.getCoord(), alpha, beta);
                     if(beta != 0.0) {
@@ -229,6 +269,8 @@ namespace MorphOperations {
                         std::cout << "Infinite curvature at source coord: " << iter.getCoord() << std::endl;
                     }
                     
+                    // Compute mean curvature at this point on the
+                    // target grid
                     mean_curv.compute(*map2, g2_accessor, iter.getCoord(), alpha, beta);
                     if(beta != 0.0) {
                         mc_2 = alpha / beta;
@@ -241,6 +283,7 @@ namespace MorphOperations {
                     }
                     
                     abs_sum_mc_diff += openvdb::math::Abs(mc_1 - mc_2);
+
                     curr_val = openvdb::math::Abs(iter.getValue() - g2_accessor.getValue(iter.getCoord()));
                     if(curr_val > max_diff) max_diff = curr_val;
                     

@@ -65,7 +65,7 @@ namespace GridOperations {
     
     /**
      * Write only the surface voxels
-     * This method is currently unused
+     * NOTE: This method is currently unused
      */
     void writeOnlySurface(const openvdb::FloatGrid::Ptr grid_pointer) {
         double bg = grid_pointer->background();
