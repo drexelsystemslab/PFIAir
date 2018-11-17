@@ -28,6 +28,10 @@ LevelSet::LevelSet(
     } 
 }
 
+openvdb::FloatGrid::Ptr LevelSet::get_level_set() {
+    return level_set;
+}
+
 void LevelSet::morphological_opening() {
     openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*level_set);
     double vs = level_set->voxelSize()[0];

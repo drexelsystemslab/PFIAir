@@ -392,11 +392,70 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string TARGET_OBJ_PROCESSED =
         OUTPUT_PATH + "target_processed.obj";
 
+    // After converting to VDBs
+    const std::string SOURCE_VDB_PROCESSED = 
+        OUTPUT_PATH + "source_processed.vdb";
+    const std::string TARGET_VDB_PROCESSED =
+        OUTPUT_PATH + "target_processed.vdb";
+
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
     // lock up my laptop again.
     limit_memory(1000);
 
+    // Read in the two open meshes and preprocess them ====================
 
+    std::cout << "Preprocess source mesh" << std::endl;
+    // boolean flag is to mark this as an open mesh
+    Mesh source_mesh(SOURCE_OBJ, true);
+    source_mesh.preprocess_mesh();
+
+    std::cout << "Preprocess target mesh" << std::endl;
+    Mesh target_mesh(TARGET_OBJ, true);
+    target_mesh.preprocess_mesh();
+
+    // Optional: Save processed meshes ==================================
+
+    std::cout << "Saving source mesh to " << SOURCE_OBJ_PROCESSED << std::endl;
+    source_mesh.save_obj(SOURCE_OBJ_PROCESSED); 
+
+    std::cout << "Saving target mesh to " << TARGET_OBJ_PROCESSED << std::endl;
+    target_mesh.save_obj(TARGET_OBJ_PROCESSED);
+
+    // Convert to level sets ===========================================
+
+    std::cout << "Converting source mesh to level set" << std::endl;
+    LevelSet source_ls = source_mesh.to_level_set();
+
+    std::cout << "Converting target mesh to level set" << std::endl;
+    LevelSet target_ls = target_mesh.to_level_set();
+
+    // Optional: Save level sets ======================================
+
+    std::cout << "Saving source mesh to " << SOURCE_VDB_PROCESSED << std::endl;
+    source_ls.save(SOURCE_VDB_PROCESSED); 
+
+    std::cout << "Saving target mesh to " << TARGET_VDB_PROCESSED << std::endl;
+    target_ls.save(TARGET_VDB_PROCESSED);
+
+    // Morph the two models ============================================
+
+    // Create an object for morphing.
+
+    // Set the morph output directory
+    MorphOperations::Morph morph_obj = MorphOperations::Morph(SOURCE_OBJ);
+    morph_obj.morph_path = OUTPUT_PATH + "source-target";
+
+    // Attach the underlying grids
+    morph_obj.source_grid = source_ls.get_level_set();
+    morph_obj.target_grid = target_ls.get_level_set(); 
+                
+    // Generate a Table Row
+    HTMLHelper::TableRow row;    
+    std::cout << "Morphing models" << std::endl;
+    double energy = morph_obj.morphModels(row);
+    std::cout << "Energy: " << energy << std::endl;
+
+/*
     // New style of pre-processing meshes with a much simpler interface.
     std::cout << "Process new-style mesh" << std::endl;
     Mesh mesh(SOURCE_OBJ, true);
@@ -406,6 +465,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "Save VDB equivalent" << std::endl;
     mesh.to_level_set().save(OUTPUT_PATH + "new_style_mesh.vdb");
     std::cout << "Done!" << std::endl;
+    */
 
     return 0;
 
@@ -420,6 +480,7 @@ int load_open_mesh(int argc, const char* argv[]) {
      * NOTE: if eccentricity is used to find the mesh center,
      * this runs in O(V^3) time so only is feasible for very small meshes.
      */
+     /*
     if (!file_exists(SOURCE_OBJ_PROCESSED)) {
         std::cout << "Pre-processing source object (SLOW)" << std::endl;
         UpdtMeshOperations::doAllMeshOperations(
@@ -479,6 +540,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     std::cout << "Morphing models" << std::endl;
     double energy = morph_obj.morphModels(row);
     std::cout << "Energy: " << energy << std::endl;
+    */
 
     /*
     PFIAir::Container model = PFIAir::Container();
