@@ -221,7 +221,6 @@ namespace GridOperations {
     
     /**
      * Use OpenVDB to peform a morphological opening
-     * TODO: How does this work?
      */
     void performMorphologicalOpening(openvdb::FloatGrid::Ptr& grid_pointer) {
         openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*(grid_pointer));

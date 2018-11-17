@@ -59,9 +59,50 @@ public:
 private:
     /**
      * Convert an unsigned distance field to a signed by setting a new
-     * 0 point and subtracting across all space
+     * 0 point and subtracting across all space. Note that the
+     * unsigned field must have TWICE the desired bandwidth
+     *
+     *
+     * Example:
+     * Before: unsigned distance field looks like this (measured in voxels)
+     *
+     * Note: Every isoband except for the one for 0 is a closed surface
+     *
+     *  ------------------ 6
+     *  ------------------ 5
+     *  ------------------ 4
+     *  ------------------ 3  <-- 3 will be the new 0 point
+     *  ------------------ 2
+     *  ------------------ 1
+     *  ================== 0 <-- original surface
+     *  ------------------ 1
+     *  ------------------ 2
+     *  ------------------ 3  <-- 3 will be the new 0 point
+     *  ------------------ 4
+     *  ------------------ 5
+     *  ------------------ 6
+     *
+     * After: subtract current distance from new zero point:
+     *
+     * Note: again, each isoband except for -3 is a closed surface. So
+     * our new 0 point is a closed surface
+     *
+     *  ------------------ 3 <-- outside the surface is positive
+     *  ------------------ 2
+     *  ------------------ 1
+     *  ================== 0  <-- new surface
+     *  ------------------ -1
+     *  ------------------ -2
+     *  ------------------ -3 <-- Inside the surface is negative
+     *  ------------------ -2
+     *  ------------------ -1
+     *  ================== 0  <-- The same new surface
+     *  ------------------ 1
+     *  ------------------ 2
+     *  ------------------ 3 <-- outside the surface  is positive
+     *
      */
-    void convert_unsigned_to_signed(float bandwidth);
+    void convert_unsigned_to_signed();
 };
 
 #endif

@@ -402,6 +402,9 @@ int load_open_mesh(int argc, const char* argv[]) {
     Mesh mesh(SOURCE_OBJ, true);
     mesh.preprocess_mesh();
     mesh.save_obj(OUTPUT_PATH + "new_style_mesh.obj");
+
+    std::cout << "Save VDB equivalent" << std::endl;
+    mesh.to_level_set().save(OUTPUT_PATH + "new_style_mesh.vdb");
     std::cout << "Done!" << std::endl;
 
     return 0;
