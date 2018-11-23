@@ -380,7 +380,29 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Test the report generator
     const std::string REPORT_FILE = "Reports/open_mesh.html";
     ReportGenerator report(REPORT_FILE);
-    report.add_row(MorphStats(), MorphStats());
+
+    MorphStats forwards;
+    forwards.set_names("source", "target");
+    forwards.count_surface_voxels(3000, 4000);
+    forwards.increment_time();
+    forwards.update_energy(30, 10);
+    forwards.add_cfl_iterations(50);
+    forwards.update_max_curvature(3);
+
+    forwards.increment_time();
+    forwards.update_energy(40, 50);
+    forwards.add_cfl_iterations(20);
+    forwards.update_max_curvature(2);
+
+    forwards.increment_time();
+    forwards.update_energy(10, 10);
+    forwards.add_cfl_iterations(15);
+    forwards.update_max_curvature(5);
+
+    forwards.finalize_stats();
+
+    MorphStats backwards;
+    report.add_row(forwards, backwards);
     report.write_report();
 
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
