@@ -2,7 +2,7 @@
 morph
 PFI_Morph
 
-# Output directories
+# Output directories and files
 build/
 output/
 morphs/
@@ -10,9 +10,11 @@ JSON/
 DerivedData/
 cmake-build-debug/
 srt.vdb
+Reports/
 
-#CMake stuff
+# CMake stuff
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+

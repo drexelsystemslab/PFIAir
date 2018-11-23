@@ -17,6 +17,8 @@
 #include "Mesh.h"
 #include "Timer.h"
 
+#include "ReportGenerator.h"
+
 //const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
 const std::string OUTPUT_DIR = "output/";
 const std::string INPUT_DIR = "original_objs/";
@@ -374,6 +376,11 @@ int load_open_mesh(int argc, const char* argv[]) {
         OUTPUT_PATH + "source_processed.vdb";
     const std::string TARGET_VDB_PROCESSED =
         OUTPUT_PATH + "target_processed.vdb";
+
+    // Test the report generator
+    const std::string REPORT_FILE = "Reports/open_mesh.html";
+    ReportGenerator report(REPORT_FILE);
+    report.write_report();
 
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
     // lock up my laptop again.
