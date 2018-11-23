@@ -380,6 +380,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Test the report generator
     const std::string REPORT_FILE = "Reports/open_mesh.html";
     ReportGenerator report(REPORT_FILE);
+    report.add_row(MorphStats(), MorphStats());
     report.write_report();
 
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
