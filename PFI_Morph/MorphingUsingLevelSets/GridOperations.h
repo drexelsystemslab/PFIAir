@@ -222,18 +222,21 @@ namespace GridOperations {
     /**
      * Use OpenVDB to peform a morphological opening
      */
-    void performMorphologicalOpening(openvdb::FloatGrid::Ptr& grid_pointer) {
+    void performMorphologicalOpening(
+            openvdb::FloatGrid::Ptr& grid_pointer, 
+            int norm_count=5,
+            int offset_voxels=5) {
         openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*(grid_pointer));
-        double vs = grid_pointer->voxelSize()[0];
+        double voxel_size = grid_pointer->voxelSize()[0];
         // Set number of normalizations
-        lsf.setNormCount(5);
+        lsf.setNormCount(norm_count);
         
         // Offset by one voxel
-        lsf.offset(vs);
+        lsf.offset(offset_voxels * voxel_size);
         lsf.normalize();
         
         // Offset by one voxel in the other direction.
-        lsf.offset(-vs);
+        lsf.offset(-offset_voxels * voxel_size);
         lsf.normalize();
     }
     

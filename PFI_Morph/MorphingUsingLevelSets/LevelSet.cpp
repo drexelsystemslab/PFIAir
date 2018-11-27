@@ -34,17 +34,17 @@ openvdb::FloatGrid::Ptr LevelSet::get_level_set() {
 
 void LevelSet::morphological_opening() {
     openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*level_set);
-    double vs = level_set->voxelSize()[0];
+    double voxel_size = level_set->voxelSize()[0];
 
     // Set number of normalizations
-    lsf.setNormCount(5);
+    lsf.setNormCount(NORM_COUNT);
         
     // Erode by 1 voxel
-    lsf.offset(vs);
+    lsf.offset(OPENING_VOXELS * voxel_size);
     lsf.normalize();
         
     // Dilate by 1 voxel
-    lsf.offset(-vs);
+    lsf.offset(-OPENING_VOXELS * voxel_size);
     lsf.normalize();
 }
 

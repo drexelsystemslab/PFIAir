@@ -82,12 +82,15 @@ namespace MorphOperations {
         openvdb::FloatGrid::Ptr source_grid;
         openvdb::FloatGrid::Ptr target_grid;
         
-        double morphModels(HTMLHelper::TableRow& row) {
+        double morphModels(HTMLHelper::TableRow& row, int norm_count=5, int opening_size=5) {
             openvdb::FloatGrid::Ptr source_grid = this->source_grid;
             openvdb::FloatGrid::Ptr target_grid = this->target_grid;
             
-            GridOperations::performMorphologicalOpening(source_grid);
-            GridOperations::performMorphologicalOpening(target_grid);
+            // TODO: Is this redundant since this is done as a pre-processing step?
+            GridOperations::performMorphologicalOpening(
+                source_grid, norm_count, opening_size);
+            GridOperations::performMorphologicalOpening(
+                target_grid, norm_count, opening_size);
             
             // Time step
             double dt = this->dt;
@@ -111,7 +114,7 @@ namespace MorphOperations {
             openvdb::tools::LevelSetMorphing <openvdb::FloatGrid, openvdb::util::NullInterrupter> ls_morph(*(source_grid), *(target_grid), interrupt);
                         
             //solved artifacts issue
-            ls_morph.setNormCount(5);
+            ls_morph.setNormCount(norm_count);
             
             //TODO: These stats should be moved to a MorphStats struct
             size_t CFL_count = 0.0;

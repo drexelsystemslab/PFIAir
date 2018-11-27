@@ -477,7 +477,9 @@ int load_open_mesh(int argc, const char* argv[]) {
                 
     // Generate a Table Row
     HTMLHelper::TableRow row;    
-    double energy = morph_obj.morphModels(row);
+    const int NORM_COUNT = 10;
+    const int OPENING_SIZE = 5; 
+    double energy = morph_obj.morphModels(row, NORM_COUNT, OPENING_SIZE);
     std::cout << "Energy: " << energy << std::endl;
 
     time_morph.stop();

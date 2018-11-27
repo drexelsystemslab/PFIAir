@@ -15,6 +15,10 @@ public:
      */
     static constexpr float HALF_BANDWIDTH = 3.0;
     static constexpr double VOXEL_SIZE = 0.01;
+    static constexpr int NORM_COUNT = 10;
+
+    // How many voxels to offset when doing the morphological opening
+    static constexpr int OPENING_VOXELS = 5;
 
     /**
      * Constructor from a .vdb file 
