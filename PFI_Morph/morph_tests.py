@@ -5,7 +5,7 @@ import argparse
 
 import trimesh
 
-#import pfimorph
+import pfimorph
 
 CONVERTED_DIR = 'converted_objs'
 
@@ -20,8 +20,16 @@ def morph_all_pairs(args):
     print("TODO: Morph all pairs")
 
 def morph_single_pair(args):
-    print("TODO: Morph single pair")
+    """
+    morph args.source_model into args.target_model
+    """
     print(args)
+    print("Morphing {} <-> {}".format(args.source_model, args.target_model))
+
+    # TODO: return a MorphStats object
+    # Quick test that we can do this
+    energy = pfimorph.morph(args.source_model, args.target_model)
+    print(energy)
 
 def stl_to_obj(stl_fname):
     """
