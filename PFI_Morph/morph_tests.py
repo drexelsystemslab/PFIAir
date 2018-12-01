@@ -16,6 +16,13 @@ def make_directories(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
+def is_open_mesh(obj_file):
+    """
+    Check if a model is closed or open
+    """
+    mesh = trimesh.io.load.load(obj_file);
+    return not mesh.is_watertight
+
 def morph_all_pairs(args):
     print("TODO: Morph all pairs")
 
@@ -26,9 +33,21 @@ def morph_single_pair(args):
     print(args)
     print("Morphing {} <-> {}".format(args.source_model, args.target_model))
 
+    # Check if we have open/closed meshes
+    source_open = is_open_mesh(args.source_model)
+    target_open = is_open_mesh(args.target_model)
+    print("Source model is open mesh: {}".format(source_open))
+    print("Target model is open mesh: {}".format(target_open))
+
     # TODO: return a MorphStats object
-    # Quick test that we can do this
-    energy = pfimorph.morph(args.source_model, args.target_model)
+    # This is just a quick test that the Cython module works
+    energy = pfimorph.morph(
+        args.source_model, 
+        args.target_model, 
+        source_open, 
+        target_open,
+        cache=args.cache_enabled,
+        profile=args.profile)
     print(energy)
 
 def stl_to_obj(stl_fname):
@@ -86,6 +105,14 @@ def parse_args():
         help="Path to source model in OBJ/STL format")
     morph_one.add_argument('target_model', type=mesh_fname,
         help="Path to target model in OBJ/STL format")
+    morph_one.add_argument('-p', '--profile', action='store_true',
+        help="Set this flag to time each step of the program");
+    morph_one.add_argument(
+        '-d', 
+        '--disable-cache', 
+        dest='cache_enabled', 
+        action='store_false',
+        help="Set this flag to disable using the cache")
     morph_one.set_defaults(func=morph_single_pair)
     
     return parser.parse_args()

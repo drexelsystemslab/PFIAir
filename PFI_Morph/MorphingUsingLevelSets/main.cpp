@@ -342,18 +342,6 @@ void print_help() {
 
 
 /**
- * Check if a file exists. I use this for
- * caching the centroid calculation
- */
-bool file_exists(std::string fname) {
-    std::ifstream file(fname);
-    if (file)
-        return true;
-    else
-        return false;
-}
-
-/**
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {

@@ -10,4 +10,7 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
     cdef double morph_cpp(
         string source_obj, 
         string target_obj, 
-        bint cache_objs)
+        bint source_open,
+        bint target_open,
+        bint cache_objs,
+        bint profile)

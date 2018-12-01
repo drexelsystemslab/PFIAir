@@ -324,7 +324,7 @@ void Mesh::normalize_skewness() {
     // Compute the median.
     // This runs in O(V log V) time. It would be faster
     // to use a linear 
-    int N = geometry.cols();
+    unsigned int N = geometry.cols();
     double z_values[N];
     for (unsigned int i = 0; i < N; i++)
         z_values[i] = geometry(Z, i);

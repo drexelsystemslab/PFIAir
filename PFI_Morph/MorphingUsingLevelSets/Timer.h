@@ -13,11 +13,11 @@ class Timer {
     /**
      * Start of time interval
      */
-    time_point<system_clock> start;
+    time_point<system_clock> start_time;
     /**
      * End of interval
      */
-    time_point<system_clock> end;
+    time_point<system_clock> end_time;
     /**
      * Message to be displayed
      */
@@ -25,10 +25,14 @@ class Timer {
 public:
     /**
      * Create a timer with a message.
+     */
+    Timer(std::string msg): message(msg) {}
+
+    /**
      * This method starts the timer and prints
      * "Start <msg>" to the console if the flag is set
      */
-    Timer(std::string msg, bool show_message=true);
+    void start(bool show_message=true);
 
     /**
      * Stop the timer and print "<msg> took <n> seconds" to the console

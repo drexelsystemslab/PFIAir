@@ -2,15 +2,15 @@
 #include <iostream>
 
 
-Timer::Timer(std::string msg, bool show_message): message(msg) {
+void Timer::start(bool show_message) {
     if (show_message)
-        std::cout << "╔═ Start " << msg << std::endl;
-    start = system_clock::now();
+        std::cout << "╔═ Start " << message << std::endl;
+    start_time = system_clock::now();
 }
 
 double Timer::stop(bool show_message) {
-    end = system_clock::now();
-    duration<double> elapsed_seconds = end - start;
+    end_time = system_clock::now();
+    duration<double> elapsed_seconds = end_time - start_time;
 
     double secs = elapsed_seconds.count();
 
