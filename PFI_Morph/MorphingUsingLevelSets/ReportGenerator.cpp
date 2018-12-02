@@ -37,11 +37,13 @@ void ReportGenerator::write_header(std::ostream& stream) {
         */
 }
 
+/*
 bool ReportGenerator::compare_rows(StatPair row1, StatPair row2) {
     double mean1 = MorphStats::mean(row1.first, row1.second);
     double mean2 = MorphStats::mean(row2.first, row2.second);
     return mean1 < mean2;
 }
+*/
 
 void ReportGenerator::write_table(std::ostream& stream) {
 
@@ -60,7 +62,7 @@ void ReportGenerator::write_table(std::ostream& stream) {
         << "    <tbody>" << std::endl;
 
     // Sort the rows by average energy
-    std::sort(stat_pairs.begin(), stat_pairs.end(), compare_rows);
+    //std::sort(stat_pairs.begin(), stat_pairs.end(), compare_rows);
     for (const StatPair& row : stat_pairs)
         write_row(stream, row);
 
@@ -82,9 +84,9 @@ void ReportGenerator::write_row(std::ostream& stream, const StatPair& row) {
         << "            </td>" << std::endl;
 
     // Write the data
-    double mean = MorphStats::mean(row.first, row.second);
+    //double mean = MorphStats::mean(row.first, row.second);
     row.first.write_row(stream);    
-    row.second.write_row(stream, mean); 
+    row.second.write_row(stream);//, mean); 
         
 
 /*

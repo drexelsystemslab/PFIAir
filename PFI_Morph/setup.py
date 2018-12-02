@@ -22,7 +22,9 @@ source_fnames = [
     'Mesh.cpp',
     'LevelSet.cpp',
     'BoundingBox.cpp',
-    'PCACalculator.cpp'
+    'PCACalculator.cpp',
+    'Morph.cpp',
+    'MorphStats.cpp'
 ]
 
 cpp_sources = [os.path.join(SRC_DIR, x) for x in source_fnames]
@@ -39,7 +41,8 @@ morph_ext = Extension(
     language='c++')
 
 # Cythonize it in parallel
-cython_morph = cythonize(morph_ext, nthreads=multiprocessing.cpu_count())
+cython_morph = cythonize(
+    morph_ext, nthreads=multiprocessing.cpu_count(), gdb_debug=True)
 
 # Setup like any other python library
 setup(ext_modules=cython_morph)

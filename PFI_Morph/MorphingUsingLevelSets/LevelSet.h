@@ -9,6 +9,10 @@ class Mesh;
 class LevelSet {
     // Level set representation as a VDB data structure
     openvdb::FloatGrid::Ptr level_set = nullptr;
+    /**
+     * Short name to identify this level set.
+     */
+    std::string name;
 public:
     /**
      * Half bandwidth of the final signed distance field.
@@ -42,10 +46,25 @@ public:
      */
     void morphological_opening();
 
+
+    /**
+     * Count the number of surface voxels in the model
+     */
+    int count_surface_voxels();
+
+    /**
+     * Check if a voxel is on the surface of the level set
+     */
+    bool is_surface_voxel(const openvdb::Coord& coord);
+
     /**
      * Convert a LevelSet to a new Mesh object
      */
     Mesh to_mesh();
+
+    // Getters and setters
+    std::string get_name() const;
+    void set_name(std::string name);
 
     /**
      * Convert to a mesh, populating lists of vertices and faces.

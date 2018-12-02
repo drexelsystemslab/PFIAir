@@ -99,7 +99,8 @@ void MorphStats::write_header_row(std::ostream& stream) {
         << "        </tr>" << std::endl;
 }
 
+// ==============================================================
 
-double MorphStats::mean(const MorphStats& first, const MorphStats& second) {
-    return (first.total_energy + second.total_energy) / 2;
+double MorphStatsPair::average_energy() {
+    return (forwards.total_energy + backwards.total_energy) / 2;
 }

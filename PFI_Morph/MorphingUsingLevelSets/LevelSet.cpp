@@ -1,7 +1,22 @@
 #include "LevelSet.h"
+#include <stdexcept>
 #include <openvdb/tools/MeshToVolume.h>
 #include <openvdb/tools/VolumeToMesh.h>
 #include <openvdb/tools/LevelSetFilter.h>
+
+LevelSet::LevelSet(std::string fname) {
+    openvdb::io::File file(fname);
+    openvdb::GridBase::Ptr baseGrid;
+
+    file.open();
+    typedef openvdb::io::File::NameIterator NameIter;
+    for (NameIter it = file.beginName(); it != file.endName(); ++it) {
+        baseGrid = file.readGrid(it.gridName());
+    }    
+    file.close();
+
+    level_set = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
+}
 
 LevelSet::LevelSet(
         const std::vector<openvdb::Vec3s>& vertices,
@@ -48,6 +63,39 @@ void LevelSet::morphological_opening() {
     lsf.normalize();
 }
 
+int LevelSet::count_surface_voxels()  {
+    typedef openvdb::FloatGrid::ValueOnIter IterType;
+    int count = 0;
+    for (IterType iter = level_set->beginValueOn(); iter; ++iter) {
+        if(iter.getValue() < 0 && is_surface_voxel(iter.getCoord()))
+            count++;
+    }
+    return count;
+} 
+
+bool LevelSet::is_surface_voxel(const openvdb::Coord& coord) {
+    bool found_positive = false;
+    openvdb::Coord six_connected[6] = {
+        openvdb::Coord(coord.x() - 1, coord.y(), coord.z()),
+        openvdb::Coord(coord.x() + 1, coord.y(), coord.z()),
+        openvdb::Coord(coord.x(), coord.y() - 1, coord.z()),
+        openvdb::Coord(coord.x(), coord.y() + 1, coord.z()),
+        openvdb::Coord(coord.x(), coord.y(), coord.z() - 1),
+        openvdb::Coord(coord.x(), coord.y(), coord.z() + 1)
+    };
+        
+    openvdb::FloatGrid::Accessor accessor = level_set->getAccessor();
+        
+    for(int i = 0; i < 6; i++) {
+        if(accessor.getValue(six_connected[i]) > 0) {
+            found_positive = true;
+            break;
+        }
+    }
+
+    return found_positive;
+}
+
 void LevelSet::convert_unsigned_to_signed() {
     // NOTE: If we need to squeeze out better performance,
     // look into openvdb::tools::foreach() to do these computations
@@ -83,6 +131,16 @@ void LevelSet::to_mesh(
 
     openvdb::tools::volumeToMesh<openvdb::FloatGrid>(
         *level_set, out_vertices, out_indices_tri, out_indices_quad);
+}
+
+std::string LevelSet::get_name() const {
+    if (name == "")
+        throw new std::runtime_error("Name not set!");
+    return name;
+}
+
+void LevelSet::set_name(std::string name) {
+    this->name = name;
 }
 
 void LevelSet::save(std::string fname) {

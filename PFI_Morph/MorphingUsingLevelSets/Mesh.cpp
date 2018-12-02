@@ -33,7 +33,12 @@ void Mesh::preprocess_mesh() {
 LevelSet Mesh::to_level_set() { 
     // Build a LevelSet object. Passing in the is_open_mesh flag is enough
     // to ensure the right method gets called.
-    return LevelSet(vertices, indices_tri, indices_quad, is_open_mesh);
+    LevelSet ls(vertices, indices_tri, indices_quad, is_open_mesh);
+
+    // Copy the short name
+    ls.set_name(name);
+
+    return ls;
 }
 
 void Mesh::save_obj(std::string filename) {
@@ -62,6 +67,16 @@ void Mesh::save_obj(std::string filename) {
         write_quad(obj_file, quad);
 
     obj_file.close();
+}
+
+std::string Mesh::get_name() const {
+    if (name == "")
+        throw new std::runtime_error("Name not set!");
+    return name;
+}
+
+void Mesh::set_name(std::string name) {
+    this->name = name;
 }
 
 void Mesh::preprocess_open_mesh() {

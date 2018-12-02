@@ -2,15 +2,30 @@
 #define MORPH_EXTENSION_H
 #include <string>
 #include "Mesh.h"
+#include "MorphStats.h"
+#include "LevelSet.h"
 
 /**
  * This file defines the public methods for the morph extension module
  */
 
 // preprocessed models will go here
-static const std::string PREPROCESS_CACHE = "preprocessed/";
+static const std::string PREPROCESS_CACHE = "output/preprocessed/";
+static const std::string VDB_DIR = "output/morphs/";
 
 // EXPORTED FUNCTIONS ===================================================
+
+/**
+ * Struct of information to pass to the morphing code
+ */
+struct ModelInfo {
+    // Filename of OBJ file on disk, e.g. /path/to/foo.obj
+    std::string obj_fname;
+    // Short name e.g. foo
+    std::string name;
+    // True if this is an open mesh
+    bool is_open;
+};
 
 /**
  * Morph source -> target and target -> source, returning the
@@ -18,25 +33,34 @@ static const std::string PREPROCESS_CACHE = "preprocessed/";
  *
  * TODO: This should return a MorphStatsPair for reporting in Python land
  */
-double morph_cpp(
-        std::string source_obj,
-        std::string target_obj, 
-        bool source_open,
-        bool target_open,
-        bool cache_objs=true,
-        bool profile=false);
+MorphStatsPair morph_cpp(
+    const ModelInfo& source_model,
+    const ModelInfo& target_model,
+    bool cache=true,
+    bool save_debug_models=false,
+    bool profile=false);
 
 
 // NON-EXPORTED HELPER FUNCTIONS ========================================
 
 
 /**
- * Preprocess a model, optionally saving the model to a cache
+ * Preprocess the model. If caching is enabled and an existing .vdb
+ * file exists for this model, it will be loaded with no preprocessing.
+ * If caching is disabled, the .vdb files will be ignored
+ * 
+ * There is a separate debug flag for saving an obj file representation
+ * of the preprocessed model
+ *
+ * In both cases, models will be written to {PREPROCESS_CACHE}/
+ *
+ * If the profile flag is set, each step in the morphing process will be
+ * timed and output will be written to stdout
  */
-Mesh preprocess_model(
-    std::string model_fname, 
-    bool open_mesh, 
+LevelSet preprocess_model(
+    const ModelInfo& model,
     bool cache=true,
+    bool save_obj=false,
     bool profile=false);
 
 /**
@@ -45,8 +69,9 @@ Mesh preprocess_model(
 bool file_exists(std::string fname);
 
 /**
- * Rename old/path/here/foo.obj -> {PREPROCESS_CACHE}/foo.obj
+ * Rename old/path/here/foo.obj -> {PREPROCESS_CACHE}/foo.{new_extension}
  */
-std::string get_cache_name(std::string original_name);
+std::string get_cache_name(
+    std::string original_name, std::string new_extension);
 
 #endif

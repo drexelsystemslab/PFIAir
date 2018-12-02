@@ -4,7 +4,10 @@
 #include <cstdlib>
 #include <iostream>
 
-class MorphStats {
+/**
+ * Stats for a morph in a single direction
+ */
+struct MorphStats {
     // Counters for computing averages =====================================
 
     // Keep a running total of surface voxels over time
@@ -13,7 +16,7 @@ class MorphStats {
     // Actual Stats ========================================================
 
     // Courrant-Friedrrichs-Lewy iterations from advecting the level sets
-    std::size_t cfl_count = 0;
+    int cfl_count = 0;
     // Number of time steps in the calculation
     int time_steps = 0;
     // Source surface voxels
@@ -36,7 +39,6 @@ class MorphStats {
     std::string source_name = "";
     // Target model without extension
     std::string target_name = "";
-public:
     // Number of fileds
     static constexpr int NUM_FIELDS = 14;
 
@@ -88,11 +90,25 @@ public:
      * Write the column headers for the HTML report
      */
     static void write_header_row(std::ostream& stream);
+};
+
+/**
+ * Stats for a bi-directional morph
+ */
+struct MorphStatsPair {
+    // forwards morph information
+    MorphStats forwards;
+    // Backwards morph information
+    MorphStats backwards;
+
+    MorphStatsPair() {}
+
+    MorphStatsPair(MorphStats forwards, MorphStats backwards):
+        forwards(forwards), backwards(backwards) {}
 
     /**
-     * Compute the mean of the total energy of two stat objects
+     * Compute the mean of the total energies of the two sets of stats
      */
-    static double mean(
-        const MorphStats& first, const MorphStats& second);
+    double average_energy();
 };
 #endif

@@ -21,7 +21,7 @@ class ReportGenerator {
      * Compare rows by comparing the average energies of forwards and
      * backwards transformations
      */
-    static bool compare_rows(StatPair row1, StatPair row2);
+    //static bool compare_rows(StatPair row1, StatPair row2);
 public:
     ReportGenerator(std::string fname): fname(fname) {}
 

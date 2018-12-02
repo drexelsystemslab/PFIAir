@@ -1,3 +1,4 @@
+#include <openvdb/openvdb.h>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -5,71 +6,102 @@
 #include "morph_extension.h"
 #include "Mesh.h"
 #include "Timer.h"
+#include "Morph.h"
 
 // EXPORTED FUNCTIONS ===================================================
 
-double morph_cpp(
-        std::string source_obj,
-        std::string target_obj, 
-        bool source_open,
-        bool target_open,
-        bool cache_objs,
+MorphStatsPair morph_cpp(
+        const ModelInfo& source_model,
+        const ModelInfo& target_model,
+        bool cache,
+        bool save_debug_models,
         bool profile) {
 
+    // Ensure OpenVDB is set up before doing any morphing.
+    // According to the docs, it is safe to call this more than once
+    openvdb::initialize();
+
     // Preprocess both meshes
-    preprocess_model(source_obj, source_open, cache_objs, profile);
-    preprocess_model(target_obj, target_open, cache_objs, profile);
+    LevelSet source_ls = preprocess_model(
+        source_model, cache, save_debug_models, profile);
+    LevelSet target_ls = preprocess_model(
+        target_model, cache, save_debug_models, profile);
 
-    // Morph source -> target
-    // Morph target -> source
+    // Output directories will be
+    // output/morphs/{model1}-{model2}/
+    std::string forwards_dir = "";
+    std::string backwards_dir = "";
+    if (save_debug_models) {
+        forwards_dir = 
+            VDB_DIR + source_ls.get_name() + "-" + target_ls.get_name() + "/";
+        backwards_dir = 
+            VDB_DIR + target_ls.get_name() + "-" + source_ls.get_name() + "/";
+    }
 
-    //Return the energy
-    return 0.5;
+    // Perform the morphing
+    Morph morpher;
+    MorphStats forward_stats = morpher.morph(
+        source_ls, target_ls, forwards_dir);
+    MorphStats backward_stats = morpher.morph(
+        target_ls, source_ls, forwards_dir);
+
+    return MorphStatsPair(forward_stats, backward_stats);
 }
 
 // NON-EXPORTED HELPER FUNCTIONS ========================================
 
-Mesh preprocess_model(
-        std::string model_fname, 
-        bool open_mesh, 
+LevelSet preprocess_model(
+        const ModelInfo& model,
         bool cache, 
+        bool save_obj,
         bool profile) {
-    // Get the name of the model after preprocessing
-    std::string cache_obj = get_cache_name(model_fname);
+    // The two possible output filenames
+    std::string output_obj = get_cache_name(model.obj_fname, "obj");
+    std::string output_vdb = get_cache_name(model.obj_fname, "vdb");
 
     // Ensure we have a cache directory
     mkdir(PREPROCESS_CACHE.c_str(), S_IRWXU);
 
     // Optional timer for processing
-    std::string msg = "Preprocessing " + model_fname;
+    std::string msg = "Preprocessing " + model.obj_fname;
     Timer timer(msg);
     if (profile)
         timer.start(); 
 
-    Mesh processed;
-    if (cache && file_exists(cache_obj)) {
-        // If a cache .obj exists, load that model
-        std::cout << "Using cached model: " << cache_obj << std::endl;
-        // preprocessed models are always closed meshes so open_mesh = false
-        processed = Mesh(cache_obj, false);
-    } else {
-        // Otherwise, load and process the model
-        processed = Mesh(model_fname, open_mesh);
-        std::cout << "Transforming model..." << std::endl;
-        processed.preprocess_mesh(); 
-        
-        // Save a .obj file if caching is enabled
-        if (cache) {
-            std::cout << "Saving cache file: " << cache_obj << std::endl;
-            processed.save_obj(cache_obj);
-        }
+    // If caching is enabled and we have a pre-processed VDB, just
+    // load and return it.
+    if (cache && file_exists(output_vdb)) {
+        std::cout << "Using cached model: " << output_vdb << std::endl;
+        if (profile)
+            timer.stop();
+        return LevelSet(output_vdb);
     }
 
-    // Stop the timeer
+    // Otherwise, we need to preprocess the model
+    Mesh mesh(model.obj_fname, model.is_open);
+    mesh.set_name(model.name);
+    std::cout << "Transforming Model..." <<  std::endl;
+    mesh.preprocess_mesh();
+
+    // Optionally save an OBJ file 
+    if (save_obj) {
+        std::cout << "Saving OBJ file: " << output_obj << std::endl;
+        mesh.save_obj(output_obj);
+    }
+
+    // Convert Mesh -> LevelSet
+    LevelSet result = mesh.to_level_set();
+
+    // Save the 
+    if (cache) {
+        std::cout << "Saving VDB file: " << output_vdb << std::endl;
+        result.save(output_vdb);
+    }
+
     if (profile)
         timer.stop();
 
-    return processed;
+    return result;
 }
 
 bool file_exists(std::string fname) {
@@ -80,8 +112,15 @@ bool file_exists(std::string fname) {
         return false;
 }
 
-std::string get_cache_name(std::string original_name) {
+std::string get_cache_name(
+        std::string original_name, std::string new_extension) {
+    // Strip off the old path
     int last_slash = original_name.find_last_of("/");
     std::string basename = original_name.substr(last_slash + 1);
-    return PREPROCESS_CACHE + basename;
+    
+    // Change the extension
+    int dot_pos = basename.find_last_of(".");
+    std::string name = basename.substr(0, dot_pos);
+
+    return PREPROCESS_CACHE + name + "." + new_extension;
 }

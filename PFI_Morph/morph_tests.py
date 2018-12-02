@@ -26,6 +26,14 @@ def is_open_mesh(obj_file):
 def morph_all_pairs(args):
     print("TODO: Morph all pairs")
 
+def get_short_name(path):
+    """
+    Strip the path and extension from a filename to get a shorter name
+    """
+    _, fname = os.path.split(path)
+    short_name, _ = os.path.splitext(fname)
+    return short_name
+
 def morph_single_pair(args):
     """
     morph args.source_model into args.target_model
@@ -39,14 +47,17 @@ def morph_single_pair(args):
     print("Source model is open mesh: {}".format(source_open))
     print("Target model is open mesh: {}".format(target_open))
 
-    # TODO: return a MorphStats object
-    # This is just a quick test that the Cython module works
-    energy = pfimorph.morph(
-        args.source_model, 
-        args.target_model, 
-        source_open, 
-        target_open,
-        cache=args.cache_enabled,
+    # Get a shorter name for each model
+    source_name = get_short_name(args.source_model)
+    target_name = get_short_name(args.target_model)
+
+    # Run the morphinng
+    morpher = pfimorph.Morpher()
+    morpher.set_source_info(args.source_model, source_name, source_open)
+    morpher.set_target_info(args.target_model, target_name, target_open)
+    energy = morpher.morph(
+        cache=args.cache_enabled, 
+        save_debug_models=args.save_debug_models, 
         profile=args.profile)
     print(energy)
 
@@ -56,8 +67,7 @@ def stl_to_obj(stl_fname):
     already. Then return the converted OBJ filename
     """
     # Get the model name minus the path and extension
-    _, fname = os.path.split(stl_fname)
-    model_name, _ = os.path.splitext(fname)
+    model_name = get_short_name(stl_fname)
 
     # new output file is in the converted model directory
     new_fname = os.path.join(CONVERTED_DIR, model_name + '.obj')
@@ -106,7 +116,9 @@ def parse_args():
     morph_one.add_argument('target_model', type=mesh_fname,
         help="Path to target model in OBJ/STL format")
     morph_one.add_argument('-p', '--profile', action='store_true',
-        help="Set this flag to time each step of the program");
+        help="Set this flag to time each step of the program")
+    morph_one.add_argument('-s', '--save-debug-models', action='store_true',
+        help="Set this flag to save extra .obj and .vdb models")
     morph_one.add_argument(
         '-d', 
         '--disable-cache', 
