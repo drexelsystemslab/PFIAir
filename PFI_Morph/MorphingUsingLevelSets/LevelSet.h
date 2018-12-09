@@ -81,7 +81,7 @@ public:
     /**
      * Save a .vdb file of this level set
      */
-    void save(std::string fname);
+    void save(std::string fname) const;
 private:
     /**
      * Convert an unsigned distance field to a signed by setting a new

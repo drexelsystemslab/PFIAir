@@ -32,10 +32,14 @@ MorphStatsPair morph_cpp(
     std::string forwards_dir = "";
     std::string backwards_dir = "";
     if (save_debug_models) {
+        mkdir_quiet(VDB_DIR);
         forwards_dir = 
             VDB_DIR + source_model.name + "-" + target_model.name + "/";
+        mkdir_quiet(forwards_dir);
+
         backwards_dir = 
-            VDB_DIR + target_model.name + "-" + target_model.name + "/";
+            VDB_DIR + target_model.name + "-" + source_model.name + "/";
+        mkdir_quiet(backwards_dir);
     }
 
     // Perform the morphing
@@ -82,7 +86,7 @@ LevelSet preprocess_model(
     std::string output_vdb = get_cache_name(model.obj_fname, "vdb");
 
     // Ensure we have a cache directory
-    mkdir(PREPROCESS_CACHE.c_str(), S_IRWXU);
+    mkdir_quiet(PREPROCESS_CACHE);
 
     // Optional timer for processing
     std::string msg = "Preprocessing " + model.obj_fname;
@@ -131,6 +135,11 @@ bool file_exists(std::string fname) {
         return true;
     else
         return false;
+}
+
+void mkdir_quiet(std::string dirname) {
+    if (!file_exists(dirname))
+        mkdir(dirname.c_str(), S_IRWXU);
 }
 
 std::string get_cache_name(

@@ -143,7 +143,7 @@ LevelSet LevelSet::deep_copy() const {
     return LevelSet(copy);
 }
 
-void LevelSet::save(std::string fname) {
+void LevelSet::save(std::string fname) const {
     openvdb::io::File file(fname);
     openvdb::GridPtrVec grids;
     grids.push_back(level_set);

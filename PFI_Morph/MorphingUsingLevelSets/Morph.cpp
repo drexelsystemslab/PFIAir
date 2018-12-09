@@ -22,11 +22,8 @@ MorphStats Morph::morph(
     // Initialize the OpenVDB morph object
     init_morph(current_ls.get_level_set(), target.get_level_set());
 
-    // Save the first frame frame
-    if (save_frames) {
-        std::cout << "Saving first frame: " << frame_fname(frames_dir, 0)
-            << std::endl;
-    }
+    // Save the first frame frame if the directory was specified
+    maybe_save_frame(frames_dir, current_ls, 0);
 
     // Energy consumed for this frame. This is used for the stopping
     // condition. Set this above the threshold for the first frame.
@@ -70,6 +67,7 @@ MorphStats Morph::morph(
         stats.update_energy(energy.delta_curvature, energy.delta_curvature);
         stats.update_max_curvature(energy.max_curvature);  
 
+        // Output summary of frame
         std::cout << "\nFrame " << frame_count << " -----------" << std::endl;
         std::cout << "CFL iterations - " << cfl_iters << std::endl;
         std::cout << "(dCurvature, dValue, max_Curvature) = ("
@@ -77,16 +75,10 @@ MorphStats Morph::morph(
             << energy.max_curvature << ")" << std::endl;
 
         // Optionally save the frame
-        if (save_frames) { 
-            std::cout << "Saving frame " 
-                << frame_fname(frames_dir, frame_count) << std::endl;
-        }
+        maybe_save_frame(frames_dir, current_ls, frame_count);
     }
 
-    if (save_frames) {
-        std::cout << "\nSaving last frame: " 
-            << frame_fname(frames_dir, frame_count) << std::endl;
-    }
+    maybe_save_frame(frames_dir, target, frame_count);
 
     stats.finalize_stats();
     return stats;
@@ -103,7 +95,36 @@ void Morph::init_morph(
 
 bool Morph::morph_is_finished(
         const LevelSet& current, const LevelSet& target) {
-    return false;
+
+    // Get the underlying grids
+    openvdb::FloatGrid::ConstPtr current_grid = current.get_level_set();
+    openvdb::FloatGrid::ConstPtr target_grid = target.get_level_set();
+
+    double threshold = target_grid->voxelSize()[0];
+    double max_diff = 0.0;
+    double curr_diff = 0.0;
+
+    openvdb::FloatGrid::ConstAccessor target_acc = target_grid->getAccessor();
+
+    typedef openvdb::FloatGrid::ValueOnCIter IterType;
+    for (IterType iter = current_grid->cbeginValueOn(); iter; ++iter) {
+        bool is_surface = current.is_surface_voxel(iter.getCoord());
+        if (iter.getValue() < 0 && is_surface) {
+            // compare the voxels at the same location in the current
+            // and target grids and get the absolute difference in values
+            curr_diff = openvdb::math::Abs(
+                iter.getValue() - target_acc.getValue(iter.getCoord()));
+
+            // Update the maximum difference
+            if (curr_diff > max_diff)
+                max_diff = curr_diff;
+        }
+    }
+
+    // Threshold the result
+    std::cout << "Max diff - " << max_diff << std::endl;
+    std::cout << "Threshold - " << threshold << std::endl;
+    return max_diff < threshold;
 }
 
 EnergyResults Morph::calculate_energy(
@@ -118,6 +139,17 @@ EnergyResults Morph::calculate_energy(
 std::string Morph::frame_fname(std::string frames_dir, int frame) { 
     std::string frame_str = std::to_string(frame);
     return frames_dir + "frame_" + frame_str + ".vdb";
+}
+
+void Morph::maybe_save_frame(
+        std::string frames_dir, const LevelSet& current_ls, int frame) {
+    // Don't do anything if frames_dir is not specified
+    if (frames_dir == "")
+        return;
+
+    std::string fname = frame_fname(frames_dir, frame);
+    std::cout << "Saving frame " << frame << " to " << fname << std::endl;
+    current_ls.save(fname);
 }
 
 

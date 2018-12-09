@@ -73,5 +73,11 @@ public:
      * format the filename as <frames_dir>/frame_<frame>.vdb
      */
     std::string frame_fname(std::string frames_dir, int frame);
+
+    /**
+     * save a VDB file of the current frame if frames_dir is specified
+     */
+    void maybe_save_frame(
+        std::string frames_dir, const LevelSet& current_ls, int frame);
 };
 #endif

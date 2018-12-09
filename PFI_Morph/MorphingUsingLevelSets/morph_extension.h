@@ -69,6 +69,11 @@ LevelSet preprocess_model(
 bool file_exists(std::string fname);
 
 /**
+ * Make a directory if it doesn't already exist
+ */
+void mkdir_quiet(std::string dirname);
+
+/**
  * Rename old/path/here/foo.obj -> {PREPROCESS_CACHE}/foo.{new_extension}
  */
 std::string get_cache_name(
