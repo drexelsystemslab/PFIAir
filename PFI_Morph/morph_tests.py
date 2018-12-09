@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import argparse
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 import trimesh
 
 import pfimorph
@@ -55,11 +56,30 @@ def morph_single_pair(args):
     morpher = pfimorph.Morpher()
     morpher.set_source_info(args.source_model, source_name, source_open)
     morpher.set_target_info(args.target_model, target_name, target_open)
-    energy = morpher.morph(
+    stat_pair = morpher.morph(
         cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
         profile=args.profile)
-    print(energy)
+
+    # Save a report
+    report_fname = "Reports/{}_{}.html".format(source_name, target_name)
+    write_report(report_fname, [stat_pair])
+
+def write_report(fname, stat_pairs):
+    """
+    Generate a HTML report using Jinja2
+    """
+    env = Environment(
+        loader=FileSystemLoader("templates"),
+        autoescape=select_autoescape(['html', 'xml']))
+    template = env.get_template('report.html')
+    html = template.render(
+        source_name=stat_pairs[0].source_name,
+        stat_pairs=stat_pairs,
+        columns=pfimorph.StatPair.COLUMNS)
+
+    with open(fname, 'w') as f:
+        f.write(html) 
 
 def stl_to_obj(stl_fname):
     """

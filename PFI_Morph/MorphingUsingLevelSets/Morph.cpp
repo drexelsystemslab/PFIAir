@@ -112,6 +112,7 @@ EnergyResults Morph::calculate_energy(
     results.delta_curvature = 0.0;
     results.delta_value = 0.0;
     results.max_curvature = 0.0;
+    return results;
 }
 
 std::string Morph::frame_fname(std::string frames_dir, int frame) { 

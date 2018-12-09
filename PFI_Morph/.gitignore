@@ -21,3 +21,4 @@ Makefile
 # Cython stuff
 pfimorph.cpp
 pfimorph.so
+cython_debug/

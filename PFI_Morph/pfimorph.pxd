@@ -19,6 +19,8 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
     # Output info ===========================================
 
     cdef struct MorphStats:
+        string source_name
+        string target_name
         int cfl_count
         int time_steps
         int source_surface_count
@@ -32,12 +34,11 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
         double weighted_total_value
         double total_energy
         double evolving_avg
-        void finalize_stats()
 
     cdef struct MorphStatsPair:
         MorphStats forwards
         MorphStats backwards
-        double average_energy()
+        double average_energy() except +
 
     # Morph Function =========================================== 
 
