@@ -59,6 +59,11 @@ struct MorphStats {
      * Add CFL iterations from the latest call to advect
      */
     void add_cfl_iterations(int delta);
+    
+    /**
+     * Add surface voxels to the total
+     */
+    void add_surface_voxels(int voxels);
 
     /**
      * Add one to the time steps

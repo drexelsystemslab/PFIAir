@@ -47,6 +47,10 @@ openvdb::FloatGrid::Ptr LevelSet::get_level_set() {
     return level_set;
 }
 
+openvdb::FloatGrid::ConstPtr LevelSet::get_level_set() const {
+    return level_set;
+}
+
 void LevelSet::morphological_opening() {
     openvdb::tools::LevelSetFilter<openvdb::FloatGrid> lsf(*level_set);
     double voxel_size = level_set->voxelSize()[0];
@@ -63,17 +67,17 @@ void LevelSet::morphological_opening() {
     lsf.normalize();
 }
 
-int LevelSet::count_surface_voxels()  {
-    typedef openvdb::FloatGrid::ValueOnIter IterType;
+int LevelSet::count_surface_voxels() const {
+    typedef openvdb::FloatGrid::ValueOnCIter IterType;
     int count = 0;
-    for (IterType iter = level_set->beginValueOn(); iter; ++iter) {
+    for (IterType iter = level_set->cbeginValueOn(); iter; ++iter) {
         if(iter.getValue() < 0 && is_surface_voxel(iter.getCoord()))
             count++;
     }
     return count;
 } 
 
-bool LevelSet::is_surface_voxel(const openvdb::Coord& coord) {
+bool LevelSet::is_surface_voxel(const openvdb::Coord& coord) const {
     bool found_positive = false;
     openvdb::Coord six_connected[6] = {
         openvdb::Coord(coord.x() - 1, coord.y(), coord.z()),
@@ -141,6 +145,12 @@ std::string LevelSet::get_name() const {
 
 void LevelSet::set_name(std::string name) {
     this->name = name;
+}
+
+LevelSet LevelSet::deep_copy() const { 
+    using openvdb::FloatGrid;
+    FloatGrid::Ptr copy = openvdb::deepCopyTypedGrid<FloatGrid>(level_set);
+    return LevelSet(copy);
 }
 
 void LevelSet::save(std::string fname) {

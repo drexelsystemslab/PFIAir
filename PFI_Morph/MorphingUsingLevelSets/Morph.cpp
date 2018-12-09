@@ -1,13 +1,15 @@
 #include "Morph.h"
 
 MorphStats Morph::morph(
-        LevelSet& source, LevelSet& target, std::string frames_dir) {
-
+        const LevelSet& source, 
+        const LevelSet& target,
+        std::string frames_dir) {
     // Check if we should save frames
     bool save_frames = frames_dir != "";
 
     // Set up a new MorphStats
     stats = MorphStats();
+    // TODO: Names can be moved up to the Python level
     stats.set_names(source.get_name(), target.get_name());
 
     // Compute stats about source and target level sets
@@ -15,28 +17,34 @@ MorphStats Morph::morph(
     double target_count = target.count_surface_voxels(); 
     stats.count_surface_voxels(source_count, target_count);
 
+    // We don't want to modify the input grids, so deep copy
+    // the first frame.
+    LevelSet current_ls = source.deep_copy();
+
     // Initialize the OpenVDB morph object
-    init_morph(source.get_level_set(), target.get_level_set());
+    init_morph(current_ls.get_level_set(), target.get_level_set());
 
-    int frame_count = 0;
-
-    // Save first frame
+    // Save the first frame frame
     if (save_frames) {
-        std::cout << frame_count << std::endl;
-        std::cout << frames_dir << std::endl;
+        std::cout << "Saving first frame: " << frame_fname(frames_dir, 0);
     }
 
     // Energy consumed for this frame. This is used for the stopping
-    // condition. Set this to a large value to start
+    // condition. Set this above the threshold for the first frame.
     double energy_consumed = MIN_ENERGY + 1;
-    for (frame_count = 0; frame_count < MAX_ITERS; frame_count++) {
+
+    // Declare frame_count outside the scope of the loop, we will need
+    // the final value to save the last frame.
+    int frame_count;
+    for (frame_count = 1; frame_count < MAX_ITERS; frame_count++) {
+        // Check if we've consumed too much energy
         if (energy_consumed < MIN_ENERGY)
             break;
 
-        /*
-        if (morph_finished(current_grid, target_grid))
+        // Check if the morph is finished
+        if (morph_is_finished(current_ls, target))
             break;
-        */
+
         //if(this->checkStopMorph(source_grid, target_grid)) break;
 
         // Start and end times for this advection step
@@ -44,71 +52,74 @@ MorphStats Morph::morph(
         double end_time = start_time + TIME_STEP;
         stats.increment_time();
 
-        /*
-                openvdb::FloatGrid::Ptr before_advect = openvdb::deepCopyTypedGrid<openvdb::FloatGrid>(source_grid);
-                
+        // We need to compute the energy between each pair of frames.
+        // Thus we must make a copy of the 
+        LevelSet prev_ls = current_ls.deep_copy();
+
         // Advect the level set and count the 
         // Courrant-Friedrrichs-Lewy iterations
-        cfl_count += ls_morph.advect(start_time, end_time);
-        forwards.add_cfl_iterations(cfl_count);
+        // NOTE: This modifies current_ls in place
+        double cfl_iters = ls_morph->advect(start_time, end_time);
+        stats.add_cfl_iterations(cfl_iters);
 
-        std::cout << "CFL iterations - " << CFL_count << std::endl;
-                
+        // Update voxel count from the new frame
+        double surface_voxel_count = current_ls.count_surface_voxels();
+        stats.add_surface_voxels(surface_voxel_count);
 
-                // Update
-                source_surface_count_sum += GridOperations::countSurfaceVoxels(source_grid);
-                
-                // Calculate the energy used for this frame and update stats
-                // Note: source_grid has been updated after advection
-                this->calculateEnergy(before_advect, source_grid, mc_sum, val_sum, max_curv);
+        // Update the energy calculation
+        EnergyResults energy = calculate_energy(prev_ls, current_ls);
+        stats.update_energy(energy.delta_curvature, energy.delta_curvature);
+        stats.update_max_curvature(energy.max_curvature);  
 
-        stats.update_energy(delta_curvature, delta_value);
+        std::cout << "Frame " << frame_count << std::endl;
+        std::cout << "CFL iterations - " << cfl_iters << std::endl;
+        std::cout << "(dCurvature, dValue, max_Curvature) = ("
+            << energy.delta_curvature << ", " << energy.delta_value << ", "
+            << energy.max_curvature << std::endl;
 
-        forwards.update_max_curvature(max_curvature);
+        // Optionally save the frame
+        if (save_frames) { 
+            std::cout << "Saving frame " 
+                << frame_fname(frames_dir, frame_count) << std::endl;
+        }
 
-
-        std::string frame_fname = 
-                
-                // TODO: Again, maybe use a numbering scheme that includes
-                // source and target frames for easier viewing in Houdini.
-                // TODO: Consider making these VDB files optional. They are
-                // helpful for debugging and for making morph animations,
-                // but not necessary for computing the energy
-                file_name = file_path + "/advect_" + std::to_string((int)(time/time_inc)) + ".vdb";
-                GridOperations::writeToFile(file_name, source_grid);
-                
-                // Print a summary of this frame to the console
-                std::cout << "File created - " << file_name << std::endl;
-                std::cout << "Energy - " << (mc_sum + val_sum) << std::endl;
-                 
-                // Step forward in time
-                time += time_inc;
-                
-                // TODO: a new Morph class should check these conditions
-                // at the top of the loop.
-                // it looks like there is a limit of 500 frames to this
-                // animation. be more explicit about this with a for loop
-                if((int)(time/time_inc) > 500) break;
-                if(energy_consumed < 10) break;
-                if(this->checkStopMorph(source_grid, target_grid)) break;
-    */
+        std::cout << std::endl;
     }
 
     if (save_frames) {
-        std::cout << frame_count << std::endl;
-        std::cout << frames_dir << std::endl;
+        std::cout << "Saving last frame: " 
+            << frame_fname(frames_dir, frame_count) << std::endl;
     }
 
     stats.finalize_stats();
     return stats;
 }
 
-void Morph::init_morph(GridType::Ptr source_grid, GridType::Ptr target_grid) {
+void Morph::init_morph(
+        GridType::Ptr source_grid, GridType::ConstPtr target_grid) {
     // Create a level set morphing object
     InterruptType* interrupt = nullptr;
     ls_morph = std::unique_ptr<LSMorph>(
         new LSMorph(*source_grid, *target_grid, interrupt));
     ls_morph->setNormCount(NORM_COUNT);
+}
+
+bool Morph::morph_is_finished(
+        const LevelSet& current, const LevelSet& target) {
+    return false;
+}
+
+EnergyResults Morph::calculate_energy(
+        const LevelSet& prev, const LevelSet& next) {
+    EnergyResults results;
+    results.delta_curvature = 0.0;
+    results.delta_value = 0.0;
+    results.max_curvature = 0.0;
+}
+
+std::string Morph::frame_fname(std::string frames_dir, int frame) { 
+    std::string frame_str = std::to_string(frame);
+    return frames_dir + "/frame_" + frame_str + ".vdb";
 }
 
 

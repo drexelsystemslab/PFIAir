@@ -38,24 +38,29 @@ public:
         const std::vector<openvdb::Vec4I>& indices_quad,
         bool is_open_mesh);
 
+    /**
+     * Initialize from a grid pointer.
+     */
+    LevelSet(openvdb::FloatGrid::Ptr level_set): level_set(level_set) {}
+
     // Getter for the underlying VDB
     openvdb::FloatGrid::Ptr get_level_set();
+    openvdb::FloatGrid::ConstPtr get_level_set() const;
 
     /**
      * Perform a morphological opening
      */
     void morphological_opening();
 
-
     /**
      * Count the number of surface voxels in the model
      */
-    int count_surface_voxels();
+    int count_surface_voxels() const;
 
     /**
      * Check if a voxel is on the surface of the level set
      */
-    bool is_surface_voxel(const openvdb::Coord& coord);
+    bool is_surface_voxel(const openvdb::Coord& coord) const;
 
     /**
      * Convert a LevelSet to a new Mesh object
@@ -74,6 +79,12 @@ public:
         std::vector<openvdb::Vec3s>& out_vertices,
         std::vector<openvdb::Vec3I>& out_indices_tri,
         std::vector<openvdb::Vec4I>& out_indices_quad);
+
+    /**
+     * Deep copy the underlying level set and 
+     * return a new LevelSet object.
+     */
+    LevelSet deep_copy() const;
 
     /**
      * Save a .vdb file of this level set

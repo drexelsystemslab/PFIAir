@@ -16,6 +16,7 @@
 #include "UpdtMeshOperations.h"
 #include "Mesh.h"
 #include "Timer.h"
+#include "Morph.h"
 
 #include "ReportGenerator.h"
 
@@ -365,6 +366,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     const std::string TARGET_VDB_PROCESSED =
         OUTPUT_PATH + "target_processed.vdb";
 
+    /*
     // Test the report generator
     const std::string REPORT_FILE = "Reports/open_mesh.html";
     ReportGenerator report(REPORT_FILE);
@@ -392,6 +394,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     MorphStats backwards;
     report.add_row(forwards, backwards);
     report.write_report();
+    */
 
     // Limit memory usage to 1 GB as a safety precaution. I don't want to 
     // lock up my laptop again.
@@ -400,8 +403,10 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Read in the two open meshes and preprocess them ====================
 
     Timer time_overall("Open Mesh Experiment");
+    time_overall.start();
 
     Timer time_preprocess("Preprocessing meshes");
+    time_preprocess.start();
 
     std::cout << "Preprocess source mesh" << std::endl;
     // boolean flag is to mark this as an open mesh
@@ -417,6 +422,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Optional: Save processed meshes ==================================
 
     Timer time_save_obj("(Optional) Saving OBJ files");
+    time_save_obj.start();
 
     std::cout << "Saving source mesh to " << SOURCE_OBJ_PROCESSED << std::endl;
     source_mesh.save_obj(SOURCE_OBJ_PROCESSED); 
@@ -429,6 +435,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Convert to level sets ===========================================
 
     Timer time_convert("Converting meshes -> level sets");
+    time_convert.start();
 
     std::cout << "Converting source mesh to level set" << std::endl;
     LevelSet source_ls = source_mesh.to_level_set();
@@ -441,6 +448,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Optional: Save level sets ======================================
 
     Timer time_save_vdb("(Optional) Saving VDBs");
+    time_save_vdb.start();
 
     std::cout << "Saving source mesh to " << SOURCE_VDB_PROCESSED << std::endl;
     source_ls.save(SOURCE_VDB_PROCESSED); 
@@ -453,22 +461,22 @@ int load_open_mesh(int argc, const char* argv[]) {
     // Morph the two models ============================================
 
     Timer time_morph("Morphing Models");
+    time_morph.start();
 
-    // Set the morph output directory
-    MorphOperations::Morph morph_obj = MorphOperations::Morph(SOURCE_OBJ);
-    morph_obj.morph_path = OUTPUT_PATH + "source-target";
-    CommonOperations::makeDirs(morph_obj.morph_path.c_str());
+    Morph morph_obj;
+    std::string morph_dir = OUTPUT_PATH + "source-target";
 
-    // Attach the underlying grids
-    morph_obj.source_grid = source_ls.get_level_set();
-    morph_obj.target_grid = target_ls.get_level_set(); 
-                
-    // Generate a Table Row
-    HTMLHelper::TableRow row;    
-    const int NORM_COUNT = 10;
-    const int OPENING_SIZE = 5; 
-    double energy = morph_obj.morphModels(row, NORM_COUNT, OPENING_SIZE);
-    std::cout << "Energy: " << energy << std::endl;
+    Timer timer_fwd("Morph source -> target");
+    timer_fwd.start();
+    MorphStats fwd_stats = morph_obj.morph(
+        source_ls, target_ls, "source-target");
+    timer_fwd.stop();
+
+    Timer timer_bwd("Morph source <- target");
+    timer_bwd.start();
+    MorphStats bwd_stats = morph_obj.morph(
+        target_ls, source_ls, "target-source");
+    timer_bwd.stop();
 
     time_morph.stop();
 

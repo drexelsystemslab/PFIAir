@@ -7,6 +7,16 @@
 #include "MorphStats.h"
 
 /**
+ * Morph::calculate_energy() comuptes a few different values,
+ * so pack them up in a struct.
+ */
+struct EnergyResults {
+    double delta_curvature;
+    double delta_value;
+    double max_curvature;
+};
+
+/**
  * Morph one model into another and keep track
  * of statistics at each step.
  */
@@ -23,7 +33,7 @@ class Morph {
     // Use a pointer because OpenVDB does not provide a null constructor
     std::unique_ptr<LSMorph> ls_morph = nullptr;
 public:
-    static constexpr int MAX_ITERS = 500;
+    static constexpr int MAX_ITERS = 3;//500;
     static constexpr int NORM_COUNT = 5;
     static constexpr int TIME_STEP = 0.25;
 
@@ -39,11 +49,29 @@ public:
      * to {frames_dir}/advect_XXXX.vdb
      */
     MorphStats morph(
-        LevelSet& source, LevelSet& target, std::string frames_dir);
+        const LevelSet& source, 
+        const LevelSet& target, 
+        std::string frames_dir);
 
     /**
      * Initialize the level set morphing filter
      */
-    void init_morph(GridType::Ptr source_grid, GridType::Ptr target_grid);
+    void init_morph(GridType::Ptr source_grid, GridType::ConstPtr target_grid);
+
+    /**
+     * Check if the morph is finished by comparing voxels of two level sets.
+     * take the total difference and threshold it.
+     */
+    bool morph_is_finished(const LevelSet& current, const LevelSet& target);
+
+    /**
+     * Compute the inter-frame energy consumption and curvature changes
+     */
+    EnergyResults calculate_energy(const LevelSet& prev, const LevelSet& next);
+
+    /**
+     * format the filename as <frames_dir>/frame_<frame>.vdb
+     */
+    std::string frame_fname(std::string frames_dir, int frame);
 };
 #endif

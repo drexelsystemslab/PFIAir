@@ -56,6 +56,10 @@ void MorphStats::add_cfl_iterations(int delta) {
     cfl_count += delta;
 }
 
+void MorphStats::add_surface_voxels(int voxels) {
+    total_surface_voxels += voxels;
+}
+
 void MorphStats::increment_time() {
     time_steps++;
 }
