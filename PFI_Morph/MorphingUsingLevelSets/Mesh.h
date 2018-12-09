@@ -27,11 +27,6 @@ class Mesh {
     static const int VECTOR_SIZE = 4;
 
     /**
-     * Short name to identify this model
-     */
-    std::string name;
-
-    /**
      * List of vertices and faces from the .obj
      * file stored as OpenVDB vectors.
      */
@@ -125,10 +120,6 @@ public:
      * Save the OBJ file to disk. This is useful for debugging.
      */
     void save_obj(std::string filename);
-
-    // Getters and setters
-    std::string get_name() const;
-    void set_name(std::string name);
 private:
 
     /**

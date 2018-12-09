@@ -9,10 +9,6 @@ class Mesh;
 class LevelSet {
     // Level set representation as a VDB data structure
     openvdb::FloatGrid::Ptr level_set = nullptr;
-    /**
-     * Short name to identify this level set.
-     */
-    std::string name;
 public:
     /**
      * Half bandwidth of the final signed distance field.
@@ -66,10 +62,6 @@ public:
      * Convert a LevelSet to a new Mesh object
      */
     Mesh to_mesh();
-
-    // Getters and setters
-    std::string get_name() const;
-    void set_name(std::string name);
 
     /**
      * Convert to a mesh, populating lists of vertices and faces.

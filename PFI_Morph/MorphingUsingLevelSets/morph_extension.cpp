@@ -33,18 +33,40 @@ MorphStatsPair morph_cpp(
     std::string backwards_dir = "";
     if (save_debug_models) {
         forwards_dir = 
-            VDB_DIR + source_ls.get_name() + "-" + target_ls.get_name() + "/";
+            VDB_DIR + source_model.name + "-" + target_model.name + "/";
         backwards_dir = 
-            VDB_DIR + target_ls.get_name() + "-" + source_ls.get_name() + "/";
+            VDB_DIR + target_model.name + "-" + target_model.name + "/";
     }
 
     // Perform the morphing
     Morph morpher;
+
+    // Forwards Direction ====================
+    Timer time_forward("Morphing source -> target");
+    if (profile)
+        time_forward.start();
+
     MorphStats forward_stats = morpher.morph(
         source_ls, target_ls, forwards_dir);
+    forward_stats.set_names(source_model.name, target_model.name);
+
+    if (profile)
+        time_forward.stop();
+
+    // Backwards direction ====================
+
+    Timer time_backward("Morphing source <- target");
+    if (profile)
+        time_forward.start();
+
     MorphStats backward_stats = morpher.morph(
         target_ls, source_ls, forwards_dir);
+    backward_stats.set_names(target_model.name, source_model.name);
 
+    if (profile)
+        time_backward.stop();
+
+    // Combine results into a pair of stats
     return MorphStatsPair(forward_stats, backward_stats);
 }
 
@@ -79,7 +101,6 @@ LevelSet preprocess_model(
 
     // Otherwise, we need to preprocess the model
     Mesh mesh(model.obj_fname, model.is_open);
-    mesh.set_name(model.name);
     std::cout << "Transforming Model..." <<  std::endl;
     mesh.preprocess_mesh();
 

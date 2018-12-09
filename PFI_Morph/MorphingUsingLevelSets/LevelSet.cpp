@@ -137,16 +137,6 @@ void LevelSet::to_mesh(
         *level_set, out_vertices, out_indices_tri, out_indices_quad);
 }
 
-std::string LevelSet::get_name() const {
-    if (name == "")
-        throw new std::runtime_error("Name not set!");
-    return name;
-}
-
-void LevelSet::set_name(std::string name) {
-    this->name = name;
-}
-
 LevelSet LevelSet::deep_copy() const { 
     using openvdb::FloatGrid;
     FloatGrid::Ptr copy = openvdb::deepCopyTypedGrid<FloatGrid>(level_set);

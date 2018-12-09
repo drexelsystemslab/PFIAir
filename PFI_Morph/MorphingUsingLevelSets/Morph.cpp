@@ -9,8 +9,6 @@ MorphStats Morph::morph(
 
     // Set up a new MorphStats
     stats = MorphStats();
-    // TODO: Names can be moved up to the Python level
-    stats.set_names(source.get_name(), target.get_name());
 
     // Compute stats about source and target level sets
     double source_count = source.count_surface_voxels();
@@ -26,7 +24,8 @@ MorphStats Morph::morph(
 
     // Save the first frame frame
     if (save_frames) {
-        std::cout << "Saving first frame: " << frame_fname(frames_dir, 0);
+        std::cout << "Saving first frame: " << frame_fname(frames_dir, 0)
+            << std::endl;
     }
 
     // Energy consumed for this frame. This is used for the stopping
@@ -71,23 +70,21 @@ MorphStats Morph::morph(
         stats.update_energy(energy.delta_curvature, energy.delta_curvature);
         stats.update_max_curvature(energy.max_curvature);  
 
-        std::cout << "Frame " << frame_count << std::endl;
+        std::cout << "\nFrame " << frame_count << " -----------" << std::endl;
         std::cout << "CFL iterations - " << cfl_iters << std::endl;
         std::cout << "(dCurvature, dValue, max_Curvature) = ("
             << energy.delta_curvature << ", " << energy.delta_value << ", "
-            << energy.max_curvature << std::endl;
+            << energy.max_curvature << ")" << std::endl;
 
         // Optionally save the frame
         if (save_frames) { 
             std::cout << "Saving frame " 
                 << frame_fname(frames_dir, frame_count) << std::endl;
         }
-
-        std::cout << std::endl;
     }
 
     if (save_frames) {
-        std::cout << "Saving last frame: " 
+        std::cout << "\nSaving last frame: " 
             << frame_fname(frames_dir, frame_count) << std::endl;
     }
 
@@ -119,7 +116,7 @@ EnergyResults Morph::calculate_energy(
 
 std::string Morph::frame_fname(std::string frames_dir, int frame) { 
     std::string frame_str = std::to_string(frame);
-    return frames_dir + "/frame_" + frame_str + ".vdb";
+    return frames_dir + "frame_" + frame_str + ".vdb";
 }
 
 
