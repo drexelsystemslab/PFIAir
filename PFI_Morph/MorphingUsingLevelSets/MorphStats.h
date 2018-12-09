@@ -85,16 +85,6 @@ struct MorphStats {
      * Compute averages and other post-morph stats
      */
     void finalize_stats();
-
-    /**
-     * Serialize to a HTML table row
-     */
-    void write_row(std::ostream& stream, double mean=-1.0) const; 
-
-    /**
-     * Write the column headers for the HTML report
-     */
-    static void write_header_row(std::ostream& stream);
 };
 
 /**
