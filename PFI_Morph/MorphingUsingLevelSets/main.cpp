@@ -17,15 +17,15 @@
 #include "Mesh.h"
 #include "Timer.h"
 #include "Morph.h"
-
 #include "ReportGenerator.h"
+#include "morph_extension.h"
+
 
 //const std::string MORPH_OUTPUT_DIR = "/Volumes/ExtHDD/Jeshur/new/morphs/";
 const std::string OUTPUT_DIR = "output/";
 const std::string INPUT_DIR = "original_objs/";
 const std::string TEMP_OBJ1 = OUTPUT_DIR + "srt1.obj";
 const std::string TEMP_OBJ2 = OUTPUT_DIR + "srt2.obj";
-const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
 
 /**
  * Some functions in the existing code do not work well with open meshes.
@@ -79,6 +79,7 @@ int main(int argc, const char * argv[])
  */
 int morph_all()
 {
+    const std::string VDB_DIR = OUTPUT_DIR + "vdbs";
     openvdb::initialize();
 
 //    GridOperations::doMorphologicalOpening(source_grid1);
@@ -346,12 +347,17 @@ void print_help() {
  * Test of scan-converting a non-watertight model
  */
 int load_open_mesh(int argc, const char* argv[]) {
-    const std::string INPUT_PATH = "open_mesh_objs/";
+    // Limit memory usage to 1 GB as a safety precaution. I don't want to 
+    // lock up my laptop again.
+    limit_memory(1000);
+
+    const std::string INPUT_PATH = "open_mesh_objs/"; 
     const std::string OUTPUT_PATH = "output/open_mesh/";
     // Original OBJ files
     const std::string SOURCE_OBJ = INPUT_PATH + "source.obj";
     const std::string TARGET_OBJ = INPUT_PATH + "target.obj";
-
+    
+    /*
     CommonOperations::makeDirs(OUTPUT_DIR.c_str());
 
     // After mesh pre-processing.
@@ -365,6 +371,33 @@ int load_open_mesh(int argc, const char* argv[]) {
         OUTPUT_PATH + "source_processed.vdb";
     const std::string TARGET_VDB_PROCESSED =
         OUTPUT_PATH + "target_processed.vdb";
+    */
+
+    // Use the entry point that Cython uses 
+    ModelInfo source_info{
+        .obj_fname = SOURCE_OBJ,
+        .name = "source",
+        .is_open = true,
+    };
+    ModelInfo target_info{
+        .obj_fname = TARGET_OBJ,
+        .name = "target",
+        .is_open = true,
+    };
+
+    // Run the morphing in full debug mode
+    try {
+        MorphStatsPair results = morph_cpp(
+            source_info,
+            target_info,
+            true,
+            true,
+            true);  
+    } catch (const std::exception& e) {
+        std::cerr <<  e.what() << std::endl;
+    }
+
+    // Old version
 
     /*
     // Test the report generator
@@ -396,12 +429,10 @@ int load_open_mesh(int argc, const char* argv[]) {
     report.write_report();
     */
 
-    // Limit memory usage to 1 GB as a safety precaution. I don't want to 
-    // lock up my laptop again.
-    limit_memory(1000);
 
     // Read in the two open meshes and preprocess them ====================
 
+    /*
     Timer time_overall("Open Mesh Experiment");
     time_overall.start();
 
@@ -481,6 +512,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     time_morph.stop();
 
     time_overall.stop();
+    */
 
     return 0;
 }
