@@ -77,6 +77,10 @@ int LevelSet::count_surface_voxels() const {
     return count;
 } 
 
+double LevelSet::get_voxel_size() const {
+    return level_set->voxelSize()[0];
+}
+
 bool LevelSet::is_surface_voxel(const openvdb::Coord& coord) const {
     bool found_positive = false;
     openvdb::Coord six_connected[6] = {

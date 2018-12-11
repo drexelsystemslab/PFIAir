@@ -54,6 +54,11 @@ public:
     int count_surface_voxels() const;
 
     /**
+     * Get the voxel size of the underlying level set
+     */
+    double get_voxel_size() const;
+
+    /**
      * Check if a voxel is on the surface of the level set
      */
     bool is_surface_voxel(const openvdb::Coord& coord) const;

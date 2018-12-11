@@ -67,7 +67,7 @@ public:
     /**
      * Compute the inter-frame energy consumption and curvature changes
      */
-    EnergyResults calculate_energy(const LevelSet& prev, const LevelSet& next);
+    EnergyResults calculate_energy(const LevelSet& prev, const LevelSet& curr);
 
     /**
      * format the filename as <frames_dir>/frame_<frame>.vdb

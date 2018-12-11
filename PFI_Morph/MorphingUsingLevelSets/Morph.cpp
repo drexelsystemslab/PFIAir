@@ -100,7 +100,7 @@ bool Morph::morph_is_finished(
     openvdb::FloatGrid::ConstPtr current_grid = current.get_level_set();
     openvdb::FloatGrid::ConstPtr target_grid = target.get_level_set();
 
-    double threshold = target_grid->voxelSize()[0];
+    double threshold = target.get_voxel_size();
     double max_diff = 0.0;
     double curr_diff = 0.0;
 
@@ -128,7 +128,165 @@ bool Morph::morph_is_finished(
 }
 
 EnergyResults Morph::calculate_energy(
-        const LevelSet& prev, const LevelSet& next) {
+        const LevelSet& prev, const LevelSet& curr) {
+
+    /**
+     * 
+     * Pseudocode for updated energy calculation algorithm
+     * (Without curvature bounds)
+     *
+     * max_curvature = -infinity (or 0?) // max curvature this frame
+     * delta_curvature = 0.0
+     * delta_value = 0
+
+     * For each active surface voxel in the previous frame:
+     * - compute the mean curvature of prev @ current voxel 
+     * - compute the mean curvature of curr @ current voxel 
+     * - if both prev/curr mean curvature are infinite:
+     *   - skip to the next voxel, we cannot get any meaningful info
+     * - if one of prev/curr mean curvature is finite:
+     *   - max_curvature = max(max_curvature, finite mean curvature)
+     *   - curv_diff = |finite mean curvature|
+     *   - delta_curvature += curv_diff
+     * - if both prev/curr mean curvature are finite:
+     *   - max_curvature = max(
+     *         max_curvature, prev mean curvature, curr mean curvature)
+     *   - curv_diff = |prev mean curvature - curr mean curvature|
+     *   - delta_curvature += curv_diff
+     * - val_diff = prev.value[coord] - curr.value[coord]
+     * - increment delta_value if val_diff > voxel_size 
+     *   
+     * Return the following:
+     *
+     * results.delta_value: the number of voxels that changed by at least
+     *      1 * voxel_size
+     * results.delta_curvature: the change in mean curvature during the morph
+     *      from prev -> current
+     * results.max_curvature: maximum mean curvature *for this pair of frames*
+     *
+     *
+     * Changes to add with Curvature bounds:
+     * - Precompute the maximum (and miniumum for negative curvature?) 
+     *     mean curvatures for source and target models.
+     * - lower_bound = min(source_min_mean_curv, target_min_mean_curv)
+     * - upper_bound = max(source_max_mean_curv, target_max_mean_curv)
+     * - Replace checks for "is finite" with 
+     *    "is in range [lower_bound, upper_bound]"
+     *
+     * These bounds will make it easier to filter out extraneous values,
+     * at a cost of running another pass over the voxels of source and
+     * target models (once per morph)
+     */
+
+    /**
+     * Mean curvature is defined in OpenVDB as
+     *
+     * div((grad phi)/|grad phi|)
+     *
+     * alpha = grad phi
+     * beta = |grad phi|
+     */
+     /*
+    double alpha;
+    double beta;
+
+    double mean_curv_prev;
+    double mean_curv_curr;
+    double abs_diff_curv = 0.0;
+    double voxel_size = prev.get_voxel_size();
+    int count = 0;
+    int diff_count = 0;
+    double max_diff = 0.0;
+    double curr_val;
+    */
+
+    // Lots of intermediate OpenVDB objects ===========================
+    /*
+    using namespace openvdb::math;
+    openvdb::FloatGrid::ConstPtr prev_grid = prev.get_level_set();
+    openvdb::FloatGrid::ConstPtr curr_grid = curr.get_level_set();
+
+    const Transform prev_xform = prev_grid->transform();
+    const Transform curr_xform = next_grid->transform();
+
+    MapBase::ConstPtr prev_map = prev_xform.baseMap();
+    MapBase::ConstPtr curr_map = curr_xform.baseMap();
+
+    openvdb::FloatGrid::ConstAccessor prev_acc = prev_grid->getAccessor();
+    openvdb::FloatGrid::ConstAccessor curr_acc = curr_grid->getAccessor();
+
+    MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_SND> mean_curv;
+    */
+    
+    // =================================================================
+
+
+/*
+    // Iterate over surface voxels
+    typedef openvdb::FloatGrid::ValueOnCIter IterType;
+    for (IterType iter = prev_grid.cbeginValueOn(); iter; ++iter) {
+        if (iter.get_value() < 0 && prev.is_surface_voxel(iter.getCoord()) {
+            // count up surface voxels
+            count++;
+
+            // Compute the mean curvature
+            mean_curv.compute(
+                *prev_map, prev_acc, iter.getCoord(), alpha, beta);
+
+            if (beta != 0.0) {
+               mean_curv_prev = alpha / beta;
+               if (mean_curv_prev > max
+            } else {
+                // Ignore infinite curvature
+            }
+
+        }
+    }
+    */
+    /*
+
+                if(iter.getValue() < 0 && GridOperations::checkIfSurface(iter, grid_t1)) {
+                    
+                    // Compute mean curvature at this point on the source
+                    // grid
+                    count++;
+                    mean_curv.compute(*map1, g1_accessor, iter.getCoord(), alpha, beta);
+                    if(beta != 0.0) {
+                        mc_1 = alpha / beta;
+                        if(mc_1 > max_curv) max_curv = mc_1;
+                    }
+                    else {
+                        mc_1 = 0.0;
+                        max_curv = std::numeric_limits<int>::max();
+                        std::cout << "Infinite curvature at source coord: " << iter.getCoord() << std::endl;
+                    }
+                    
+                    // Compute mean curvature at this point on the
+                    // target grid
+                    mean_curv.compute(*map2, g2_accessor, iter.getCoord(), alpha, beta);
+                    if(beta != 0.0) {
+                        mc_2 = alpha / beta;
+                        if(mc_2 > max_curv) max_curv = mc_2;
+                    }
+                    else {
+                        mc_2 = 0.0;
+                        max_curv = std::numeric_limits<int>::max();
+                        std::cout << "Infinite curvature at target coord: " << iter.getCoord() << std::endl;
+                    }
+                    
+                    abs_sum_mc_diff += openvdb::math::Abs(mc_1 - mc_2);
+
+                    curr_val = openvdb::math::Abs(iter.getValue() - g2_accessor.getValue(iter.getCoord()));
+                    if(curr_val > max_diff) max_diff = curr_val;
+                    
+                    if(openvdb::math::Abs(iter.getValue() - g2_accessor.getValue(iter.getCoord())) > voxel_size)
+                        val_sum += 1;
+                }
+            }
+            std::cout << max_diff << std::endl;
+            mc_sum = abs_sum_mc_diff;
+        }
+    */
     EnergyResults results;
     results.delta_curvature = 0.0;
     results.delta_value = 0.0;
