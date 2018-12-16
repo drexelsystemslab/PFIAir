@@ -5,16 +5,7 @@
 #include <openvdb/tools/LevelSetMorph.h>
 #include "LevelSet.h"
 #include "MorphStats.h"
-
-/**
- * Morph::calculate_energy() comuptes a few different values,
- * so pack them up in a struct.
- */
-struct EnergyResults {
-    double delta_curvature;
-    double delta_value;
-    double max_curvature;
-};
+#include "EnergyCalculator.h"
 
 /**
  * Morph one model into another and keep track

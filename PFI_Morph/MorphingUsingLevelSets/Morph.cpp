@@ -130,14 +130,16 @@ bool Morph::morph_is_finished(
 EnergyResults Morph::calculate_energy(
         const LevelSet& prev, const LevelSet& curr) {
 
+    EnergyCalculator calc(prev, curr);
+    return calc.compute_energy();
+
     /**
-     * 
      * Pseudocode for updated energy calculation algorithm
-     * (Without curvature bounds)
      *
-     * max_curvature = -infinity (or 0?) // max curvature this frame
+     * (maximum absolute mean cuvature for this pair of frames)
+     * max_curvature = 0.0
      * delta_curvature = 0.0
-     * delta_value = 0
+     * delta_value = 0.0
 
      * For each active surface voxel in the previous frame:
      * - compute the mean curvature of prev @ current voxel 
@@ -145,21 +147,19 @@ EnergyResults Morph::calculate_energy(
      * - if both prev/curr mean curvature are infinite:
      *   - skip to the next voxel, we cannot get any meaningful info
      * - if one of prev/curr mean curvature is finite:
-     *   - max_curvature = max(max_curvature, finite mean curvature)
+     *   - max_curvature = max(max_curvature, abs(finite mean curvature))
      *   - curv_diff = |finite mean curvature|
      *   - delta_curvature += curv_diff
      * - if both prev/curr mean curvature are finite:
      *   - max_curvature = max(
-     *         max_curvature, prev mean curvature, curr mean curvature)
+     *         max_curvature, abs(prev mean curvature), abs(curr mean curvature))
      *   - curv_diff = |prev mean curvature - curr mean curvature|
      *   - delta_curvature += curv_diff
-     * - val_diff = prev.value[coord] - curr.value[coord]
-     * - increment delta_value if val_diff > voxel_size 
+     * - delta_value = |prev.value[coord] - curr.value[coord]|
      *   
      * Return the following:
      *
-     * results.delta_value: the number of voxels that changed by at least
-     *      1 * voxel_size
+     * results.delta_value: 
      * results.delta_curvature: the change in mean curvature during the morph
      *      from prev -> current
      * results.max_curvature: maximum mean curvature *for this pair of frames*
@@ -186,9 +186,8 @@ EnergyResults Morph::calculate_energy(
      * alpha = grad phi
      * beta = |grad phi|
      */
+
      /*
-    double alpha;
-    double beta;
 
     double mean_curv_prev;
     double mean_curv_curr;
@@ -221,17 +220,31 @@ EnergyResults Morph::calculate_energy(
     // =================================================================
 
 
-/*
     // Iterate over surface voxels
+    /*
     typedef openvdb::FloatGrid::ValueOnCIter IterType;
     for (IterType iter = prev_grid.cbeginValueOn(); iter; ++iter) {
         if (iter.get_value() < 0 && prev.is_surface_voxel(iter.getCoord()) {
             // count up surface voxels
             count++;
 
-            // Compute the mean curvature
+            // Compute the mean curvature at this point in both models ======
+            double alpha;
+            double beta;
+            double prev_mean_curv;
+
             mean_curv.compute(
                 *prev_map, prev_acc, iter.getCoord(), alpha, beta);
+
+            // Check for infinite curvature
+            if (beta == 0.0) {
+                prev_mean_curv = std::numeric_limits<double>::infinity(); 
+            }
+            
+            
+
+            mean_curv.compute(
+                *curr_map, curr_acc, iter.getCoor(), alpha, beta);
 
             if (beta != 0.0) {
                mean_curv_prev = alpha / beta;
@@ -243,6 +256,7 @@ EnergyResults Morph::calculate_energy(
         }
     }
     */
+
     /*
 
                 if(iter.getValue() < 0 && GridOperations::checkIfSurface(iter, grid_t1)) {
@@ -287,11 +301,13 @@ EnergyResults Morph::calculate_energy(
             mc_sum = abs_sum_mc_diff;
         }
     */
+    /*
     EnergyResults results;
     results.delta_curvature = 0.0;
     results.delta_value = 0.0;
     results.max_curvature = 0.0;
     return results;
+    */
 }
 
 std::string Morph::frame_fname(std::string frames_dir, int frame) { 
