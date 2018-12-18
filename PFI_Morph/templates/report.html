@@ -30,7 +30,7 @@
             </tr>
             <tr>
             {% for stat in stat_pair.forward_stats %}
-                <td>{{stat}}</td>
+                <td>{{stat | format_number}}</td>
             {% endfor %}
             </tr>
             <tr>
@@ -40,9 +40,9 @@
             </tr>
             <tr>
             {% for stat in stat_pair.backward_stats %}
-                <td>{{stat}}</td>
+                <td>{{stat | format_number}}</td>
             {% endfor -%}
-                <td>{{stat_pair.average_energy}}</td>
+                <td>{{stat_pair.average_energy | format_number}}</td>
             </tr>
         {% endfor -%}
         </tbody>

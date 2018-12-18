@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import argparse
+import math
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import trimesh
@@ -65,13 +66,33 @@ def morph_single_pair(args):
     report_fname = "Reports/{}_{}.html".format(source_name, target_name)
     write_report(report_fname, [stat_pair])
 
+def format_number(num):
+    # Determine which group of three digits we are in.
+    # group 0: 0 to 999
+    # group 1: 1,000 to 999,999
+    # group 2: 1,000,000 to 999,999,999
+    num_digits = int(math.floor(math.log10(num)))
+    nearest_thousands_group = num_digits // 3
+
+    # Round to the nearest thousands group so it's easier to read
+    round_position = -3 * nearest_thousands_group
+    rounded = round(num, round_position)
+
+    # Add in thousands separators and trim decimals
+    return "{:,.0f}".format(rounded)
+    
+
 def write_report(fname, stat_pairs):
     """
     Generate a HTML report using Jinja2
     """
+    # Set up a Jinja templating environment, including a custom
+    # format function for numbers
     env = Environment(
         loader=FileSystemLoader("templates"),
         autoescape=select_autoescape(['html', 'xml']))
+    env.filters['format_number'] = format_number
+
     template = env.get_template('report.html')
     html = template.render(
         source_name=stat_pairs[0].source_name,
