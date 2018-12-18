@@ -61,10 +61,10 @@ MorphStatsPair morph_cpp(
 
     Timer time_backward("Morphing source <- target");
     if (profile)
-        time_forward.start();
+        time_backward.start();
 
     MorphStats backward_stats = morpher.morph(
-        target_ls, source_ls, forwards_dir);
+        target_ls, source_ls, backwards_dir);
     backward_stats.set_names(target_model.name, source_model.name);
 
     if (profile)

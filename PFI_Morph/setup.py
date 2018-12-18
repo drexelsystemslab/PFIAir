@@ -24,7 +24,8 @@ source_fnames = [
     'BoundingBox.cpp',
     'PCACalculator.cpp',
     'Morph.cpp',
-    'MorphStats.cpp'
+    'MorphStats.cpp',
+    'EnergyCalculator.cpp'
 ]
 
 cpp_sources = [os.path.join(SRC_DIR, x) for x in source_fnames]

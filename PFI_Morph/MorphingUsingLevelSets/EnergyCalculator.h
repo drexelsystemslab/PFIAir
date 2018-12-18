@@ -26,20 +26,12 @@ class EnergyCalculator {
     const LevelSet& prev_frame;
     const LevelSet& curr_frame; 
 
-    // Many, many OpenVDB objects needed for curvature calculations
-    //const Transform prev_xform;
-    //const Transform curr_xform;
-    //MapBase::ConstPtr prev_map;
-    //MapBase::ConstPtr curr_map;
-
     // Mean curvature calculator
     MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_2ND> mean_curv;
 public:
     EnergyCalculator(const LevelSet& prev_frame, const LevelSet& curr_frame):
         prev_frame(prev_frame),
         curr_frame(curr_frame) {}
-
-    void init();
 
     EnergyResults compute_energy();
 

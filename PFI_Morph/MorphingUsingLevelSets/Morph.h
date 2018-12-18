@@ -24,9 +24,9 @@ class Morph {
     // Use a pointer because OpenVDB does not provide a null constructor
     std::unique_ptr<LSMorph> ls_morph = nullptr;
 public:
-    static constexpr int MAX_ITERS = 3;//500;
+    static constexpr int MAX_ITERS = 20;//500;
     static constexpr int NORM_COUNT = 5;
-    static constexpr int TIME_STEP = 0.25;
+    static constexpr double TIME_STEP = 0.25;
 
     // Minimum energy consumed per frame. This sets a threshold below
     // which we stop the morphing

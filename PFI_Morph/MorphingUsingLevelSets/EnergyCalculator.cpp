@@ -1,23 +1,7 @@
 #include "EnergyCalculator.h"
 #include <cmath>
 
-void EnergyCalculator::init() {
-    // get the low-level grids
-    //openvdb::FloatGrid::Ptr prev_grid = prev_frame.get_level_set();
-    //openvdb::FloatGrid::Ptr curr_grid = curr_frame.get_level_set();
-
-    // Construct OpenVDB objects
-    //prev_xform = prev_frame.get_level_set()->transform();//prev_grid->transform();
-    //curr_xform = curr_frame.get_level_set()->transform();//curr_grid->transform();
-    /*
-    MapBase::ConstPtr prev_map = prev_xform.baseMap();
-    MapBase::ConstPtr curr_map = curr_xform.baseMap();
-    */
-}
-
 EnergyResults EnergyCalculator::compute_energy() {
-    // Initialize all the underlying OpenVDB objects
-    init();
 
     EnergyResults results;
     results.max_curvature = 0.0;
@@ -90,6 +74,8 @@ EnergyResults EnergyCalculator::compute_energy() {
             results.delta_value += std::abs(prev_val - curr_val);
         }
     }
+
+    return results;
 
     /*
      * Pseudocode for updated energy calculation algorithm
