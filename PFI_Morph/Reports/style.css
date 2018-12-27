@@ -1,3 +1,16 @@
-img { width:200px; height:100px; }
-.table_img {margin-top: 15%;}
-table th {border-bottom: 1px black solid !important; border-top: 1px black solid !important}
+img { 
+    width:200px; 
+    height:100px;
+}
+.table_img {
+    margin-top: 15%;
+}
+
+canvas {
+    float: left;
+}
+
+table th {
+    border-bottom: 1px black solid !important; 
+    border-top: 1px black solid !important
+}
