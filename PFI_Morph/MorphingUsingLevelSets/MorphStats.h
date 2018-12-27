@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdlib>
 #include <iostream>
+#include <vector>
 
 /**
  * Stats for a morph in a single direction
@@ -34,6 +35,17 @@ struct MorphStats {
     double weighted_total_value = 0.0;
     double total_energy = 0.0;
     double evolving_avg = 0.0;
+
+    // Keep track of values of some of the above for each frame.
+    // This way we can generate graphs in the reports
+    std::vector<double> curve_delta_curvature;
+    std::vector<double> curve_delta_value;
+    // This one is cumulative maximum curvature
+    std::vector<double> curve_max_curvature;
+    // This is the max curvature per frame
+    std::vector<double> curve_frame_max_curvature;
+    std::vector<double> curve_cfl_iters;
+    std::vector<double> curve_surface_voxels;
 
     // Source model without extension
     std::string source_name = "";
@@ -100,6 +112,13 @@ struct MorphStatsPair {
 
     MorphStatsPair(MorphStats forwards, MorphStats backwards):
         forwards(forwards), backwards(backwards) {}
+
+    /**
+     * Return a new MorphStatsPair where target is the new source
+     * and vice-versa. This is helpful when generating the all-pairs
+     * report in Python land
+     */
+    MorphStatsPair swapped() const;
 
     /**
      * Compute the mean of the total energies of the two sets of stats

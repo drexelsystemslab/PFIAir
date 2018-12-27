@@ -18,14 +18,19 @@ void MorphStats::count_surface_voxels(
 
     // Initialize the total surface voxels to that of the source count
     total_surface_voxels = source_surface_count;
+
+    // Only add the source surface count to the curve.
+    curve_surface_voxels.push_back(source_surface_count);
 }
 
 void MorphStats::add_cfl_iterations(int delta) {
     cfl_count += delta;
+    curve_cfl_iters.push_back(delta);
 }
 
 void MorphStats::add_surface_voxels(int voxels) {
     total_surface_voxels += voxels;
+    curve_surface_voxels.push_back(voxels);
 }
 
 void MorphStats::increment_time() {
@@ -36,11 +41,17 @@ void MorphStats::update_energy(double delta_curvature, double delta_value) {
     total_energy += delta_curvature + delta_value;
     total_curvature +=  delta_curvature;
     total_value += delta_value;
+
+    curve_delta_curvature.push_back(delta_curvature);
+    curve_delta_value.push_back(delta_value);
 }
 
 void MorphStats::update_max_curvature(double frame_max_curvature) {
     if (frame_max_curvature > max_curvature)
         max_curvature = frame_max_curvature;
+
+    curve_frame_max_curvature.push_back(frame_max_curvature);
+    curve_max_curvature.push_back(max_curvature);
 }
 
 void MorphStats::finalize_stats() {
@@ -54,4 +65,9 @@ void MorphStats::finalize_stats() {
 
 double MorphStatsPair::average_energy() {
     return (forwards.total_energy + backwards.total_energy) / 2;
+}
+
+MorphStatsPair MorphStatsPair::swapped() const {
+    // Flip the source/target
+    return MorphStatsPair(backwards, forwards);
 }

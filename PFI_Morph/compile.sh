@@ -2,8 +2,13 @@
 if [[ "$1" == "release" ]]
 then
     FLAGS='-DCMAKE_BUILD_TYPE=Release'
-else
+elif [[ "$1" == "debug" ]]
+then
     FLAGS='-DCMAKE_BUILD_TYPE=Debug'
+else
+    # Default to release with debug symbols
+    # so the program runs faster
+    FLAGS='-DCMAKE_BUILD_TYPE=RelWithDebInfo'
 fi
 
 # Do an out-of-source build using CMake

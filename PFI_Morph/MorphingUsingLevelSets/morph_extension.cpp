@@ -117,7 +117,7 @@ LevelSet preprocess_model(
     // Convert Mesh -> LevelSet
     LevelSet result = mesh.to_level_set();
 
-    // Save the 
+    // Save the vdb file
     if (cache) {
         std::cout << "Saving VDB file: " << output_vdb << std::endl;
         result.save(output_vdb);

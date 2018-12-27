@@ -7,6 +7,7 @@ in a Cython one
 This module is imported by pfimorph.pyx
 """
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 cdef extern from "MorphingUsingLevelSets/morph_extension.h":
 
     # Input Info ============================================
@@ -34,10 +35,17 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
         double weighted_total_value
         double total_energy
         double evolving_avg
+        vector[double] curve_max_curvature
+        vector[double] curve_frame_max_curvature
+        vector[double] curve_delta_curvature
+        vector[double] curve_delta_value
+        vector[double] curve_cfl_iters
+        vector[double] curve_surface_voxels
 
     cdef struct MorphStatsPair:
         MorphStats forwards
         MorphStats backwards
+        MorphStatsPair swapped()
         double average_energy() except +
 
     # Morph Function =========================================== 
