@@ -8,12 +8,6 @@
 #include <eigen3/Eigen/Geometry>
 #include "PCACalculator.h"
 
-const int Mesh::X;
-const int Mesh::Y;
-const int Mesh::Z;
-const int Mesh::W;
-const int Mesh::VECTOR_SIZE;
-
 Mesh::Mesh(std::string filename, bool is_open_mesh):
         is_open_mesh(is_open_mesh) {
 

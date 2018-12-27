@@ -38,7 +38,8 @@ MorphStatsPair morph_cpp(
     const ModelInfo& target_model,
     bool cache=true,
     bool save_debug_models=false,
-    bool profile=false);
+    bool profile=false,
+    int max_iters=500);
 
 
 // NON-EXPORTED HELPER FUNCTIONS ========================================

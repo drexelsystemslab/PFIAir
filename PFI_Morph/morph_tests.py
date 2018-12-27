@@ -47,7 +47,8 @@ def morph_pair_parallel(args, model_names):
     stat_pair = morpher.morph(
         cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
-        profile=args.profile) 
+        profile=args.profile,
+        max_iters=args.iter_limit) 
     return stat_pair
 
 def morph_all_pairs(args):
@@ -119,7 +120,8 @@ def morph_single_pair(args):
     stat_pair = morpher.morph(
         cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
-        profile=args.profile)
+        profile=args.profile,
+        max_iters=args.iter_limit)
 
     # Save a report
     report_fname = "Reports/{}_{}.html".format(source_name, target_name)
@@ -243,22 +245,26 @@ def mesh_fname(fname):
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--profile', action='store_true',
+        help="Set this flag to time each step of the program")
+    parser.add_argument('-s', '--save-debug-models', action='store_true',
+        help="Set this flag to save extra .obj and .vdb models")
+    parser.add_argument(
+        '-d', 
+        '--disable-cache', 
+        dest='cache_enabled', 
+        action='store_false',
+        help="Set this flag to disable using the cache")
+    parser.add_argument(
+        '-i', '--iter-limit', type=int, default=20, 
+        help="Set max number of frames for each morph (default 20)")
+
     subparsers = parser.add_subparsers()
     subparsers.required = True
     
     # Morph all pairs of models
     morph_all = subparsers.add_parser('all')
     morph_all.set_defaults(func=morph_all_pairs)
-    morph_all.add_argument('-p', '--profile', action='store_true',
-        help="Set this flag to time each step of the program")
-    morph_all.add_argument('-s', '--save-debug-models', action='store_true',
-        help="Set this flag to save extra .obj and .vdb models")
-    morph_all.add_argument(
-        '-d', 
-        '--disable-cache', 
-        dest='cache_enabled', 
-        action='store_false',
-        help="Set this flag to disable using the cache")
     morph_all.set_defaults(func=morph_all_pairs)
 
     # Morph a single pair of models and generate a report
@@ -267,16 +273,6 @@ def parse_args():
         help="Path to source model in OBJ/STL format")
     morph_one.add_argument('target_model', type=mesh_fname,
         help="Path to target model in OBJ/STL format")
-    morph_one.add_argument('-p', '--profile', action='store_true',
-        help="Set this flag to time each step of the program")
-    morph_one.add_argument('-s', '--save-debug-models', action='store_true',
-        help="Set this flag to save extra .obj and .vdb models")
-    morph_one.add_argument(
-        '-d', 
-        '--disable-cache', 
-        dest='cache_enabled', 
-        action='store_false',
-        help="Set this flag to disable using the cache")
     morph_one.set_defaults(func=morph_single_pair)
     
     return parser.parse_args()
@@ -284,5 +280,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    print(args)
     args.func(args)

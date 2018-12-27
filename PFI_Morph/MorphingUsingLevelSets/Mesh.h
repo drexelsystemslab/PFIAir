@@ -18,13 +18,13 @@ class LevelSet;
  */
 class Mesh {
     // Index of the w-component of a vector
-    static const int X = 0;
-    static const int Y = 1;
-    static const int Z = 2;
-    static const int W = 3;
+    static constexpr int X = 0;
+    static constexpr int Y = 1;
+    static constexpr int Z = 2;
+    static constexpr int W = 3;
 
     // Homogeneous coordinates require size 4 vectors
-    static const int VECTOR_SIZE = 4;
+    static constexpr int VECTOR_SIZE = 4;
 
     /**
      * List of vertices and faces from the .obj

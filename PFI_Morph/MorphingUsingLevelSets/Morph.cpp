@@ -4,7 +4,8 @@
 MorphStats Morph::morph(
         const LevelSet& source, 
         const LevelSet& target,
-        std::string frames_dir) {
+        std::string frames_dir,
+        int max_iters) {
 
     // Set up a new MorphStats
     stats = MorphStats();
@@ -31,7 +32,7 @@ MorphStats Morph::morph(
     // Declare frame_count outside the scope of the loop, we will need
     // the final value to save the last frame.
     int frame_count;
-    for (frame_count = 1; frame_count < MAX_ITERS; frame_count++) {
+    for (frame_count = 1; frame_count < max_iters; frame_count++) {
         // Check if we've consumed too much energy
         if (energy_consumed < MIN_ENERGY)
             break;
@@ -43,7 +44,6 @@ MorphStats Morph::morph(
         //if(this->checkStopMorph(source_grid, target_grid)) break;
 
         // Start and end times for this advection step
-        std::cout << frame_count << " " << Morph::TIME_STEP << std::endl; 
         double start_time = frame_count * TIME_STEP;
         double end_time = start_time + TIME_STEP;
         stats.increment_time();
@@ -55,13 +55,8 @@ MorphStats Morph::morph(
         // Advect the level set and count the 
         // Courrant-Friedrrichs-Lewy iterations
         // NOTE: This modifies current_ls in place
-        std::cout << "time: " << start_time << " " << end_time << std::endl;
-        std::cout << "before: " << current_ls.get_level_set()  << " "
-            << prev_ls.get_level_set() << std::endl;
         double cfl_iters = ls_morph->advect(start_time, end_time);
         stats.add_cfl_iterations(cfl_iters);
-        std::cout << "after: " << current_ls.get_level_set() << " "  
-            << prev_ls.get_level_set() << std::endl;
 
         // Update voxel count from the new frame
         double surface_voxel_count = current_ls.count_surface_voxels();

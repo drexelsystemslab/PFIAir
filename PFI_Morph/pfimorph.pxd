@@ -55,4 +55,5 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
         ModelInfo target_model,
         bint cache,
         bint save_debug_models,
-        bint profile) except +
+        bint profile,
+        int max_iters) except +

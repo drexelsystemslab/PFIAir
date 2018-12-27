@@ -166,7 +166,12 @@ cdef class Morpher:
         self.target_model.name = name
         self.target_model.is_open = is_open
 
-    def morph(self, cache=True, save_debug_models=False, profile=False):
+    def morph(
+            self, 
+            cache=True, 
+            save_debug_models=False, 
+            profile=False, 
+            max_iters=500):
         """
         Morph the two models
         """
@@ -175,7 +180,8 @@ cdef class Morpher:
             self.target_model,
             cache,
             save_debug_models,
-            profile)
+            profile,
+            max_iters)
 
         stat_pair = StatPair()
         stat_pair.set_pair(result)

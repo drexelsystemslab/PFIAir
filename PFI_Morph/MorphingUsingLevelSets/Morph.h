@@ -24,7 +24,6 @@ class Morph {
     // Use a pointer because OpenVDB does not provide a null constructor
     std::unique_ptr<LSMorph> ls_morph = nullptr;
 public:
-    static constexpr int MAX_ITERS = 20;//500;
     static constexpr int NORM_COUNT = 5;
     static constexpr double TIME_STEP = 0.25;
 
@@ -38,11 +37,14 @@ public:
      *
      * if frames_dir is specified, frames will be saved
      * to {frames_dir}/advect_XXXX.vdb
+     * max_iters allows the caller to set a more conservative limit to save
+     * time/disk space
      */
     MorphStats morph(
         const LevelSet& source, 
         const LevelSet& target, 
-        std::string frames_dir);
+        std::string frames_dir,
+        int max_iters=500);
 
     /**
      * Initialize the level set morphing filter

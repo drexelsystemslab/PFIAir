@@ -15,7 +15,8 @@ MorphStatsPair morph_cpp(
         const ModelInfo& target_model,
         bool cache,
         bool save_debug_models,
-        bool profile) {
+        bool profile,
+        int max_iters) {
 
     // Ensure OpenVDB is set up before doing any morphing.
     // According to the docs, it is safe to call this more than once
@@ -51,7 +52,7 @@ MorphStatsPair morph_cpp(
         time_forward.start();
 
     MorphStats forward_stats = morpher.morph(
-        source_ls, target_ls, forwards_dir);
+        source_ls, target_ls, forwards_dir, max_iters);
     forward_stats.set_names(source_model.name, target_model.name);
 
     if (profile)
@@ -64,7 +65,7 @@ MorphStatsPair morph_cpp(
         time_backward.start();
 
     MorphStats backward_stats = morpher.morph(
-        target_ls, source_ls, backwards_dir);
+        target_ls, source_ls, backwards_dir, max_iters);
     backward_stats.set_names(target_model.name, source_model.name);
 
     if (profile)

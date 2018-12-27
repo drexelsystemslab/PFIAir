@@ -385,6 +385,7 @@ int load_open_mesh(int argc, const char* argv[]) {
     };
 
     // Run the morphing in full debug mode
+    // Note: This runs a full-length morph, up to 500 frames
     try {
         MorphStatsPair results = morph_cpp(
             source_info,
