@@ -16,6 +16,42 @@
             crossorigin='anonymous'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
     <script src="scripts/graph.js"></script>
+    <script>
+        window.onload = () => {
+            {% for stat_pair in stat_pairs -%}
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-frame-max-curv', 
+                'Max Absolute Mean Curvature (per-frame)', 
+                {{stat_pair.forward_curves['frame_max_curvature'] | tojson}},
+                {{stat_pair.backward_curves['frame_max_curvature'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-curv', 
+                'Max Absolute Mean Curvature (cumulative)', 
+                {{stat_pair.forward_curves['max_curvature'] | tojson}},
+                {{stat_pair.backward_curves['max_curvature'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-curv', 
+                'Absolute Delta Mean Curvature (per-frame)', 
+                {{stat_pair.forward_curves['delta_curvature'] | tojson}},
+                {{stat_pair.backward_curves['delta_curvature'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-val', 
+                'Absolute Delta Value (per-frame)', 
+                {{stat_pair.forward_curves['delta_value'] | tojson}},
+                {{stat_pair.backward_curves['delta_value'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-cfl', 
+                'CFL Iterations (per-frame)', 
+                {{stat_pair.forward_curves['cfl_iters'] | tojson}},
+                {{stat_pair.backward_curves['cfl_iters'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-surf-voxels', 
+                'Surface Voxels (per-frame)', 
+                {{stat_pair.forward_curves['surface_voxels'] | tojson}},
+                {{stat_pair.backward_curves['surface_voxels'] | tojson}});
+            {% endfor -%}
+        };
+    </script>
 </head>
 <body>
     <img src='images/{{source_name}}.png' alt="{{source_name}}"/>
@@ -28,7 +64,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for stat_pair in stat_pairs -%}
+            {% for stat_pair in stat_pairs -%}
             <tr>
                 <td rowspan='4' style='border-bottom:1px black solid'>
                     <img class="table_img", 
@@ -55,7 +91,17 @@
             {% endfor -%}
                 <td>{{stat_pair.average_energy | format_number}}</td>
             </tr>
-        {% endfor -%}
+            <tr>
+                <td colspan="14">
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-frame-max-curv" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-curv" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-curv" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-val" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-cfl" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-surf-voxels" width="600" height="300"></canvas>
+                </td>
+            </tr>
+            {% endfor -%}
         </tbody>
     </table>
 </body>
