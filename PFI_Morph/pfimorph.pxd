@@ -53,7 +53,6 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
     cdef MorphStatsPair morph_cpp(
         ModelInfo source_model,
         ModelInfo target_model,
-        bint cache,
         bint save_debug_models,
         bint profile,
         int max_iters) except +

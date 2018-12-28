@@ -31,11 +31,23 @@ LevelSet::LevelSet(
     scale.preScale(Vec3d(VOXEL_SIZE));
 
     if (is_open_mesh) {
-        // Open meshes can only be read in as unsigned distance fields
-        // However, if we use twice the bandwidth, we can convert it 
-        // to a level set by a uniform subtraction.
+        // Open meshes can only be read in as unsigned distance fields.
+        // However, if we offset the distance field by a constant amount
+        // (3 voxels) we now have an inside which is negative and an outside
+        // which is positive. The inner size will always be the default
+        // bandwidth
+        double inside_width = HALF_BANDWIDTH;
+        // However, the outside bandwidth may be much larger to help prevent
+        // aliasing.
+        double outside_width = half_bandwidth;
+        double full_width = inside_width + outside_width;
+
+        // Convert to an *unsigned* distance field with a width of the
+        // entire desired bandwidth
         level_set = tools::meshToUnsignedDistanceField<FloatGrid>(
-            scale, vertices, indices_tri, indices_quad, 2.0 * half_bandwidth);
+            scale, vertices, indices_tri, indices_quad, full_width);
+
+        // Set the 0 surface 3 voxels away so we have a level set.
         convert_unsigned_to_signed();
     } else {
         float width = half_bandwidth;
@@ -112,10 +124,12 @@ void LevelSet::convert_unsigned_to_signed() {
     // using threading. This would involve moving some of the code
     // into a functor
 
+    // 3 voxels away from the surface will be the inflated level set,
+    // even if the half bandwidth is larger
+    double zero_point = HALF_BANDWIDTH * VOXEL_SIZE;
+
     // Iterate over all values 
     typedef openvdb::FloatGrid::ValueAllIter AllIter;
-    // Half the bandwidth is the new 0 point
-    double zero_point = half_bandwidth * VOXEL_SIZE;
     for (AllIter iter = level_set->beginValueAll(); iter; ++iter) {
         double current_val = *iter;
         // Subtracting values from the zero point uniformly

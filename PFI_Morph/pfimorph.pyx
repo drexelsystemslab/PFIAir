@@ -168,7 +168,6 @@ cdef class Morpher:
 
     def morph(
             self, 
-            cache=True, 
             save_debug_models=False, 
             profile=False, 
             max_iters=500):
@@ -178,7 +177,6 @@ cdef class Morpher:
         result = morph_cpp(
             self.source_model,
             self.target_model,
-            cache,
             save_debug_models,
             profile,
             max_iters)

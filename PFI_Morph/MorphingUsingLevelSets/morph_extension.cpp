@@ -132,7 +132,7 @@ std::tuple<LevelSet, LevelSet> preprocess_model(
 
     // Convert Mesh -> LevelSet
     // the high res version is an attempt to limit the aliasing issues
-    constexpr int HIGH_RES_LS_VOXELS = 50;
+    constexpr int HIGH_RES_LS_VOXELS = 100;
     LevelSet result = mesh.to_level_set();
     LevelSet result_hi_res = mesh.to_level_set(HIGH_RES_LS_VOXELS);
 

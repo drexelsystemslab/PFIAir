@@ -41,11 +41,13 @@ def morph_pair_parallel(args, model_names):
     source_open = is_open_mesh(source_fname)
     target_open = is_open_mesh(target_fname)
 
+    # TODO: Remove this eventually
+    assert source_open and target_open, "Not ready to morph closed meshes"
+
     morpher = pfimorph.Morpher()
     morpher.set_source_info(source_fname, source_name, source_open)
     morpher.set_target_info(target_fname, target_name, target_open)
     stat_pair = morpher.morph(
-        cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
         profile=args.profile,
         max_iters=args.iter_limit) 
@@ -68,9 +70,6 @@ def morph_all_pairs(args):
             indices.append((i, j))
             model_pairs.append((MODELS[i], MODELS[j]))
     
-    print(indices)
-    print(model_pairs)
-
     print("Start morphing pairs. This could take a while...")
     func = functools.partial(morph_pair_parallel, args)
 
@@ -118,7 +117,6 @@ def morph_single_pair(args):
     morpher.set_source_info(args.source_model, source_name, source_open)
     morpher.set_target_info(args.target_model, target_name, target_open)
     stat_pair = morpher.morph(
-        cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
         profile=args.profile,
         max_iters=args.iter_limit)
@@ -156,7 +154,6 @@ def morph_single_pair(args):
     morpher.set_source_info(args.source_model, source_name, source_open)
     morpher.set_target_info(args.target_model, target_name, target_open)
     stat_pair = morpher.morph(
-        cache=args.cache_enabled, 
         save_debug_models=args.save_debug_models, 
         profile=args.profile)
 
@@ -249,12 +246,6 @@ def parse_args():
         help="Set this flag to time each step of the program")
     parser.add_argument('-s', '--save-debug-models', action='store_true',
         help="Set this flag to save extra .obj and .vdb models")
-    parser.add_argument(
-        '-d', 
-        '--disable-cache', 
-        dest='cache_enabled', 
-        action='store_false',
-        help="Set this flag to disable using the cache")
     parser.add_argument(
         '-i', '--iter-limit', type=int, default=20, 
         help="Set max number of frames for each morph (default 20)")
