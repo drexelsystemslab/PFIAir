@@ -13,6 +13,7 @@ import trimesh
 import pfimorph
 
 CONVERTED_DIR = 'converted_objs'
+JSON_DIR = 'output/json'
 MODELS = glob.glob('open_mesh_objs/all_pairs/*')
 
 def make_directories(dirname):
@@ -29,7 +30,32 @@ def is_open_mesh(obj_file):
     mesh = trimesh.io.load.load(obj_file);
     return not mesh.is_watertight
 
-def morph_pair_parallel(args, model_names):
+def cache_morph(args, model_names):
+    """
+    If look for a json file for this pair of models and load it
+    instead of running the expensive morph code again.
+
+    also, save a JSON file after morphing.
+    """
+    source_fname, target_fname = model_names
+    source_name = get_short_name(source_fname)
+    target_name = get_short_name(target_fname)
+
+    json_fname = "{}/{}-{}.json".format(JSON_DIR, source_name, target_name)
+    if os.path.exists(json_fname):
+        # TODO: I'll need a way to create a proper StatsPair from the JSON
+        print("Warning: Caching not fully implemented! Morphing models anyway")
+    #   stat_pair = pfimorph.StatPair.load_json(json_file)
+        stat_pair = morph_pair(args, model_names)
+    else:
+        stat_pair = morph_pair(args, model_names)
+
+    # Save the stats as a JSON file for later analysis
+    stat_pair.save_json(JSON_DIR)
+
+    return stat_pair
+
+def morph_pair(args, model_names):
     """ 
     Morph a single pair of models. This is designed to be used
     in multiprocessing.pool
@@ -71,7 +97,7 @@ def morph_all_pairs(args):
             model_pairs.append((MODELS[i], MODELS[j]))
     
     print("Start morphing pairs. This could take a while...")
-    func = functools.partial(morph_pair_parallel, args)
+    func = functools.partial(cache_morph, args)
 
     # TODO: Figure out how to pickle Cython objects
     # so I can use multiprocessing.pool

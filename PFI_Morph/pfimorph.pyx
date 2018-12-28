@@ -4,6 +4,8 @@
 This module wraps the Cython interface (defined in pfimorph.pxd)
 in a Python function.
 """
+import json
+import os
 from pfimorph cimport morph_cpp
 from pfimorph cimport ModelInfo
 from pfimorph cimport MorphStatsPair
@@ -95,7 +97,6 @@ cdef class StatPair:
         """
         return self.curve_dict(self.pair.backwards)
 
-
     def stats_array(self, MorphStats stats):
         """
         Pull out stats and put them into a single Python list
@@ -138,6 +139,36 @@ cdef class StatPair:
             # plot of total surface voxels over time
             'surface_voxels': list(stats.curve_surface_voxels),
         }
+
+    @property
+    def to_dict(self):
+        """
+        Return a JSON string of the results for caching
+        """
+        stats_dict = {
+            'source_name': self.source_name,
+            'target_name': self.target_name,
+            'forward_stats': self.forward_stats,
+            'backward_stats': self.backward_stats,
+            'forward_curves': self.forward_curves,
+            'backward_curves': self.backward_curves,
+        }
+        return stats_dict
+
+    @property
+    def json_fname(self):
+        """
+        Make a filename for the json cache (basename only)
+        """
+        return "{}-{}.json".format(self.source_name, self.target_name)
+
+    def save_json(self, json_dir):
+        """
+        Save a .json file of these stats into a specified directory
+        """
+        full_fname = os.path.join(json_dir, self.json_fname)
+        with open(full_fname, 'w') as json_file:
+            json.dump(self.to_dict, json_file)
 
 cdef class Morpher:
     """
