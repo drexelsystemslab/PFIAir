@@ -24,7 +24,7 @@ void Mesh::preprocess_mesh() {
         preprocess_closed_mesh();
 }
 
-LevelSet Mesh::to_level_set() { 
+LevelSet Mesh::to_level_set(double half_bandwidth) { 
     // Build a LevelSet object. Passing in the is_open_mesh flag is enough
     // to ensure the right method gets called.
     LevelSet ls(vertices, indices_tri, indices_quad, is_open_mesh);

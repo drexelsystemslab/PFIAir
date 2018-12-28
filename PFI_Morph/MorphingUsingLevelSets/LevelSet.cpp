@@ -4,7 +4,8 @@
 #include <openvdb/tools/VolumeToMesh.h>
 #include <openvdb/tools/LevelSetFilter.h>
 
-LevelSet::LevelSet(std::string fname) {
+LevelSet::LevelSet(std::string fname, double half_bandwidth):
+        half_bandwidth(half_bandwidth) {
     openvdb::io::File file(fname);
     openvdb::GridBase::Ptr baseGrid;
 
@@ -22,7 +23,8 @@ LevelSet::LevelSet(
         const std::vector<openvdb::Vec3s>& vertices,
         const std::vector<openvdb::Vec3I>& indices_tri,
         const std::vector<openvdb::Vec4I>& indices_quad,
-        bool is_open_mesh) {
+        bool is_open_mesh,
+        double half_bandwidth): half_bandwidth(half_bandwidth) {
     using namespace openvdb;
 
     math::Transform scale = math::Transform();
@@ -33,10 +35,10 @@ LevelSet::LevelSet(
         // However, if we use twice the bandwidth, we can convert it 
         // to a level set by a uniform subtraction.
         level_set = tools::meshToUnsignedDistanceField<FloatGrid>(
-            scale, vertices, indices_tri, indices_quad, 2.0 * HALF_BANDWIDTH);
+            scale, vertices, indices_tri, indices_quad, 2.0 * half_bandwidth);
         convert_unsigned_to_signed();
     } else {
-        float width = HALF_BANDWIDTH;
+        float width = half_bandwidth;
         level_set = tools::meshToLevelSet<FloatGrid>(
             scale, vertices, indices_tri, indices_quad, width);
         level_set->setGridClass(openvdb::GRID_LEVEL_SET);
@@ -113,7 +115,7 @@ void LevelSet::convert_unsigned_to_signed() {
     // Iterate over all values 
     typedef openvdb::FloatGrid::ValueAllIter AllIter;
     // Half the bandwidth is the new 0 point
-    double zero_point = HALF_BANDWIDTH * VOXEL_SIZE;
+    double zero_point = half_bandwidth * VOXEL_SIZE;
     for (AllIter iter = level_set->beginValueAll(); iter; ++iter) {
         double current_val = *iter;
         // Subtracting values from the zero point uniformly

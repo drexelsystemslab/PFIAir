@@ -114,7 +114,7 @@ public:
     /*
      * Get a LevelSet (VDB) object representation of this model
      */
-    LevelSet to_level_set();
+    LevelSet to_level_set(double half_bandwidth=3.0);
 
     /**
      * Save the OBJ file to disk. This is useful for debugging.

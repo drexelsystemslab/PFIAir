@@ -391,7 +391,6 @@ int load_open_mesh(int argc, const char* argv[]) {
             source_info,
             target_info,
             true,
-            true,
             true);  
     } catch (const std::exception& e) {
         std::cerr <<  e.what() << std::endl;

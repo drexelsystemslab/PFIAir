@@ -13,7 +13,6 @@
 MorphStatsPair morph_cpp(
         const ModelInfo& source_model,
         const ModelInfo& target_model,
-        bool cache,
         bool save_debug_models,
         bool profile,
         int max_iters) {
@@ -23,10 +22,15 @@ MorphStatsPair morph_cpp(
     openvdb::initialize();
 
     // Preprocess both meshes
-    LevelSet source_ls = preprocess_model(
-        source_model, cache, save_debug_models, profile);
-    LevelSet target_ls = preprocess_model(
-        target_model, cache, save_debug_models, profile);
+    LevelSet source_ls;
+    LevelSet source_ls_hi_res;
+    std::tie(source_ls, source_ls_hi_res) = preprocess_model(
+        source_model, save_debug_models, profile);
+
+    LevelSet target_ls;
+    LevelSet target_ls_hi_res;
+    std::tie(target_ls, target_ls_hi_res) = preprocess_model(
+        target_model, save_debug_models, profile);
 
     // Output directories will be
     // output/morphs/{model1}-{model2}/
@@ -52,7 +56,7 @@ MorphStatsPair morph_cpp(
         time_forward.start();
 
     MorphStats forward_stats = morpher.morph(
-        source_ls, target_ls, forwards_dir, max_iters);
+        source_ls, target_ls_hi_res, forwards_dir, max_iters);
     forward_stats.set_names(source_model.name, target_model.name);
 
     if (profile)
@@ -65,7 +69,7 @@ MorphStatsPair morph_cpp(
         time_backward.start();
 
     MorphStats backward_stats = morpher.morph(
-        target_ls, source_ls, backwards_dir, max_iters);
+        target_ls, source_ls_hi_res, backwards_dir, max_iters);
     backward_stats.set_names(target_model.name, source_model.name);
 
     if (profile)
@@ -77,14 +81,20 @@ MorphStatsPair morph_cpp(
 
 // NON-EXPORTED HELPER FUNCTIONS ========================================
 
-LevelSet preprocess_model(
+std::tuple<LevelSet, LevelSet> preprocess_model(
         const ModelInfo& model,
-        bool cache, 
         bool save_obj,
         bool profile) {
-    // The two possible output filenames
+    // Filenames:
+    // <name>.obj - the processed obj file
+    // <name>.vdb - the processed vdb file
+    // hi_res_<name>.vdb - same as vdb but with much larger half bandwidth
     std::string output_obj = get_cache_name(model.obj_fname, "obj");
     std::string output_vdb = get_cache_name(model.obj_fname, "vdb");
+    std::string output_vdb_hi_res = 
+        PREPROCESS_CACHE + model.name + "_hi_res.vdb";
+
+    std::cout << output_vdb_hi_res << std::endl;
 
     // Ensure we have a cache directory
     mkdir_quiet(PREPROCESS_CACHE);
@@ -95,13 +105,18 @@ LevelSet preprocess_model(
     if (profile)
         timer.start(); 
 
-    // If caching is enabled and we have a pre-processed VDB, just
+    // If we have pre-processed VDB files, just
     // load and return it.
-    if (cache && file_exists(output_vdb)) {
+    if (file_exists(output_vdb) && file_exists(output_vdb_hi_res)) {
         std::cout << "Using cached model: " << output_vdb << std::endl;
+
+        // Load cached models
+        LevelSet cached(output_vdb);
+        LevelSet cached_hi_res(output_vdb_hi_res);
+
         if (profile)
             timer.stop();
-        return LevelSet(output_vdb);
+        return std::make_tuple(cached, cached_hi_res);
     }
 
     // Otherwise, we need to preprocess the model
@@ -116,18 +131,20 @@ LevelSet preprocess_model(
     }
 
     // Convert Mesh -> LevelSet
+    // the high res version is an attempt to limit the aliasing issues
+    constexpr int HIGH_RES_LS_VOXELS = 50;
     LevelSet result = mesh.to_level_set();
+    LevelSet result_hi_res = mesh.to_level_set(HIGH_RES_LS_VOXELS);
 
     // Save the vdb file
-    if (cache) {
-        std::cout << "Saving VDB file: " << output_vdb << std::endl;
-        result.save(output_vdb);
-    }
+    std::cout << "Saving VDB file: " << output_vdb << std::endl;
+    result.save(output_vdb);
+    result_hi_res.save(output_vdb_hi_res);
 
     if (profile)
         timer.stop();
 
-    return result;
+    return std::make_tuple(result, result_hi_res);
 }
 
 bool file_exists(std::string fname) {
