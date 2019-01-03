@@ -143,9 +143,10 @@ cdef class StatPair:
     @property
     def to_dict(self):
         """
-        Return a JSON string of the results for caching
+        Return a dict representation of the
         """
         stats_dict = {
+            'stat_labels': self.COLUMNS,
             'source_name': self.source_name,
             'target_name': self.target_name,
             'forward_stats': self.forward_stats,
@@ -154,6 +155,78 @@ cdef class StatPair:
             'backward_curves': self.backward_curves,
         }
         return stats_dict
+
+    def __reduce__(self):
+        """
+        After much struggling, I found that this was the correct method
+        to implement for pickling a Cython object with struct fields
+        """
+        # first element is the constructor, StatPair()
+        # second is constructor arguments (none in this case)
+        # third is the state to pass into __setstate__()
+        return (self.__class__, tuple(), self.to_dict)
+
+    def __getstate__(self):
+        """
+        Needed for pickling
+        """
+        return self.to_dict
+
+    def __setstate__(self, state):
+        """
+        Needed for pickling and loading JSON cache files
+        """ 
+        cdef MorphStats forwards
+        forwards.source_name = state['source_name']
+        forwards.target_name = state['target_name']
+        self.set_stats_array(&forwards, state['forward_stats'])
+        self.set_stats_curves(&forwards, state['forward_curves'])
+
+        cdef MorphStats backwards
+        backwards.source_name = state['target_name']
+        backwards.target_name = state['source_name']
+        self.set_stats_array(&backwards, state['backward_stats'])
+        self.set_stats_curves(&backwards, state['backward_curves'])
+
+        cdef MorphStatsPair pair
+        pair.forwards = forwards
+        pair.backwards = backwards
+        self.pair = pair
+
+    cdef set_stats_array(self, MorphStats* stats, stat_list):
+        """
+        Unpack a row of stats into one of the MorphStatsPairs
+
+        This modifies the stats object, hence we need to pass in a pointer
+        """
+        [
+            stats.cfl_count,
+            stats.time_steps,
+            stats.source_surface_count,
+            stats.target_surface_count,
+            stats.abs_diff_count,
+            stats.evolving_avg,
+            stats.src_tar_avg,
+            stats.total_curvature,
+            stats.max_curvature,
+            stats.weighted_total_curvature,
+            stats.total_value,
+            stats.weighted_total_value,
+            stats.total_energy
+        ] = stat_list
+
+    cdef set_stats_curves(self, MorphStats* stats, curve_dict):
+        """
+        Unpact the curves dict
+
+        This modifies the stats object, hence we need to pass in a pointer
+        """
+        stats.curve_max_curvature = curve_dict['max_curvature']
+        stats.curve_frame_max_curvature = curve_dict['frame_max_curvature']
+        stats.curve_delta_curvature = curve_dict['delta_curvature']
+        stats.curve_delta_value = curve_dict['delta_value']
+        stats.curve_cfl_iters = curve_dict['cfl_iters']
+        stats.curve_surface_voxels = curve_dict['surface_voxels']
 
     @property
     def json_fname(self):
@@ -169,6 +242,12 @@ cdef class StatPair:
         full_fname = os.path.join(json_dir, self.json_fname)
         with open(full_fname, 'w') as json_file:
             json.dump(self.to_dict, json_file)
+
+    @classmethod
+    def from_dict(cls, state_dict):
+        stats = cls()
+        stats.__setstate__(state_dict)
+        return stats
 
 cdef class Morpher:
     """
