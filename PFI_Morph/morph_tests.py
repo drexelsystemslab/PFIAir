@@ -6,6 +6,7 @@ import math
 import glob
 import multiprocessing
 import functools
+import json
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import trimesh
@@ -43,15 +44,13 @@ def cache_morph(args, model_names):
 
     json_fname = "{}/{}-{}.json".format(JSON_DIR, source_name, target_name)
     if os.path.exists(json_fname):
-        # TODO: I'll need a way to create a proper StatsPair from the JSON
-        print("Warning: Caching not fully implemented! Morphing models anyway")
-    #   stat_pair = pfimorph.StatPair.load_json(json_file)
-        stat_pair = morph_pair(args, model_names)
+        with open(json_fname, 'r') as f:
+            stat_data = json.load(f)
+        stat_pair = pfimorph.StatPair.from_dict(stat_data)
     else:
         stat_pair = morph_pair(args, model_names)
-
-    # Save the stats as a JSON file for later analysis
-    stat_pair.save_json(JSON_DIR)
+        # Save the stats as a JSON file for later analysis
+        stat_pair.save_json(JSON_DIR)
 
     return stat_pair
 
@@ -101,10 +100,12 @@ def morph_all_pairs(args):
 
     # TODO: Figure out how to pickle Cython objects
     # so I can use multiprocessing.pool
-    #cpus = multiprocessing.cpu_count()
-    #pool = multiprocessing.Pool(cpus)
-    #stat_pairs = pool.map(func, model_pairs)
-    stat_pairs = [func(pair) for pair in model_pairs]
+    cpus = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(cpus)
+    stat_pairs = pool.map(func, model_pairs)
+    #stat_pairs = [func(pair) for pair in model_pairs]
+
+    print("Morphing done! Generating reports...")
 
     # Make an NxN table of morph results. For the lower triangular portion,
     # just swap source and target, since all morphs are done bidirectionally
