@@ -33,13 +33,26 @@ public:
         prev_frame(prev_frame),
         curr_frame(curr_frame) {}
 
-    EnergyResults compute_energy();
+    /**
+     * Compute the energy for this pair of frames.
+     *
+     * pass in the maximum absolute mean curvature of any surface point
+     * of either source or target model
+     */
+    EnergyResults compute_energy(double max_curv);
+
+    /**
+     * Compute the maximum absolute mean curvature across an entire
+     * level set. This is used to set a reasonable maximum
+     * curvature threshold above which curvature values are ignored
+     */
+    static double compute_max_curvature(const LevelSet& level_set);
 
     /**
      * Wrapper around mean_curv.compute() that turns zero denominator into
      * double infinity
      */
-    double compute_mean_curvature(
+    static double compute_mean_curvature(
         const MapBase::ConstPtr& map, 
         const openvdb::FloatGrid::ConstAccessor& acc, 
         const openvdb::Coord& coord);

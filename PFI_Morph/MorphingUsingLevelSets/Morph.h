@@ -14,6 +14,7 @@
 class Morph {
     bool save_frames;
     MorphStats stats;
+    double max_curvature;
 
     // Abbreviations
     typedef openvdb::FloatGrid GridType;

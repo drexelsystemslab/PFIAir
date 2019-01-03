@@ -1,7 +1,8 @@
 #include "EnergyCalculator.h"
 #include <cmath>
 
-EnergyResults EnergyCalculator::compute_energy() {
+
+EnergyResults EnergyCalculator::compute_energy(double max_curv) {
 
     EnergyResults results;
     results.max_curvature = 0.0;
@@ -32,8 +33,10 @@ EnergyResults EnergyCalculator::compute_energy() {
                 curr_map, curr_acc, coord);
 
             // Check for aliasing issues
-            bool prev_curv_valid = std::isfinite(prev_curv);
-            bool curr_curv_valid = std::isfinite(curr_curv);
+            bool prev_curv_valid = std::isfinite(prev_curv) 
+                && std::abs(prev_curv) < max_curv;
+            bool curr_curv_valid = std::isfinite(curr_curv)
+                && std::abs(curr_curv) < max_curv;
 
             // Handle surface curvature changes
             if (prev_curv_valid && curr_curv_valid) {
@@ -110,10 +113,37 @@ EnergyResults EnergyCalculator::compute_energy() {
      */ 
 }
 
+double EnergyCalculator::compute_max_curvature(const LevelSet& level_set) {
+    MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_2ND> mean_curv;
+    openvdb::FloatGrid::ConstPtr grid = level_set.get_level_set();
+    openvdb::FloatGrid::ConstAccessor acc = grid->getAccessor();
+    MapBase::ConstPtr map = grid->transform().baseMap();
+
+    double max_curv = -std::numeric_limits<double>::infinity();
+
+    // Iterate over surface voxels
+    typedef openvdb::FloatGrid::ValueOnCIter IterType;
+    for (IterType iter = grid->cbeginValueOn(); iter; ++iter) {
+        openvdb::Coord coord = iter.getCoord();
+        if (iter.getValue() < 0 && level_set.is_surface_voxel(coord)) {
+            // Compute the absolute mean curvature at this point
+            double curv = compute_mean_curvature(
+                map, acc, iter.getCoord());
+            curv = std::abs(curv);
+            
+            if (std::isfinite(curv) && curv > max_curv)
+                max_curv = curv;
+        }
+    }
+
+    return max_curv;
+}
+
 double EnergyCalculator::compute_mean_curvature(
         const MapBase::ConstPtr& map, 
         const openvdb::FloatGrid::ConstAccessor& acc, 
         const openvdb::Coord& coord) {
+    MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_2ND> mean_curv;
     double alpha;
     double beta;
     mean_curv.compute(*map, acc, coord, alpha, beta);

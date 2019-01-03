@@ -1,11 +1,16 @@
 #include "Morph.h"
-
+#include <cmath>
 
 MorphStats Morph::morph(
         const LevelSet& source, 
         const LevelSet& target,
         std::string frames_dir,
         int max_iters) {
+
+    // Compute the maximum finite curvature for each model
+    double source_max_curv = EnergyCalculator::compute_max_curvature(source);
+    double target_max_curv = EnergyCalculator::compute_max_curvature(target);
+    max_curvature = std::max(source_max_curv, target_max_curv);
 
     // Set up a new MorphStats
     stats = MorphStats();
@@ -131,7 +136,7 @@ EnergyResults Morph::calculate_energy(
         const LevelSet& prev, const LevelSet& curr) {
 
     EnergyCalculator calc(prev, curr);
-    return calc.compute_energy();
+    return calc.compute_energy(max_curvature);
 }
 
 std::string Morph::frame_fname(std::string frames_dir, int frame) { 
