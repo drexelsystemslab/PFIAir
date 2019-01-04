@@ -1,4 +1,10 @@
-let make_chart = function(canvas_id, title, forward_data, backward_data) {
+let make_chart = function(
+        source_name, 
+        target_name, 
+        canvas_id, 
+        title, 
+        forward_data, 
+        backward_data) {
 	let ctx = document.getElementById(canvas_id).getContext('2d');
     
     let longest_length = Math.max(forward_data.length, backward_data.length);
@@ -9,13 +15,13 @@ let make_chart = function(canvas_id, title, forward_data, backward_data) {
 		data: {
             labels: labels,
 			datasets: [{
-				label: 'Forward Morph',	
+				label: `${source_name} -> ${target_name}`,	
                 backgroundColor: 'rgb(25, 126, 126, 0.5)',
                 borderColor: 'rgb(0, 78, 78)',
                 data: forward_data,
                 lineTension: 0,
             }, {
-				label: 'Backward Morph',	
+				label: `${target_name} -> ${source_name}`,	
                 backgroundColor: 'rgb(210, 118, 41, 0.5)',
                 borderColor: 'rgb(130, 59, 0)',
                 data: backward_data,

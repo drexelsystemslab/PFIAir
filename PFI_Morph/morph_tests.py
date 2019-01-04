@@ -193,16 +193,12 @@ def format_number(num):
     if (int(num) == 0):
         return "0"
 
-    # Determine which group of three digits we are in.
-    # group 0: 0 to 999
-    # group 1: 1,000 to 999,999
-    # group 2: 1,000,000 to 999,999,999
-    num_digits = int(math.floor(math.log10(abs(num))))
-    nearest_thousands_group = num_digits // 3
+    # Count number of digits in the number
+    num_digits = int(math.ceil(math.log10(abs(num))))
 
-    # Round to the nearest thousands group so it's easier to read
-    round_position = -3 * nearest_thousands_group
-    rounded = round(num, round_position)
+    # Round to 3 sig figs
+    round_place = -(num_digits - 3)
+    rounded = round(num, round_place)
 
     # Add in thousands separators and trim decimals
     return "{:,.0f}".format(rounded)

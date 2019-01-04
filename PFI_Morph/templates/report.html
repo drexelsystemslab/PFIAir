@@ -20,31 +20,43 @@
         window.onload = () => {
             {% for stat_pair in stat_pairs -%}
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-frame-max-curv', 
                 'Max Absolute Mean Curvature (per-frame)', 
                 {{stat_pair.forward_curves['frame_max_curvature'] | tojson}},
                 {{stat_pair.backward_curves['frame_max_curvature'] | tojson}});
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-curv', 
                 'Max Absolute Mean Curvature (cumulative)', 
                 {{stat_pair.forward_curves['max_curvature'] | tojson}},
                 {{stat_pair.backward_curves['max_curvature'] | tojson}});
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-curv', 
                 'Absolute Delta Mean Curvature (per-frame)', 
                 {{stat_pair.forward_curves['delta_curvature'] | tojson}},
                 {{stat_pair.backward_curves['delta_curvature'] | tojson}});
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-val', 
                 'Absolute Delta Value (per-frame)', 
                 {{stat_pair.forward_curves['delta_value'] | tojson}},
                 {{stat_pair.backward_curves['delta_value'] | tojson}});
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-cfl', 
                 'CFL Iterations (per-frame)', 
                 {{stat_pair.forward_curves['cfl_iters'] | tojson}},
                 {{stat_pair.backward_curves['cfl_iters'] | tojson}});
             make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
                 '{{stat_pair.source_name}}-{{stat_pair.target_name}}-surf-voxels', 
                 'Surface Voxels (per-frame)', 
                 {{stat_pair.forward_curves['surface_voxels'] | tojson}},
@@ -56,15 +68,13 @@
 <body>
     <img src='images/{{source_name}}.png' alt="{{source_name}}"/>
     <table id='morph_table' class='table table-striped table-bordered'>
-        <thead>
-            <tr>
-            {% for colname in columns -%}
-                <th>{{colname}}</th>
-            {% endfor -%}
-            </tr>
-        </thead>
         <tbody>
             {% for stat_pair in stat_pairs -%}
+            <tr>
+                {% for colname in columns -%}
+                <th>{{colname}}</th>
+                {% endfor -%}
+            </tr>
             <tr>
                 <td rowspan='4' style='border-bottom:1px black solid'>
                     <img class="table_img", 
@@ -72,7 +82,7 @@
                          alt="{{stat_pair.target_name}}" />
                 </td>
                 <td colspan="{{columns|length}}">
-                    {{stat_pair.source_name}}-{{stat_pair.target_name}}
+                    Forward: {{stat_pair.source_name}}&rarr;{{stat_pair.target_name}}
                 </td>
             </tr>
             <tr>
@@ -82,7 +92,7 @@
             </tr>
             <tr>
                 <td colspan="{{columns|length}}">
-                    {{stat_pair.target_name}}-{{stat_pair.source_name}}
+                    Backward: {{stat_pair.target_name}} &rarr; {{stat_pair.source_name}}
                 </td>
             </tr>
             <tr>
