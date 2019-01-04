@@ -69,7 +69,7 @@ MorphStats Morph::morph(
 
         // Update the energy calculation
         EnergyResults energy = calculate_energy(prev_ls, current_ls);
-        stats.update_energy(energy.delta_curvature, energy.delta_curvature);
+        stats.update_energy(energy.delta_curvature, energy.delta_value);
         stats.update_max_curvature(energy.max_curvature);  
 
         // Output summary of frame
@@ -111,19 +111,17 @@ bool Morph::morph_is_finished(
 
     openvdb::FloatGrid::ConstAccessor target_acc = target_grid->getAccessor();
 
-    typedef openvdb::FloatGrid::ValueOnCIter IterType;
-    for (IterType iter = current_grid->cbeginValueOn(); iter; ++iter) {
-        bool is_surface = current.is_surface_voxel(iter.getCoord());
-        if (iter.getValue() < 0 && is_surface) {
-            // compare the voxels at the same location in the current
-            // and target grids and get the absolute difference in values
-            curr_diff = openvdb::math::Abs(
-                iter.getValue() - target_acc.getValue(iter.getCoord()));
+    SurfaceIterator surf_iter = current.get_surface_iterator();
+    for (surf_iter.begin(); surf_iter; surf_iter++) {
+        openvdb::Coord coord = surf_iter.get_coord();
+        // compare the voxels at the same location in the current
+        // and target grids and get the absolute difference in values
+        curr_diff = openvdb::math::Abs(
+            surf_iter.get_value() - target_acc.getValue(coord));
 
-            // Update the maximum difference
-            if (curr_diff > max_diff)
-                max_diff = curr_diff;
-        }
+        // Update the maximum difference
+        if (curr_diff > max_diff)
+            max_diff = curr_diff;
     }
 
     // Threshold the result

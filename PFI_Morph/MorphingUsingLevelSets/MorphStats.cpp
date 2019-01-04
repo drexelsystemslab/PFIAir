@@ -39,7 +39,7 @@ void MorphStats::increment_time() {
 
 void MorphStats::update_energy(double delta_curvature, double delta_value) {
     total_energy += delta_curvature + delta_value;
-    total_curvature +=  delta_curvature;
+    total_curvature += delta_curvature;
     total_value += delta_value;
 
     curve_delta_curvature.push_back(delta_curvature);

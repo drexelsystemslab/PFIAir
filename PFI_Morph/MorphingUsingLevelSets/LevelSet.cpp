@@ -4,6 +4,76 @@
 #include <openvdb/tools/VolumeToMesh.h>
 #include <openvdb/tools/LevelSetFilter.h>
 
+// SurfaceIterator ====================================================
+
+void SurfaceIterator::begin() {
+    iter = grid->cbeginValueOn();
+}
+
+SurfaceIterator::operator bool() {
+    return static_cast<bool>(iter);
+}
+
+openvdb::Coord SurfaceIterator::get_coord() {
+    return iter.getCoord();
+}
+
+double SurfaceIterator::get_value() {
+    return iter.getValue();
+}
+
+openvdb::FloatGrid::ValueOnCIter SurfaceIterator::vdb_iter() {
+    return iter;
+}
+
+void SurfaceIterator::operator++(int) {
+    // Always advance at least one voxel
+    ++iter;
+
+    // If we are at a non-surface voxel,
+    // advance again
+    while (iter && !is_surface_voxel())
+        ++iter;
+}
+
+bool SurfaceIterator::is_surface_voxel() {
+    openvdb::Coord coord = iter.getCoord();
+
+    // We only want to count voxels that are slightly negative of
+    // zero with a neighbor that is positive
+    if (iter.getValue() >= 0)
+        return false;
+    
+    // While the exact coords vary from voxel to voxel,
+    // the 6 directions are the same
+    constexpr int NUM_DIRS = 6;
+    const openvdb::Coord neighbor_directions[NUM_DIRS] = {
+        openvdb::Coord(-1, 0, 0),
+        openvdb::Coord(+1, 0, 0),
+        openvdb::Coord(0, -1, 0),
+        openvdb::Coord(0, +1, 0),
+        openvdb::Coord(0, 0, -1),
+        openvdb::Coord(0, 0, +1)
+    };
+
+    // Check each direction until we find a positive neighbor
+    openvdb::FloatGrid::ConstAccessor acc = grid->getConstAccessor();
+    for (int i = 0; i < NUM_DIRS; i++) {
+        // Neighbor = position + offset
+        openvdb::Coord neighbor = coord + neighbor_directions[i];
+
+        // If we found a positive neighbor, we can stop and return true
+        // since we are on the edge
+        if (acc.getValue(neighbor) > 0) 
+            return true;
+    }
+
+    // We are not on the edge
+    return false; 
+}
+
+// Level Set =============================================================
+
 LevelSet::LevelSet(std::string fname, double half_bandwidth):
         half_bandwidth(half_bandwidth) {
     openvdb::io::File file(fname);
@@ -82,40 +152,16 @@ void LevelSet::morphological_opening() {
 }
 
 int LevelSet::count_surface_voxels() const {
-    typedef openvdb::FloatGrid::ValueOnCIter IterType;
     int count = 0;
-    for (IterType iter = level_set->cbeginValueOn(); iter; ++iter) {
-        if(iter.getValue() < 0 && is_surface_voxel(iter.getCoord()))
-            count++;
+    SurfaceIterator surf_iter = get_surface_iterator();
+    for (surf_iter.begin(); surf_iter; surf_iter++) {
+        count++;
     }
     return count;
 } 
 
 double LevelSet::get_voxel_size() const {
     return level_set->voxelSize()[0];
-}
-
-bool LevelSet::is_surface_voxel(const openvdb::Coord& coord) const {
-    bool found_positive = false;
-    openvdb::Coord six_connected[6] = {
-        openvdb::Coord(coord.x() - 1, coord.y(), coord.z()),
-        openvdb::Coord(coord.x() + 1, coord.y(), coord.z()),
-        openvdb::Coord(coord.x(), coord.y() - 1, coord.z()),
-        openvdb::Coord(coord.x(), coord.y() + 1, coord.z()),
-        openvdb::Coord(coord.x(), coord.y(), coord.z() - 1),
-        openvdb::Coord(coord.x(), coord.y(), coord.z() + 1)
-    };
-        
-    openvdb::FloatGrid::Accessor accessor = level_set->getAccessor();
-        
-    for(int i = 0; i < 6; i++) {
-        if(accessor.getValue(six_connected[i]) > 0) {
-            found_positive = true;
-            break;
-        }
-    }
-
-    return found_positive;
 }
 
 void LevelSet::convert_unsigned_to_signed() {
@@ -169,4 +215,8 @@ void LevelSet::save(std::string fname) const {
     grids.push_back(level_set);
     file.write(grids);
     file.close();
+}
+
+SurfaceIterator LevelSet::get_surface_iterator() const {
+    return SurfaceIterator(level_set);
 }

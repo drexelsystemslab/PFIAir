@@ -3,7 +3,6 @@
 
 
 EnergyResults EnergyCalculator::compute_energy(double max_curv) {
-
     EnergyResults results;
     results.max_curvature = 0.0;
     results.delta_curvature = 0.0;
@@ -22,95 +21,60 @@ EnergyResults EnergyCalculator::compute_energy(double max_curv) {
     MapBase::ConstPtr curr_map = curr_grid->transform().baseMap();
 
     // Iterate over surface voxels in the previous frame
-    typedef openvdb::FloatGrid::ValueOnCIter IterType;
-    for (IterType iter = prev_grid->cbeginValueOn(); iter; ++iter) {
-        openvdb::Coord coord = iter.getCoord();
-        if (iter.getValue() < 0 && prev_frame.is_surface_voxel(coord)) {
-            // Compute the mean curvature for both frames
-            double prev_curv = compute_mean_curvature(
-                prev_map, prev_acc, coord); 
-            double curr_curv = compute_mean_curvature(
-                curr_map, curr_acc, coord);
+    SurfaceIterator surf_iter = prev_frame.get_surface_iterator();
+    for (surf_iter.begin(); surf_iter; surf_iter++) {
+        openvdb::Coord coord = surf_iter.get_coord();
 
-            // Check for aliasing issues
-            bool prev_curv_valid = std::isfinite(prev_curv) 
-                && std::abs(prev_curv) < max_curv;
-            bool curr_curv_valid = std::isfinite(curr_curv)
-                && std::abs(curr_curv) < max_curv;
+        // Compute the mean curvature for both frames
+        double prev_curv = compute_mean_curvature(prev_map, prev_acc, coord); 
+        double curr_curv = compute_mean_curvature(curr_map, curr_acc, coord);
 
-            // Handle surface curvature changes
-            if (prev_curv_valid && curr_curv_valid) {
-                // Both are valid, so compare the values
+        // Check for aliasing issues
+        bool prev_curv_valid = std::isfinite(prev_curv) 
+            && std::abs(prev_curv) < max_curv;
+        bool curr_curv_valid = std::isfinite(curr_curv)
+            && std::abs(curr_curv) < max_curv;
 
-                // Max curvature: max of both values and the old maximum
-                double abs_prev = std::abs(prev_curv);
-                double abs_curr = std::abs(curr_curv);
-                results.max_curvature = std::max({
-                    results.max_curvature, abs_prev, abs_curr});
+        // Handle surface curvature changes
+        if (prev_curv_valid && curr_curv_valid) {
+            // Both are valid, so compare the values
 
-                // Delta curvature: absolute difference of curvatures
-                results.delta_curvature += std::abs(prev_curv - curr_curv);
-            } else if (prev_curv_valid) {
-                // Only the voxel in the previous frame is valid. Use its
-                // values.
-                // we only care about the magnitude of the curvature change
-                // so take the absolute value
-                double abs_curvature = std::abs(prev_curv);
-                results.max_curvature = std::max(
-                    results.max_curvature, abs_curvature);
-                results.delta_curvature += abs_curvature;
-            } else if (curr_curv_valid) {
-                // current frame only is handled symmetrically
-                double abs_curvature = std::abs(curr_curv);
-                results.max_curvature = std::max(
-                    results.max_curvature, abs_curvature);
-                results.delta_curvature += abs_curvature;
-            } else {
-                // Neither is valid, so skip this voxel
-                continue;
-            }
+            // Max curvature: max of both values and the old maximum
+            double abs_prev = std::abs(prev_curv);
+            double abs_curr = std::abs(curr_curv);
+            results.max_curvature = std::max({
+                results.max_curvature, abs_prev, abs_curr});
 
-            // Handle changes in value, which should be roughly
-            // related to changes in volume
-            double prev_val = iter.getValue();
-            double curr_val = curr_acc.getValue(coord);
-            results.delta_value += std::abs(prev_val - curr_val);
+            // Delta curvature: absolute difference of curvatures
+            results.delta_curvature += std::abs(prev_curv - curr_curv);
+        } else if (prev_curv_valid) {
+            // Only the voxel in the previous frame is valid. Use its
+            // values.
+            // we only care about the magnitude of the curvature change
+            // so take the absolute value
+            double abs_curvature = std::abs(prev_curv);
+            results.max_curvature = std::max(
+                results.max_curvature, abs_curvature);
+            results.delta_curvature += abs_curvature;
+        } else if (curr_curv_valid) {
+            // current frame only is handled symmetrically
+            double abs_curvature = std::abs(curr_curv);
+            results.max_curvature = std::max(
+                results.max_curvature, abs_curvature);
+            results.delta_curvature += abs_curvature;
+        } else {
+            // Neither is valid, so skip this voxel
+            continue;
         }
+
+        // Handle changes in value, which should be roughly
+        // related to changes in volume
+        double prev_val = surf_iter.get_value();
+        double curr_val = curr_acc.getValue(coord);
+        results.delta_value += std::abs(prev_val - curr_val);
     }
 
     return results;
-
-    /*
-     * Pseudocode for updated energy calculation algorithm
-     *
-     * (maximum absolute mean cuvature for this pair of frames)
-     * max_curvature = 0.0
-     * delta_curvature = 0.0
-     * delta_value = 0.0
-
-     * For each active surface voxel in the previous frame:
-     * - compute the mean curvature of prev @ current voxel 
-     * - compute the mean curvature of curr @ current voxel 
-     * - if both prev/curr mean curvature are infinite:
-     *   - skip to the next voxel, we cannot get any meaningful info
-     * - if one of prev/curr mean curvature is finite:
-     *   - max_curvature = max(max_curvature, abs(finite mean curvature))
-     *   - curv_diff = |finite mean curvature|
-     *   - delta_curvature += curv_diff
-     * - if both prev/curr mean curvature are finite:
-     *   - max_curvature = max(
-     *         max_curvature, abs(prev mean curvature), abs(curr mean curvature))
-     *   - curv_diff = |prev mean curvature - curr mean curvature|
-     *   - delta_curvature += curv_diff
-     * - delta_value = |prev.value[coord] - curr.value[coord]|
-     *   
-     * Return the following:
-     *
-     * results.delta_value: 
-     * results.delta_curvature: the change in mean curvature during the morph
-     *      from prev -> current
-     * results.max_curvature: maximum mean curvature *for this pair of frames*
-     */ 
 }
 
 double EnergyCalculator::compute_max_curvature(const LevelSet& level_set) {
@@ -122,18 +86,16 @@ double EnergyCalculator::compute_max_curvature(const LevelSet& level_set) {
     double max_curv = -std::numeric_limits<double>::infinity();
 
     // Iterate over surface voxels
-    typedef openvdb::FloatGrid::ValueOnCIter IterType;
-    for (IterType iter = grid->cbeginValueOn(); iter; ++iter) {
-        openvdb::Coord coord = iter.getCoord();
-        if (iter.getValue() < 0 && level_set.is_surface_voxel(coord)) {
-            // Compute the absolute mean curvature at this point
-            double curv = compute_mean_curvature(
-                map, acc, iter.getCoord());
-            curv = std::abs(curv);
+    SurfaceIterator surf_iter = level_set.get_surface_iterator();
+    for (surf_iter.begin(); surf_iter; surf_iter++) {
+        // Compute the absolute mean curvature at this point
+        double curv = compute_mean_curvature(map, acc, surf_iter.get_coord());
+        curv = std::abs(curv);
             
-            if (std::isfinite(curv) && curv > max_curv)
-                max_curv = curv;
-        }
+        // If we found a new maximum curvature that is finite, 
+        // update the value
+        if (std::isfinite(curv) && curv > max_curv)
+            max_curv = curv;
     }
 
     return max_curv;

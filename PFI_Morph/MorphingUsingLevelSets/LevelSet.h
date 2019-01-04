@@ -1,11 +1,81 @@
 #ifndef LEVEL_SET_WRAPPER_H
 #define LEVEL_SET_WRAPPER_H
 #include <string>
+#include <memory>
 #include <openvdb/openvdb.h>
 #include "Mesh.h"
 
 class Mesh;
 
+/**
+ * Utility class that helps iterate over surface values (read-only)
+ * I stray away from the C++ standard iterators since they are
+ * more complicated than they are worth
+ *
+ * Typical Usage: 
+ *
+ * LevelSet level_set(...); 
+ * SurfaceIterator surf_iter = level_set.get_surface_iterator();
+ * for (surf_iter.begin(); surf_iter; surf_iter++) {
+ *    // Do whatever with surf_iter.get_value()
+ *    // and surf_iter.get_coord()
+ * }
+ */
+class SurfaceIterator {
+    // The OpenVDB grid to iterate over
+    openvdb::FloatGrid::ConstPtr grid; 
+
+    // an iterator object which points to the current active voxel
+    openvdb::FloatGrid::ValueOnCIter iter;
+public:
+    // Null constructor. It's a bit hacky since there's no way to
+    // null-construct OpenVDB iterators
+    SurfaceIterator(): grid(nullptr), iter(openvdb::FloatTree()) {}
+
+    // This is the constructor to use. See usage notes above
+    SurfaceIterator(openvdb::FloatGrid::ConstPtr grid): 
+        grid(grid),
+        // This is redundant since SurfaceIterator::begin() does the
+        // same thing. However, there is no null constructor
+        // for OpenVDB iterators
+        iter(grid->cbeginValueOn()) {}
+
+    // Start iterating over the underlying grid
+    void begin();
+    
+    // Return true if the iterator is not finished
+    operator bool();
+
+    // Get the underlying OpenVDB iterator object to access the
+    // value/coordinate
+    openvdb::FloatGrid::ValueOnCIter vdb_iter();
+
+    // Get the coordinate in 3D space for the current
+    // location. This is shorthand for vdb_iter().getCoord()
+    openvdb::Coord get_coord();
+
+    // Get the value at the current location
+    // shortcut for vdb_iter().getValue()
+    double get_value();
+    
+    /**
+     * Advance the underlying iterator
+     */
+    void operator++(int);
+
+    /**
+     * Check if this voxel is on the 0 surface. This is done
+     * by checking if we are a negative voxel adjacent to a positive
+     * voxel
+     */
+    bool is_surface_voxel();
+};
+
+/**
+ * The actual LevelSet, a higher-level wrapper around an
+ * OpenVDB level set (a openvdb::FloatGrid::Ptr with a grid class of 
+ * openvdb::GRID_LEVEL_SET)
+ */
 class LevelSet {
     // Level set representation as a VDB data structure
     openvdb::FloatGrid::Ptr level_set = nullptr;
@@ -66,11 +136,6 @@ public:
     double get_voxel_size() const;
 
     /**
-     * Check if a voxel is on the surface of the level set
-     */
-    bool is_surface_voxel(const openvdb::Coord& coord) const;
-
-    /**
      * Convert a LevelSet to a new Mesh object
      */
     Mesh to_mesh();
@@ -94,6 +159,12 @@ public:
      * Save a .vdb file of this level set
      */
     void save(std::string fname) const;
+
+    /**
+     * Get a SurfaceIterator object which can be used to iterate over
+     * surface voxels only
+     */
+    SurfaceIterator get_surface_iterator() const;
 private:
     /**
      * Convert an unsigned distance field to a signed by setting a new
@@ -141,6 +212,8 @@ private:
      *
      */
     void convert_unsigned_to_signed();
+
 };
+
 
 #endif
