@@ -46,6 +46,13 @@ struct MorphStats {
     std::vector<double> curve_frame_max_curvature;
     std::vector<double> curve_cfl_iters;
     std::vector<double> curve_surface_voxels;
+    // Maximum value difference at any single voxel between the current frame
+    // and either prev/target
+    std::vector<double> curve_max_diff_from_prev;
+    std::vector<double> curve_max_diff_from_target;
+    // Number of voxels different between current frame and either prev/target
+    std::vector<double> curve_voxels_diff_from_prev;
+    std::vector<double> curve_voxels_diff_from_target;
 
     // Source model without extension
     std::string source_name = "";
@@ -92,6 +99,19 @@ struct MorphStats {
      * frame of the advection
      */
     void update_max_curvature(double frame_max_curvature);
+
+    /**
+     * Add the number of voxels that are different between
+     * (prev, curr) and (curr, target) to the appropriate curves
+     */
+    void add_voxels_diff(
+        int voxels_diff_from_prev, int voxels_diff_from_target);
+
+    /**
+     * Add the maximum differences between (prev, curr) and (curr, target)
+     * for this frame to the curves
+     */
+    void add_max_diffs(double max_diff_prev, double max_diff_target);
 
     /**
      * Compute averages and other post-morph stats

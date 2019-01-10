@@ -138,6 +138,13 @@ cdef class StatPair:
             'cfl_iters': list(stats.curve_cfl_iters),
             # plot of total surface voxels over time
             'surface_voxels': list(stats.curve_surface_voxels),
+            # Maximum value difference for a single voxel from current frame
+            # to another frame over time
+            'max_diff_prev': list(stats.curve_max_diff_from_prev),
+            'max_diff_target': list(stats.curve_max_diff_from_target),
+            # Number of voxels different between frames over time
+            'voxels_diff_prev': list(stats.curve_voxels_diff_from_prev),
+            'voxels_diff_target': list(stats.curve_voxels_diff_from_target),
         }
 
     @property
@@ -227,6 +234,10 @@ cdef class StatPair:
         stats.curve_delta_value = curve_dict['delta_value']
         stats.curve_cfl_iters = curve_dict['cfl_iters']
         stats.curve_surface_voxels = curve_dict['surface_voxels']
+        stats.curve_max_diff_from_prev = curve_dict['max_diff_prev']
+        stats.curve_max_diff_from_target = curve_dict['max_diff_target']
+        stats.curve_voxels_diff_from_prev = curve_dict['voxels_diff_prev']
+        stats.curve_voxels_diff_from_target = curve_dict['voxels_diff_target']
 
     @property
     def json_fname(self):

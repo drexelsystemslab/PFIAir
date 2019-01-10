@@ -53,10 +53,16 @@ public:
     void init_morph(GridType::Ptr source_grid, GridType::ConstPtr target_grid);
 
     /**
-     * Check if the morph is finished by comparing voxels of two level sets.
-     * take the total difference and threshold it.
+     * Check if the morph is finished by comparing voxels of 
+     * the most recent pair of frames along with the final target frame
+     *
+     * This also adds information to the MorphStats objects so we can
+     * inspect the curves
      */
-    bool morph_is_finished(const LevelSet& current, const LevelSet& target);
+    bool morph_is_finished(
+        const LevelSet& prev,
+        const LevelSet& current, 
+        const LevelSet& target);
 
     /**
      * Compute the inter-frame energy consumption and curvature changes

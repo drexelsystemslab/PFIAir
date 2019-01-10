@@ -42,9 +42,6 @@ MorphStats Morph::morph(
         if (energy_consumed < MIN_ENERGY)
             break;
 
-        // Check if the morph is finished
-        if (morph_is_finished(current_ls, target))
-            break;
 
         //if(this->checkStopMorph(source_grid, target_grid)) break;
 
@@ -81,6 +78,10 @@ MorphStats Morph::morph(
 
         // Optionally save the frame
         maybe_save_frame(frames_dir, current_ls, frame_count);
+
+        // Check if the morph is finished
+        if (morph_is_finished(prev_ls, current_ls, target))
+            break;
     }
 
     maybe_save_frame(frames_dir, target, frame_count);
@@ -99,35 +100,73 @@ void Morph::init_morph(
 }
 
 bool Morph::morph_is_finished(
-        const LevelSet& current, const LevelSet& target) {
+        const LevelSet& prev, 
+        const LevelSet& current, 
+        const LevelSet& target) {
 
     // Get the underlying grids
+    openvdb::FloatGrid::ConstPtr prev_grid = prev.get_level_set();
     openvdb::FloatGrid::ConstPtr current_grid = current.get_level_set();
     openvdb::FloatGrid::ConstPtr target_grid = target.get_level_set();
 
+    // We care about values that have moved by at least a voxel
     double threshold = target.get_voxel_size();
-    double max_diff = 0.0;
-    double curr_diff = 0.0;
 
+    // We want to compute the maximum difference of voxels along
+    // with the number of voxels that changed between each pair
+    // of frames (prev, curr), (curr, target)
+    double max_diff_target = 0.0;
+    double max_diff_prev = 0.0;
+    int voxels_diff_from_target = 0;
+    int voxels_diff_from_prev = 0;
+
+    // We need the accessors for the grids we are not iterating over
+    openvdb::FloatGrid::ConstAccessor prev_acc = prev_grid->getAccessor();
     openvdb::FloatGrid::ConstAccessor target_acc = target_grid->getAccessor();
 
+    // Iterate over the current grid and compare to the others
     SurfaceIterator surf_iter = current.get_surface_iterator();
     for (surf_iter.begin(); surf_iter; surf_iter++) {
+        // Lookup the value in all three grids
         openvdb::Coord coord = surf_iter.get_coord();
-        // compare the voxels at the same location in the current
-        // and target grids and get the absolute difference in values
-        curr_diff = openvdb::math::Abs(
-            surf_iter.get_value() - target_acc.getValue(coord));
+        double prev_val = prev_acc.getValue(coord);
+        double curr_val = surf_iter.get_value(); 
+        double target_val = target_acc.getValue(coord);
 
-        // Update the maximum difference
-        if (curr_diff > max_diff)
-            max_diff = curr_diff;
+        // Compute the absolute difference in value, i.e. the distance
+        // the voxel moved
+        double diff_prev = std::abs(curr_val - prev_val);
+        double diff_target = std::abs(curr_val - target_val);
+
+        // If the value changed by a distance of at least 1 voxel
+        // increment the appropriate counter
+        if (diff_prev > threshold)
+            voxels_diff_from_prev++;
+        if (diff_target > threshold)
+            voxels_diff_from_target++;
+
+        // Update the maximum difference values
+        if (diff_prev > max_diff_prev)
+            max_diff_prev = diff_prev;
+        if (diff_prev > max_diff_target) 
+            max_diff_target = diff_target;
     }
 
     // Threshold the result
-    std::cout << "Max diff - " << max_diff << std::endl;
+    std::cout << "Max diff prev -> curr - " << max_diff_prev << std::endl;
+    std::cout << "Changed Voxels prev -> curr - " 
+        << voxels_diff_from_prev << std::endl;
+    std::cout << "Max diff curr -> target - " << max_diff_target << std::endl;
+    std::cout << "Changed Voxels curr -> target - " 
+        << voxels_diff_from_target << std::endl;
     std::cout << "Threshold - " << threshold << std::endl;
-    return max_diff < threshold;
+
+    // Update Morph Stats
+    stats.add_voxels_diff(voxels_diff_from_prev, voxels_diff_from_target);
+    stats.add_max_diffs(max_diff_prev, max_diff_target);
+
+    // TODO: Exact calculation TBD by results of above
+    return max_diff_target < threshold;
 }
 
 EnergyResults Morph::calculate_energy(

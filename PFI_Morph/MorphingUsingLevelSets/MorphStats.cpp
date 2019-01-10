@@ -61,6 +61,21 @@ void MorphStats::finalize_stats() {
     total_energy = weighted_total_curvature + weighted_total_value;
 }
 
+void MorphStats::add_voxels_diff(
+        int voxels_diff_from_prev, int voxels_diff_from_target) {
+    curve_voxels_diff_from_prev.push_back(voxels_diff_from_prev);
+    curve_voxels_diff_from_target.push_back(voxels_diff_from_target);
+}
+
+/**
+ * Add the maximum differences between (prev, curr) and (curr, target)
+ * for this frame to the curves
+ */
+void MorphStats::add_max_diffs(double max_diff_prev, double max_diff_target) {
+    curve_max_diff_from_prev.push_back(max_diff_prev);
+    curve_max_diff_from_target.push_back(max_diff_target);
+}
+
 // ==============================================================
 
 double MorphStatsPair::average_energy() {

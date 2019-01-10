@@ -41,6 +41,10 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
         vector[double] curve_delta_value
         vector[double] curve_cfl_iters
         vector[double] curve_surface_voxels
+        vector[double] curve_max_diff_from_prev
+        vector[double] curve_max_diff_from_target
+        vector[double] curve_voxels_diff_from_prev;
+        vector[double] curve_voxels_diff_from_target;
 
     cdef struct MorphStatsPair:
         MorphStats forwards

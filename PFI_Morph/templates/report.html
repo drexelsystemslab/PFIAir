@@ -61,6 +61,34 @@
                 'Surface Voxels (per-frame)', 
                 {{stat_pair.forward_curves['surface_voxels'] | tojson}},
                 {{stat_pair.backward_curves['surface_voxels'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-prev', 
+                'Maximum Value Difference (prev ->  curr)',
+                {{stat_pair.forward_curves['max_diff_prev'] | tojson}},
+                {{stat_pair.backward_curves['max_diff_prev'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-target', 
+                'Maximum Value Difference (curr -> target)',
+                {{stat_pair.forward_curves['max_diff_target'] | tojson}},
+                {{stat_pair.backward_curves['max_diff_target'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-prev', 
+                '# Voxels Different (prev -> curr)',
+                {{stat_pair.forward_curves['voxels_diff_prev'] | tojson}},
+                {{stat_pair.backward_curves['voxels_diff_prev'] | tojson}});
+            make_chart(
+                '{{stat_pair.source_name}}',
+                '{{stat_pair.target_name}}',
+                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-target', 
+                '# Voxels Different (curr -> target)',
+                {{stat_pair.forward_curves['voxels_diff_target'] | tojson}},
+                {{stat_pair.backward_curves['voxels_diff_target'] | tojson}});
             {% endfor -%}
         };
     </script>
@@ -109,6 +137,10 @@
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-delta-val" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-cfl" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-surf-voxels" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-prev" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-target" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-prev" width="600" height="300"></canvas>
+                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-target" width="600" height="300"></canvas>
                 </td>
             </tr>
             {% endfor -%}
