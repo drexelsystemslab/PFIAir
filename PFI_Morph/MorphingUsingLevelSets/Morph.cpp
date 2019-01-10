@@ -148,7 +148,7 @@ bool Morph::morph_is_finished(
         // Update the maximum difference values
         if (diff_prev > max_diff_prev)
             max_diff_prev = diff_prev;
-        if (diff_prev > max_diff_target) 
+        if (diff_target > max_diff_target) 
             max_diff_target = diff_target;
     }
 
