@@ -25,9 +25,6 @@ class EnergyCalculator {
     // Level sets
     const LevelSet& prev_frame;
     const LevelSet& curr_frame; 
-
-    // Mean curvature calculator
-    MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_2ND> mean_curv;
 public:
     EnergyCalculator(const LevelSet& prev_frame, const LevelSet& curr_frame):
         prev_frame(prev_frame),

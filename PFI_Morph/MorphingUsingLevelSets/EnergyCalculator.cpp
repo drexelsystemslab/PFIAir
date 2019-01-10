@@ -78,7 +78,6 @@ EnergyResults EnergyCalculator::compute_energy(double max_curv) {
 }
 
 double EnergyCalculator::compute_max_curvature(const LevelSet& level_set) {
-    MeanCurvature<MapBase, DDScheme::CD_SECOND, DScheme::CD_2ND> mean_curv;
     openvdb::FloatGrid::ConstPtr grid = level_set.get_level_set();
     openvdb::FloatGrid::ConstAccessor acc = grid->getAccessor();
     MapBase::ConstPtr map = grid->transform().baseMap();
