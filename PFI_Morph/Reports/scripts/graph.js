@@ -4,7 +4,8 @@ let make_chart = function(
         canvas_id, 
         title, 
         forward_data, 
-        backward_data) {
+        backward_data,
+        rolling_average_window=0) {
 	let ctx = document.getElementById(canvas_id).getContext('2d');
     
     let longest_length = Math.max(forward_data.length, backward_data.length);
@@ -36,26 +37,40 @@ let make_chart = function(
             responsive:false
 		},
 	});
+
+    // If a window size is given, make a second chart for the rolling average
+    if (rolling_average_window > 0) {
+        make_rolling_average_chart(...arguments);
+    }
 };
 
-/*
-var ctx = document.getElementById('myChart').getContext('2d');
-var chart = new Chart(ctx, {
-    // The type of chart we want to create
-    type: 'line',
+let make_rolling_average_chart = function(
+        source_name, 
+        target_name, 
+        canvas_id, 
+        title, 
+        forward_data, 
+        backward_data,
+        rolling_average_window) {
 
-    // The data for our dataset
-    data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
-        datasets: [{
-            label: "My First dataset",
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
-            data: [0, 10, 5, 2, 20, 30, 45],
-        }]
-    },
+    // Call make_chart() again with the averaged data
+    make_chart(
+        source_name, 
+        target_name, 
+        canvas_id + '-rolling-avg', 
+        title + '[Rolling Avg]',
+        rolling_average(forward_data, rolling_average_window),
+        rolling_average(backward_data, rolling_average_window),
+        0);
+}
 
-    // Configuration options go here
-    options: {}
-});
-*/
+let rolling_average = function(data, window_size) {
+    let results = [];
+    let N = data.length - (window_size - 1);
+    for (let i = 0; i < N; i++) {
+        let sliding_window = data.slice(i, i + window_size)
+        let avg = sliding_window.reduce((a, b) => a + b) / window_size;
+        results.push(avg);
+    }
+    return results;
+};
