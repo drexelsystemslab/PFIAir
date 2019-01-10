@@ -1,6 +1,7 @@
 #ifndef MORPH_OBJECT_H
 #define MORPH_OBJECT_H
 #include <memory>
+#include <vector>
 #include <openvdb/util/NullInterrupter.h>
 #include <openvdb/tools/LevelSetMorph.h>
 #include "LevelSet.h"

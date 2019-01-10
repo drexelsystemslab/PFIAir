@@ -166,7 +166,7 @@ bool Morph::morph_is_finished(
     stats.add_max_diffs(max_diff_prev, max_diff_target);
 
     // TODO: Exact calculation TBD by results of above
-    return max_diff_target < threshold;
+    return max_diff_target < threshold || max_diff_prev < 0.5 * threshold;
 }
 
 EnergyResults Morph::calculate_energy(
