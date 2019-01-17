@@ -17,6 +17,10 @@ MorphStatsPair morph_cpp(
         bool profile,
         int max_iters) {
 
+    Timer time_overall("Morphing source <--> target");
+    if (profile)
+        time_overall.start();
+
     // Ensure OpenVDB is set up before doing any morphing.
     // According to the docs, it is safe to call this more than once
     openvdb::initialize();
@@ -51,7 +55,7 @@ MorphStatsPair morph_cpp(
     Morph morpher;
 
     // Forwards Direction ====================
-    Timer time_forward("Morphing source -> target");
+    Timer time_forward("Morphing source --> target");
     if (profile)
         time_forward.start();
 
@@ -64,7 +68,7 @@ MorphStatsPair morph_cpp(
 
     // Backwards direction ====================
 
-    Timer time_backward("Morphing source <- target");
+    Timer time_backward("Morphing source <-- target");
     if (profile)
         time_backward.start();
 
@@ -72,8 +76,10 @@ MorphStatsPair morph_cpp(
         target_ls, source_ls_hi_res, backwards_dir, max_iters);
     backward_stats.set_names(target_model.name, source_model.name);
 
-    if (profile)
+    if (profile) {
         time_backward.stop();
+        time_overall.stop();
+    }
 
     // Combine results into a pair of stats
     return MorphStatsPair(forward_stats, backward_stats);

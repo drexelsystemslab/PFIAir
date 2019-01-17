@@ -7,6 +7,8 @@ MorphStats Morph::morph(
         std::string frames_dir,
         int max_iters) {
 
+    std::cout << "Initializing morph..." << std::endl;
+
     // Compute the maximum finite curvature for each model
     double source_max_curv = EnergyCalculator::compute_max_curvature(source);
     double target_max_curv = EnergyCalculator::compute_max_curvature(target);
@@ -71,10 +73,12 @@ MorphStats Morph::morph(
 
         // Output summary of frame
         std::cout << "\nFrame " << frame_count << " -----------" << std::endl;
+        /*
         std::cout << "CFL iterations - " << cfl_iters << std::endl;
         std::cout << "(dCurvature, dValue, max_Curvature) = ("
             << energy.delta_curvature << ", " << energy.delta_value << ", "
             << energy.max_curvature << ")" << std::endl;
+            */
 
         // Optionally save the frame
         maybe_save_frame(frames_dir, current_ls, frame_count);
