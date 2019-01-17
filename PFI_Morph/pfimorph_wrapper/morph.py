@@ -52,17 +52,21 @@ def morph_pair(args, fnames):
     target_open = util.is_open_mesh(target_fname)
 
     # Sanity check: does watertight check classify models properly?
+    # NOTE: This seems to work for open meshes, but it does not work
+    # well for closed (but perhaps non-manifold) objects
+    '''
     if args.model_type == 'open':
         assert source_open, "{} not open mesh!".format(source_fname)
         assert target_open, "{} not open mesh!".format(target_fname)
     elif args.model_type == 'closed':
         assert not source_open, "{} not closed mesh!".format(source_fname)
         assert not target_open, "{} not closed mesh!".format(target_fname)
+    '''
 
     # Set up the morph
     morpher = pfimorph.Morpher()
-    morpher.set_source_info(source_fname, source_name, source_open)
-    morpher.set_target_info(target_fname, target_name, target_open)
+    morpher.set_source_info(source_fname, source_name, args.model_type)
+    morpher.set_target_info(target_fname, target_name, args.model_type)
     
     # Actually run the morph and return the result
     return morpher.morph(
