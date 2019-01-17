@@ -1,5 +1,8 @@
 import math
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from pfimorph_wrapper import util 
 
 def format_number(num):
     # Can't compute log10(0)
@@ -35,3 +38,28 @@ def write_report(fname, stat_pairs):
 
     with open(fname, 'w') as f:
         f.write(html) 
+
+def make_stat_table(N, indices, stat_pairs):
+    """
+    Make an NxN table of morph results. For the lower triangular portion,
+    just swap source and target, since all morphs are done bidirectionally
+    """
+    table = [[None] * N for i in xrange(N)]
+    for (i, j), stat_pair in zip(indices, stat_pairs):
+        if i == j:
+            table[i][j] = stat_pair
+        else:
+            table[i][j] = stat_pair
+            table[j][i] = stat_pair.swapped
+    return table
+
+def write_many_reports(models, table):
+    """
+    Make the reports by iterating over the rows in the table from
+    make_stat_table()
+    """
+    N = len(models)
+    for i in xrange(N):
+        source = util.get_short_name(models[i])
+        report_fname = "Reports/{}_all.html".format(source)
+        write_report(report_fname, table[i])

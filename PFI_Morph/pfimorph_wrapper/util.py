@@ -1,4 +1,6 @@
 import os
+import glob
+
 import trimesh
 
 def is_open_mesh(obj_file):
@@ -43,3 +45,33 @@ def get_short_name(path):
     _, fname = os.path.split(path)
     short_name, _ = os.path.splitext(fname)
     return short_name
+
+def get_models(model_type):
+    """
+    Get a list of models from one of the data sets
+    """
+    if model_type == 'closed':
+        return glob.glob('princeton/*.obj')
+    else:
+        return glob.glob('open_mesh_objs/all_pairs/*.obj')
+
+def get_model_pairs(models):
+    """
+    Since morphing happens bi-directionally, we only need to iterate
+    over the upper triangular portion.
+    Let's pre-compute the indexes and model names. Then we can
+    use multiprocessing to compute everything in parallel
+
+    This returns 2 lists:
+    indices, model_pairs
+    indices are of the form [(i, j) ...]
+    model_pairs are of the form [(source_fname, target_fname) ...]
+    """
+    N = len(models)
+    indices = []
+    model_pairs = [] 
+    for i in xrange(N):
+        for j in xrange(i, N):
+            indices.append((i, j))
+            model_pairs.append((models[i], models[j]))
+    return indices, model_pairs

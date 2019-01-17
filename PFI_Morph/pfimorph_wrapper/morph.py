@@ -1,4 +1,7 @@
+import os
 import json
+import multiprocessing
+import functools
 
 import pfimorph
 from pfimorph_wrapper import util
@@ -24,7 +27,7 @@ def cache_morph(args, fnames):
             stat_data = json.load(f)
         stat_pair = pfimorph.StatPair.from_dict(stat_data)
     else:
-        stat_pair = morph_pair(args, model_names)
+        stat_pair = morph_pair(args, fnames)
         # Save the stats as a JSON file for later analysis
         stat_pair.save_json(JSON_DIR)
 
@@ -66,3 +69,19 @@ def morph_pair(args, fnames):
         save_debug_models=args.save_debug_models, 
         profile=args.profile,
         max_iters=args.iter_limit) 
+
+def morph_all_pairs(args, model_pairs):
+    """
+    Morph all pairs of models from the given list. This uses
+    Multiprocessing.pool() to compute the morphs faster.
+
+    returns a list of stat pairs from the morphs
+    """
+    # Use multiprocessing to morph everything
+    func = functools.partial(cache_morph, args)
+    cpus = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(cpus)
+    stat_pairs = pool.map(func, model_pairs)
+
+    return stat_pairs
+
