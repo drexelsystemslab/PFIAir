@@ -117,8 +117,8 @@ bool Morph::morph_is_finished(
     // of frames (prev, curr), (curr, target)
     double max_diff_target = 0.0;
     double max_diff_prev = 0.0;
-    int voxels_diff_from_target = 0;
-    int voxels_diff_from_prev = 0;
+    //int voxels_diff_from_target = 0;
+    //int voxels_diff_from_prev = 0;
 
     // We need the accessors for the grids we are not iterating over
     openvdb::FloatGrid::ConstAccessor prev_acc = prev_grid->getAccessor();
@@ -140,10 +140,12 @@ bool Morph::morph_is_finished(
 
         // If the value changed by a distance of at least 1 voxel
         // increment the appropriate counter
+        /*
         if (diff_prev > threshold)
             voxels_diff_from_prev++;
         if (diff_target > threshold)
             voxels_diff_from_target++;
+        */
 
         // Update the maximum difference values
         if (diff_prev > max_diff_prev)
@@ -153,6 +155,7 @@ bool Morph::morph_is_finished(
     }
 
     // Threshold the result
+    /*
     std::cout << "Max diff prev -> curr - " << max_diff_prev << std::endl;
     std::cout << "Changed Voxels prev -> curr - " 
         << voxels_diff_from_prev << std::endl;
@@ -160,9 +163,10 @@ bool Morph::morph_is_finished(
     std::cout << "Changed Voxels curr -> target - " 
         << voxels_diff_from_target << std::endl;
     std::cout << "Threshold - " << threshold << std::endl;
+    */
 
     // Update Morph Stats
-    stats.add_voxels_diff(voxels_diff_from_prev, voxels_diff_from_target);
+    //stats.add_voxels_diff(voxels_diff_from_prev, voxels_diff_from_target);
     stats.add_max_diffs(max_diff_prev, max_diff_target);
 
     // TODO: Exact calculation TBD by results of above

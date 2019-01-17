@@ -103,7 +103,16 @@ void Mesh::preprocess_open_mesh() {
 }
 
 void Mesh::preprocess_closed_mesh() {
-    std::cout << "TODO: Fill out preprocess_closed_mesh" << std::endl;
+    // TODO: The main thing that needs to change is how to pick the centroid.
+    // If the centroid (which one though?) is inside the mesh (negative value 
+    // in the level set just after resampling), that would be a reasonable 
+    // center. However, If the centroid is outside the mesh, we need to find
+    // an alternative. One idea:
+    // Find a point that is as inside as possible, but is also as close
+    // the centroid as possible. I am not sure if this works in all cases
+    // Also, it may be difficult to compute without making a large level set
+    // since the narrow band does not go all the way to the center...
+    preprocess_open_mesh();
 }
 
 void Mesh::calc_vertices() {
