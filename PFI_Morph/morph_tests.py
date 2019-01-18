@@ -27,6 +27,10 @@ def mesh_fname(fname):
 
 def morph_all(args):
     models = util.get_models(args.model_type)
+    # For quick runs, limit the number of models
+    if args.model_limit > 0:
+        models = models[:args.model_limit]
+
     indices, model_pairs = util.get_model_pairs(models)
 
     N = len(models)
@@ -64,6 +68,9 @@ def parse_args():
     parser.add_argument(
         '-i', '--iter-limit', type=int, default=20, 
         help="Set max number of frames for each morph (default 20)")
+    parser.add_argument(
+        '-m', '--model-limit', type=int, default=0,
+        help="if set, only morph this many models")
 
     subparsers = parser.add_subparsers()
     subparsers.required = True
