@@ -14,8 +14,8 @@ fi
 # Do an out-of-source build using CMake
 cd build
 cmake $FLAGS ..
-make -j 4 PFI_Morph
+make -j 4 PFI_VoxelConvert
 
 # Put the executable in the current directory
-cp PFI_Morph ..
+cp PFI_VoxelConvert ..
 
