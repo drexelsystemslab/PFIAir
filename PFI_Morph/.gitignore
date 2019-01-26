@@ -22,4 +22,6 @@ Makefile
 # Cython stuff
 pfimorph.cpp
 pfimorph.so
+binvox2vdb.so
+binvox2vdb.cpp
 cython_debug/

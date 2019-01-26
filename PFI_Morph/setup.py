@@ -3,7 +3,8 @@ from Cython.Build import cythonize
 import os
 import multiprocessing
 
-SRC_DIR = 'MorphingUsingLevelSets'
+MORPH_DIR = 'MorphingUsingLevelSets'
+BINVOX_DIR = 'BinvoxToVDB'
 
 def find_sources():
     """
@@ -16,7 +17,7 @@ def find_sources():
 
 # The source directory has old and new source code. For now, I'm manually
 # filtering for source files
-source_fnames = [
+MORPH_FNAMES = [
     'morph_extension.cpp',
     'Timer.cpp',
     'Mesh.cpp',
@@ -28,22 +29,28 @@ source_fnames = [
     'EnergyCalculator.cpp'
 ]
 
-cpp_sources = [os.path.join(SRC_DIR, x) for x in source_fnames]
+BINVOX_FNAMES = [
+]
+
+MORPH_SOURCES = [os.path.join(MORPH_DIR, x) for x in MORPH_FNAMES]
+BINVOX_SOURCES = [os.path.join(BINVOX_DIR, x) for x in BINVOX_FNAMES]
 
 # Declare an extension module
 morph_ext = Extension(
     # This labels the resulting module, pfimorph.so
     'pfimorph',
     # List the main pyx file and all .cpp files needed
-    sources=['pfimorph.pyx'] + cpp_sources,
+    sources=['pfimorph.pyx'] + MORPH_SOURCES,
     # We need to compile against OpenVDB and other C++ libraries
-    libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
+    libraries=['openvdb', 'tbb', 'Half'], #, 'boost_iostreams'],
     # This is a C++, not C library.
     language='c++')
 
-# Cythonize it in parallel
-cython_morph = cythonize(
-    morph_ext, nthreads=multiprocessing.cpu_count(), gdb_debug=True)
+binvox_ext = Extension(
+    'binvox2vdb',
+    sources=['binvox2vdb.pyx'] + BINVOX_SOURCES,
+    libraries=['openvdb', 'tbb', 'Half'],
+    language='c++')
 
 # Setup like any other python library
-setup(ext_modules=cython_morph)
+setup(ext_modules=cythonize([morph_ext, binvox_ext]))
