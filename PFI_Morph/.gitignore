@@ -1,6 +1,7 @@
 # Executables
 morph
 PFI_Morph
+PFI_VoxelConvert
 
 # Output directories and files
 build/
