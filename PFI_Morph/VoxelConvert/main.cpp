@@ -1,4 +1,5 @@
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/TopologyToLevelSet.h>
 #include <iostream>
 #include <functional>
 using namespace openvdb;
@@ -67,20 +68,31 @@ void make_binary_grid(
     grid->setTransform(math::Transform::createLinearTransform(voxel_size));
 }
 
+FloatGrid::Ptr binary_to_level_set(FloatGrid::Ptr grid) {
+    return tools::topologyToLevelSet(*grid);
+}
+
+void save_grid(FloatGrid::Ptr grid, std::string fname) {
+    GridPtrVec grids;
+    grids.push_back(grid);
+    io::File file(fname);
+    file.write(grids);
+    file.close();
+}
+
 int main() {
     initialize();
 
     FloatGrid::Ptr grid = FloatGrid::create(2.0);
-    CoordBBox index_bbox(Coord(0, 0, 0), Coord(127, 127, 127));
+    CoordBBox index_bbox(Coord(-64, -64, -64), Coord(63, 63, 63));
 
-    make_binary_grid(grid, index_bbox, 1.0 / 128.0, sphere(1.0));
+    make_binary_grid(grid, index_bbox, 1.0 / 128.0, sphere(0.49));
 
     grid->setName("LevelSetSphereBinary");
 
     // Save the file
-    GridPtrVec grids;
-    grids.push_back(grid);
-    io::File file("output/convert_voxels/sphere_test_bin.vdb");
-    file.write(grids);
-    file.close();
+    save_grid(grid, "output/convert_voxels/sphere_test_bin.vdb");
+
+    FloatGrid::Ptr ls_grid = binary_to_level_set(grid);
+    save_grid(ls_grid, "output/convert_voxels/converted_test.vdb");
 }
