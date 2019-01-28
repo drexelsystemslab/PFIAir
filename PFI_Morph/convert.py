@@ -50,5 +50,10 @@ def parse_binvox(fname):
             'vals': vals
         }
 
+def main():
+    from binvox2vdb import BinvoxConverter
+    converter = BinvoxConverter('output/convert_voxels/sculpture.binvox')
+    converter.convert('output/convert_voxels/convert_test.vdb')
+
 if __name__ == "__main__":
     main()
