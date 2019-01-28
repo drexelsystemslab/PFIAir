@@ -17,8 +17,11 @@ cdef class BinvoxConverter:
         converter.set_dimensions(d, w, h)
         (tx, ty, tz) = data['translate']
         converter.set_translation(tx, ty, tz)
+        scale = data['scale']
+        converter.set_scale(scale)
         cdef BinvoxData vals = self.convert_pairs(data['vals'])
         converter.populate_grid(vals)
+        converter.convert()
         converter.save(fname)
 
     cdef BinvoxData convert_pairs(self, vals):
