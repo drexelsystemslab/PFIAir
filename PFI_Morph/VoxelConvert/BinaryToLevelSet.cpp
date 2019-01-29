@@ -37,17 +37,26 @@ void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
 
     // scale the grid to the right size, then translate so the model is
     // centered on the origin
+    /*
     Mat4d T = Mat4d::translation(translation);
     Mat4d S = Mat4d::identity();
     S.setToScale(Vec3d(scale, scale, scale));
     Mat4d TS = T * S;
 
     std::cout << T.str() << std::endl << std::endl << S.str() << std::endl;
+    */
 
-    // Set a transformation
-    Transform::Ptr xform = Transform::createLinearTransform(TS);
+    // Scale down so 128 voxels = 1 unit
+    double voxel_size = 1.0 / 128.0;
+
+    // Apply the transformation listed in the binvox file
+    Transform::Ptr xform = Transform::createLinearTransform(voxel_size);
+    xform->preScale(Vec3d(scale, scale, scale));
+    xform->postTranslate(translation);
     binary_grid->setTransform(xform);
-    //grid->setTransform(math::Transform::createLinearTransform(voxel_size));
+
+    std::cout << "Binary grid transform" << std::endl;
+    xform->print(std::cout);
 }
 
 /**
