@@ -84,14 +84,17 @@ def get_short_name(path):
     short_name, _ = os.path.splitext(fname)
     return short_name
 
-def get_models(model_type):
+def get_models():
     """
     Get a list of models from one of the data sets
     """
+    return glob.glob('input/shapenet/*.binvox')
+    '''
     if model_type == 'closed':
         return glob.glob('princeton/*.obj')
     else:
         return glob.glob('open_mesh_objs/all_pairs/*.obj')
+    '''
 
 def get_model_pairs(models):
     """
