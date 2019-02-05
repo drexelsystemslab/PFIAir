@@ -79,7 +79,6 @@ public:
 class LevelSet {
     // Level set representation as a VDB data structure
     openvdb::FloatGrid::Ptr level_set = nullptr;
-    double half_bandwidth;
 public:
     static constexpr double HALF_BANDWIDTH = 3.0;
     static constexpr double VOXEL_SIZE = 0.01;
@@ -94,9 +93,11 @@ public:
     LevelSet() {};
 
     /**
-     * Constructor from a .vdb file 
+     * Constructor from a .vdb file. Only use .vdb filees that have a single
+     * model in them
      */
-    LevelSet(std::string fname, double half_bandwidth=HALF_BANDWIDTH);
+    LevelSet(std::string fname);
+
     /**
      * Constructor from vertex list
      * This is mainly used by Mesh::to_level_set();
@@ -111,10 +112,7 @@ public:
     /**
      * Initialize from a grid pointer.
      */
-    LevelSet(
-        openvdb::FloatGrid::Ptr level_set, 
-        double half_bandwidth=HALF_BANDWIDTH): 
-            level_set(level_set), half_bandwidth(half_bandwidth) {}
+    LevelSet(openvdb::FloatGrid::Ptr level_set): level_set(level_set) {}
 
     // Getter for the underlying VDB
     openvdb::FloatGrid::Ptr get_level_set();

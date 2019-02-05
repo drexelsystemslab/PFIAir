@@ -3,6 +3,8 @@ import glob
 
 import trimesh
 
+from binvox2vdb import BinvoxConverter
+
 def is_open_mesh(obj_file):
     """
     Check if a model is closed or open
@@ -43,24 +45,36 @@ def vdb_filenames(binvox_fname):
     take the binvox fname /path/to/<model>.binvox
 
     and turn it into
-    (/output/path/<model>.vdb, /output/path/<model>_hi_res.vdb)
+    (/output/path/<model>.vdb, /output/path/<model>_high_res.vdb)
     """
     path, binvox = os.path.split(binvox_fname)
     model_name, _ = os.path.splitext(binvox)
 
     vdb_fname = '{}.vdb'.format(model_name)
-    hi_res_fname = '{}_hi_res.vdb'.format(model_name) 
-
+    high_res_fname = '{}_high_res.vdb'.format(model_name) 
 
     VDB_DIR = 'output/converted_vdbs'
+    make_directories(VDB_DIR)
     return (
         os.path.join(VDB_DIR, vdb_fname),
-        os.path.join(VDB_DIR, hi_res_fname))
+        os.path.join(VDB_DIR, high_res_fname))
 
 def binvox_to_vdb(binvox_fname):
-    from binvox2vdb import BinvoxConverter
-    converter = BinvoxConverter(binvox_fname)
-    converter.convert(args.out_file, high_res_fname=high_res_fname(args))
+    """
+    Convert a binvox file to two VDB files: one at normal resolution,
+    one at higher resolution for the target model, unless there is a
+    a cached copy. In the latter case, just use the converted model
+    """
+    # Get the names of  the
+    vdb_fname, high_res_fname = vdb_filenames(binvox_fname)
+
+    # Only convert if we have not already done so
+    if not os.path.exists(vdb_fname) or not os.path.exists(high_res_fname):
+        print("Converting {} -> {}".format(binvox_fname, vdb_fname))
+        converter = BinvoxConverter(binvox_fname)
+        converter.convert(vdb_fname, high_res_fname=high_res_fname)
+
+    return (vdb_fname, high_res_fname)
 
 def get_short_name(path):
     """

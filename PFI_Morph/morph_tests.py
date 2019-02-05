@@ -34,8 +34,8 @@ def binvox_fname(fname):
         raise argparse.ArgumentTypeError(
             "'{}': Filename must end in .binvox".format(fname))
 
-
 def morph_all(args):
+    raise NotImplementedError("Need to revise this")
     models = util.get_models(args.model_type)
     # For quick runs, limit the number of models
     if args.model_limit > 0:

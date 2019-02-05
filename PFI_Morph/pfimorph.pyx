@@ -271,21 +271,21 @@ cdef class Morpher:
     # The result of morphing
     cdef MorphStatsPair result
 
-    def set_source_info(self, obj_fname, name, is_open):
+    def set_source_info(self, name, vdb_fname, high_res_fname):
         """
         Set information about the source model
         """
-        self.source_model.obj_fname = obj_fname
         self.source_model.name = name
-        self.source_model.is_open = is_open
+        self.source_model.vdb_fname = vdb_fname
+        self.source_model.high_res_fname = high_res_fname
 
-    def set_target_info(self, obj_fname, name, is_open):
+    def set_target_info(self, name, vdb_fname, high_res_fname):
         """
         Set information about the target model
         """
-        self.target_model.obj_fname = obj_fname
         self.target_model.name = name
-        self.target_model.is_open = is_open
+        self.target_model.vdb_fname = vdb_fname
+        self.target_model.high_res_fname = high_res_fname
 
     def morph(
             self, 

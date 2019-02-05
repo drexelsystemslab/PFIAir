@@ -74,8 +74,7 @@ bool SurfaceIterator::is_surface_voxel() {
 
 // Level Set =============================================================
 
-LevelSet::LevelSet(std::string fname, double half_bandwidth):
-        half_bandwidth(half_bandwidth) {
+LevelSet::LevelSet(std::string fname) {
     openvdb::io::File file(fname);
     openvdb::GridBase::Ptr baseGrid;
 
@@ -94,7 +93,7 @@ LevelSet::LevelSet(
         const std::vector<openvdb::Vec3I>& indices_tri,
         const std::vector<openvdb::Vec4I>& indices_quad,
         bool is_open_mesh,
-        double half_bandwidth): half_bandwidth(half_bandwidth) {
+        double half_bandwidth) {
     using namespace openvdb;
 
     math::Transform scale = math::Transform();

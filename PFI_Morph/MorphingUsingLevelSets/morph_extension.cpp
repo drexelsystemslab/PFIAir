@@ -26,15 +26,11 @@ MorphStatsPair morph_cpp(
     openvdb::initialize();
 
     // Preprocess both meshes
-    LevelSet source_ls;
-    LevelSet source_ls_hi_res;
-    std::tie(source_ls, source_ls_hi_res) = preprocess_model(
-        source_model, save_debug_models, profile);
+    LevelSet source_ls(source_model.vdb_fname);
+    LevelSet source_ls_hi_res(source_model.high_res_fname);
 
-    LevelSet target_ls;
-    LevelSet target_ls_hi_res;
-    std::tie(target_ls, target_ls_hi_res) = preprocess_model(
-        target_model, save_debug_models, profile);
+    LevelSet target_ls(target_model.vdb_fname);
+    LevelSet target_ls_hi_res(target_model.high_res_fname);
 
     // Output directories will be
     // output/morphs/{model1}-{model2}/
@@ -54,7 +50,7 @@ MorphStatsPair morph_cpp(
     // Perform the morphing
     Morph morpher;
 
-    // Forwards Direction ====================
+    // Forwards Direction ------------------------------------------
     Timer time_forward("Morphing source --> target");
     if (profile)
         time_forward.start();
@@ -66,7 +62,7 @@ MorphStatsPair morph_cpp(
     if (profile)
         time_forward.stop();
 
-    // Backwards direction ====================
+    // Backwards direction ----------------------------------------
 
     Timer time_backward("Morphing source <-- target");
     if (profile)
@@ -87,6 +83,7 @@ MorphStatsPair morph_cpp(
 
 // NON-EXPORTED HELPER FUNCTIONS ========================================
 
+/*
 std::tuple<LevelSet, LevelSet> preprocess_model(
         const ModelInfo& model,
         bool save_obj,
@@ -152,6 +149,7 @@ std::tuple<LevelSet, LevelSet> preprocess_model(
 
     return std::make_tuple(result, result_hi_res);
 }
+*/
 
 bool file_exists(std::string fname) {
     std::ifstream file(fname);

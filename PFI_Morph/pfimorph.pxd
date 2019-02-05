@@ -13,9 +13,9 @@ cdef extern from "MorphingUsingLevelSets/morph_extension.h":
     # Input Info ============================================
 
     cdef struct ModelInfo:
-        string obj_fname
+        string vdb_fname
+        string high_res_fname
         string name
-        bint is_open
 
     # Output info ===========================================
 

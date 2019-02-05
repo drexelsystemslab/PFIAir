@@ -20,12 +20,12 @@ static const std::string VDB_DIR = "output/morphs/";
  * Struct of information to pass to the morphing code
  */
 struct ModelInfo {
-    // Filename of OBJ file on disk, e.g. /path/to/foo.obj
-    std::string obj_fname;
-    // Short name e.g. foo
+    // Filename of VDB file on disk
+    std::string vdb_fname;
+    // Solid version of the VDB
+    std::string high_res_fname;
+    // Short name without path or extension
     std::string name;
-    // True if this is an open mesh
-    bool is_open;
 };
 
 /**
@@ -62,10 +62,12 @@ MorphStatsPair morph_cpp(
  * much higher for use as the target model. The intent is to minimize aliasing
  * issues
  */
+/*
 std::tuple<LevelSet, LevelSet> preprocess_model(
     const ModelInfo& model,
     bool save_obj=false,
     bool profile=false);
+*/
 
 /**
  * Check if a file exists. This is useful for caching
