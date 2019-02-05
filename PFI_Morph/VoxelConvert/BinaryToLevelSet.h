@@ -43,8 +43,13 @@ public:
     /**
      * Convert the binary voxel grid -> level set using OpenVDB's built-in
      * methods
+     *
+     * half_bandwidth: half of the narrow band width in voxels. 3 is a good
+     *    number for the source model in a morph, but set it higher for the
+     *    target model if there are aliasing issues
+     * smoothing_steps: how many steps of smoothing. 5 is a good upper bound. 
      */
-    void convert();
+    void convert(float half_bandwidth, int smoothing_steps);
     /**
      * Save the resulting level set 
      *

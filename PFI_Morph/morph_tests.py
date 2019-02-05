@@ -4,7 +4,6 @@ import argparse
 
 from pfimorph_wrapper import util, morph, reports
 
-
 def mesh_fname(fname):
     """
     Argparse type function for picking a mesh filename. 
@@ -24,6 +23,17 @@ def mesh_fname(fname):
         # No other model formats are expected
         raise argparse.ArgumentTypeError(
             "'{}': Filename must end in .obj or .stl".format(fname))
+
+def binvox_fname(fname):
+    """
+    Argparse type function for picking a binvox file
+    """
+    if fname.endswith('.binvox'):
+        return fname
+    else:
+        raise argparse.ArgumentTypeError(
+            "'{}': Filename must end in .binvox".format(fname))
+
 
 def morph_all(args):
     models = util.get_models(args.model_type)
@@ -60,7 +70,6 @@ def morph_one(args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('model_type', choices=['open', 'closed'])
     parser.add_argument('-p', '--profile', action='store_true',
         help="Set this flag to time each step of the program")
     parser.add_argument('-s', '--save-debug-models', action='store_true',
@@ -81,10 +90,10 @@ def parse_args():
 
     # Morph a single pair of models and generate a report
     parser_one = subparsers.add_parser('one')
-    parser_one.add_argument('source_model', type=mesh_fname,
-        help="Path to source model in OBJ/STL format")
-    parser_one.add_argument('target_model', type=mesh_fname,
-        help="Path to target model in OBJ/STL format")
+    parser_one.add_argument('source_model', type=binvox_fname,
+        help="Path to source model in .binvox format")
+    parser_one.add_argument('target_model', type=binvox_fname,
+        help="Path to target model in .binvox format")
     parser_one.set_defaults(func=morph_one)
 
     

@@ -77,14 +77,20 @@ openvdb::Coord BinaryToLevelSet::index_to_coord(int index) {
     return openvdb::Coord(x, y, z);
 }
 
-void BinaryToLevelSet::convert() {
-    level_set = openvdb::tools::topologyToLevelSet(*binary_grid);
+void BinaryToLevelSet::convert(float half_bandwidth, int smoothing_steps) {
+    constexpr int CLOSING_STEPS = 1;
+    constexpr int ADDITIONAL_DILATION_STEPS = 0;
+    level_set = openvdb::tools::topologyToLevelSet(
+        *binary_grid,
+        half_bandwidth,
+        CLOSING_STEPS,
+        ADDITIONAL_DILATION_STEPS,
+        smoothing_steps);
 }
 
 void BinaryToLevelSet::save(std::string filename) {
     // Store both grids
     openvdb::GridPtrVec grids;
-    grids.push_back(binary_grid);
     grids.push_back(level_set);
 
     // Write it to a file

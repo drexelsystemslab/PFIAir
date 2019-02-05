@@ -14,5 +14,5 @@ cdef extern from "VoxelConvert/BinaryToLevelSet.h":
         void set_translation(float x, float y, float z)
         void set_scale(float scale)
         void populate_grid(const BinvoxData& data)
-        void convert()
+        void convert(float half_bandwidth, int smoothing_steps)
         void save(string filename)

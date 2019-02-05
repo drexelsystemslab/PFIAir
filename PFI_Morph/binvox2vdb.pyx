@@ -4,11 +4,23 @@ from binvox2vdb cimport BinaryToLevelSet, BinvoxData, RunLength
 
 cdef class BinvoxConverter:
     cdef string fname
+    cdef float HALF_BANDWIDTH_NORMAL;
+    cdef float HALF_BANDWIDTH_HIGH_RES;
 
     def __init__(self, fname):
         self.fname = fname
 
-    def convert(self, fname):
+        # Cython doesn't seem to support class-level constants. Oh well.
+        self.HALF_BANDWIDTH_NORMAL = 3.0
+        self.HALF_BANDWIDTH_HIGH_RES = 10.0
+
+    def convert(self, vdb_fname, smoothing_steps=5, high_res_fname=None):
+        """
+        Convert the binvox file to a vdb file.
+
+        If high_res_fname is specified, this will save a second
+        copy with a larger bandwidth
+        """
         cdef dict data = self.parse_binvox()
         cdef BinaryToLevelSet converter = BinaryToLevelSet()
 
@@ -21,8 +33,15 @@ cdef class BinvoxConverter:
         converter.set_scale(scale)
         cdef BinvoxData vals = self.convert_pairs(data['vals'])
         converter.populate_grid(vals)
-        converter.convert()
-        converter.save(fname)
+
+        # Generate the regular .vdb file
+        converter.convert(self.HALF_BANDWIDTH_NORMAL, smoothing_steps)
+        converter.save(vdb_fname)
+
+        # Generate the high res VDB if desired
+        if high_res_fname:
+            converter.convert(self.HALF_BANDWIDTH_HIGH_RES, smoothing_steps)
+            converter.save(high_res_fname)
 
     cdef BinvoxData convert_pairs(self, vals):
         """

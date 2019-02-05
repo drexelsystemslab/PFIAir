@@ -38,6 +38,30 @@ def stl_to_obj(stl_fname):
 
     return new_fname
 
+def vdb_filenames(binvox_fname):
+    """
+    take the binvox fname /path/to/<model>.binvox
+
+    and turn it into
+    (/output/path/<model>.vdb, /output/path/<model>_hi_res.vdb)
+    """
+    path, binvox = os.path.split(binvox_fname)
+    model_name, _ = os.path.splitext(binvox)
+
+    vdb_fname = '{}.vdb'.format(model_name)
+    hi_res_fname = '{}_hi_res.vdb'.format(model_name) 
+
+
+    VDB_DIR = 'output/converted_vdbs'
+    return (
+        os.path.join(VDB_DIR, vdb_fname),
+        os.path.join(VDB_DIR, hi_res_fname))
+
+def binvox_to_vdb(binvox_fname):
+    from binvox2vdb import BinvoxConverter
+    converter = BinvoxConverter(binvox_fname)
+    converter.convert(args.out_file, high_res_fname=high_res_fname(args))
+
 def get_short_name(path):
     """
     Strip the path and extension from a filename to get a shorter name
