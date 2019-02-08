@@ -40,6 +40,14 @@ def morph_all(args):
     if args.model_limit > 0:
         models = models[:args.model_limit]
 
+    # Preprocess the models all at once and rely on the caching to sort
+    # out the models. This prevents preprocessing the same model 4 times
+    # in parallel once we start the task pool
+    print("Preprocessing Models:")
+    for binvox_file in models:
+        _ = util.binvox_to_vdb(binvox_file)
+
+    # Pair uup the models
     indices, model_pairs = util.get_model_pairs(models)
 
     N = len(models)

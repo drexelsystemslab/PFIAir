@@ -73,6 +73,8 @@ def binvox_to_vdb(binvox_fname):
         print("Converting {} -> {}".format(binvox_fname, vdb_fname))
         converter = BinvoxConverter(binvox_fname)
         converter.convert(vdb_fname, high_res_fname=high_res_fname)
+    else:
+        print("Using cached {}".format(vdb_fname))
 
     return (vdb_fname, high_res_fname)
 
