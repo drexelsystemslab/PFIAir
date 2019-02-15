@@ -16,6 +16,16 @@ def get_data_frame():
     df = pandas.read_csv('output/test_table.csv')
     return df.set_index(['source', 'target'])
 
+def get_expected_dissimilarity():
+    """
+    Get the expected dissimilarity table created in ground_truth.py
+    """
+    df = pandas.read_csv(
+        'output/expected_dissimilarity.csv', 
+        header=None,
+        names=['source', 'target', 'expected_dissimilarity'])
+    return df.set_index(['source', 'target'])
+
 def perform_pca(data):
     """
     Perform principal component analysis to find the combination
@@ -35,7 +45,11 @@ def perform_pca(data):
 
 def main():
     data = get_data_frame()
-    perform_pca(data)
+    #perform_pca(data)
+
+    expected = get_expected_dissimilarity()
+
+    merged = pandas.merge(data, expected, left_index=True, right_index=True)
 
 if __name__ == '__main__':
     main()
