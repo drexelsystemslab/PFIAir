@@ -78,19 +78,17 @@ def compute_dissimilarity(row):
     # dissimilarity = 1 - similarity
     return 1.0 - similarity
 
-def make_heatmap(n_by_n):
+def make_heatmap(adjacency_list, fname):
     """
     Make a heatmap of the nxn matrix to make it easier to check the
     results
     """
-    adjacency_list = n_by_n.set_index(
-        ['Model Name_source', 'Model Name_target'])
 
     # Use this label order to keep the models together
     label_order = adjacency_list.index.get_level_values(0).unique()
 
     adjacency_matrix = adjacency_list.unstack()
-    adjacency_matrix.columns = adjacency_matrix.columns.droplevel()
+    #adjacency_matrix.columns = adjacency_matrix.columns.droplevel()
     adjacency_matrix = adjacency_matrix.reindex(
         index=label_order, columns=label_order.copy())
     adjacency_matrix.index.name = 'Source Model'
@@ -107,7 +105,7 @@ def make_heatmap(n_by_n):
         ax=ax,
         cbar_kws={'label': 'Dissimilarity'})
     fig.tight_layout()
-    fig.savefig('output/expected_dissimilarity_matrix.png')
+    fig.savefig(fname)
 
 def main():
     # Read in the CSV file
@@ -119,14 +117,17 @@ def main():
     # Apply a dissimilarity function to each row
     n_by_n['dissimilarity'] = n_by_n.apply(compute_dissimilarity, axis=1)
 
-    # Reduce the table to just the model names and dissimilarity
-    n_by_n = n_by_n[
-        ['Model Name_source', 'Model Name_target', 'dissimilarity']]
+    # for the detailed view, drop all features but the dissimilarity
+    adjacency_list = n_by_n.set_index(
+        ['Model Name_source', 'Model Name_target'])['dissimilarity']
+    adjacency_list.to_csv('output/expected_dissimilarity.csv')
+    make_heatmap(adjacency_list, 'output/expected_dissimilarity.png')
 
-    n_by_n.to_csv('output/expected_dissimilarity.csv')
-
-    make_heatmap(n_by_n)
-    
+    # For a higher-level view, let's just average the categories
+    category_avgs = n_by_n.groupby(
+        ['Category_source', 'Category_target']).mean()['dissimilarity']
+    category_avgs.to_csv('output/expected_category_avgs.csv')
+    make_heatmap(category_avgs, 'output/expected_category_avgs.png')
 
 if __name__ == "__main__":
     main()
