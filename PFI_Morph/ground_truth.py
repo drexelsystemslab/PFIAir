@@ -2,6 +2,9 @@
 from __future__ import print_function
 
 import pandas
+import matplotlib.pyplot as plt
+import seaborn
+seaborn.set()
 
 FEATURE_FILE = "input/shapenet/ShapeNetGroundTruth.csv"
 
@@ -9,7 +12,7 @@ def get_data():
     df = pandas.read_csv(FEATURE_FILE)
     # The UUID is only needed for locating the binvox files. For this
     # script we only care about the other columns.
-    return df.drop(columns='UUID')
+    return df.drop(columns='UUID').sort_values('Category')
 
 def cartesian_product(df1, df2):
     df1['_key'] = 0
@@ -75,6 +78,37 @@ def compute_dissimilarity(row):
     # dissimilarity = 1 - similarity
     return 1.0 - similarity
 
+def make_heatmap(n_by_n):
+    """
+    Make a heatmap of the nxn matrix to make it easier to check the
+    results
+    """
+    adjacency_list = n_by_n.set_index(
+        ['Model Name_source', 'Model Name_target'])
+
+    # Use this label order to keep the models together
+    label_order = adjacency_list.index.get_level_values(0).unique()
+
+    adjacency_matrix = adjacency_list.unstack()
+    adjacency_matrix.columns = adjacency_matrix.columns.droplevel()
+    adjacency_matrix = adjacency_matrix.reindex(
+        index=label_order, columns=label_order.copy())
+    adjacency_matrix.index.name = 'Source Model'
+    adjacency_matrix.columns.name = 'Target Model'
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_title('Expected Dissimilarity')
+    heatmap = seaborn.heatmap(
+        adjacency_matrix,
+        xticklabels=True, 
+        yticklabels=True,
+        cmap='plasma',
+        square=True,
+        ax=ax,
+        cbar_kws={'label': 'Dissimilarity'})
+    fig.tight_layout()
+    fig.savefig('output/expected_dissimilarity_matrix.png')
+
 def main():
     # Read in the CSV file
     data_frame = get_data() 
@@ -90,6 +124,8 @@ def main():
         ['Model Name_source', 'Model Name_target', 'dissimilarity']]
 
     n_by_n.to_csv('output/expected_dissimilarity.csv')
+
+    make_heatmap(n_by_n)
     
 
 if __name__ == "__main__":
