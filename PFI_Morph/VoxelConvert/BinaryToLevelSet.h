@@ -40,7 +40,7 @@ public:
     void set_scale(float scale);
     /**
      * Populate the grid from a sequence of run-length encoded pairs
-     * of on/off values
+     * of on/off values. This also reorients the grid
      */
     void populate_grid(const BinvoxData& data);
     /**
@@ -61,9 +61,21 @@ public:
     void save(std::string filename);
 private:
     /**
-     * Handle a single run in the run-length encoded voxel data
+     * Usinge the data from the binvox data, keep track of the bounding
+     * box and centroid and use the Reorienter class (see Reorienter.h/.cpp)
+     * to determine an affine transformation that standardizes the model
+     * orientation.
      */
-    void populate_run(int length, int start_voxel);
+    openvdb::math::Transform::Ptr compute_transform(const BinvoxData& data);
+    /**
+     * Handle a single run in the run-length encoded voxel data. This applies
+     * the reorientation transformation to each voxel to fix an issue
+     * with OpenVDB being unable to morph general affine transformations
+     */
+    void populate_run(
+        const openvdb::math::Transform::Ptr& reorient_xform, 
+        int length, 
+        int start_voxel);
     /**
      * Add a run of voxels to a reorienter
      */

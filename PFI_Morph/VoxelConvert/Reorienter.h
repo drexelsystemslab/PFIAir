@@ -50,7 +50,6 @@ class Reorienter {
     BBox bbox;
     int num_voxels;
     openvdb::Vec3d sum;
-    static constexpr double VOXEL_SIZE = 1.0 / 128.0;
     /**
      * basis vectors. These are used in compute_transform()
      */

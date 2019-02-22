@@ -105,7 +105,7 @@ openvdb::math::Mat4d Reorienter::compute_rotation() {
     // Now see which side of the bbox center the centroid leans
     // by computing the sign of each component.
     openvdb::Vec3d centroid_lean = lean(centroid_rel);
-    std::cout << "centroid" << centroid_lean << std::endl;
+    //std::cout << "centroid" << centroid_lean << std::endl;
 
     // Sort the bounding box components but get the indices in [0, 1, 2] of
     // which axes they refer to. indices.x() denotes which axis is the longest
@@ -129,9 +129,9 @@ openvdb::math::Mat4d Reorienter::compute_rotation() {
 
     // Return a rotation matrix
     openvdb::math::Mat3d rotation(Rx, Ry, Rz, false);
-    std::cout << Rx << std::endl;
-    std::cout << Ry << std::endl;
-    std::cout << rotation << std::endl; 
+    //std::cout << Rx << std::endl;
+    //std::cout << Ry << std::endl;
+    //std::cout << rotation << std::endl; 
 
     // Convert it into a 4D matrix with the homogeneous coordinate
     openvdb::math::Mat4d result;
@@ -144,15 +144,14 @@ openvdb::math::Mat4d Reorienter::compute_rotation() {
 openvdb::math::Transform::Ptr Reorienter::compute_transform() {
     // Create the identity transformation
     openvdb::math::Transform::Ptr xform = 
-        openvdb::math::Transform::createLinearTransform(VOXEL_SIZE);
+        openvdb::math::Transform::createLinearTransform();
 
     /**
      * The transformations are applied in this order (which is not the
      * usual order for affine transformations)
      * 1. Translate the grid so the center of the bounding box is at the
      *    origin. This is done by a pre-translation
-     * 2. Apply the scaling so 128 voxels = 1 unit
-     * 3. Rotate the grid so that longest dimension of the bounding box
+     * 2. Rotate the grid so that longest dimension of the bounding box
      *    is in the x direction. There are other constraints, see
      *    compute_rotation() for details
      */

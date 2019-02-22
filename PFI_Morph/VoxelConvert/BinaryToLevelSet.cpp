@@ -15,6 +15,15 @@ void BinaryToLevelSet::set_scale(float scale) {
 void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
     binary_grid = openvdb::FloatGrid::create(0.0);
 
+    /**
+     * Compute the transformation that centers and reorients the voxels.
+     * 
+     * Since OpenVDB's advect() function does not support general affine
+     * transformations, we cannot add this transform directly to the grid.
+     * thus we need to apply this manually as we write the grid
+     */
+    openvdb::math::Transform::Ptr reorient = compute_transform(data);
+
     int voxel_count = 0;
 
     /**
@@ -35,30 +44,63 @@ void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
             voxel_count += length;
         } else {
             // Update the VDB and the reorienter's centroid/bounding box
-            populate_run(length, voxel_count);
-            update_reorienter(reorienter, length, voxel_count);
+            populate_run(reorient, length, voxel_count);
             voxel_count += length;
         }
     }
 
-    // Set the scale and origin =============================
-    using namespace openvdb::math;
+    // The reorientation transformation  does not scale the model to prevent 
+    // adding holes to the grid. Apply the scaling now.
+    const double VOXEL_SIZE = 1.0 / 128.0;
+    openvdb::math::Transform::Ptr scale = 
+        openvdb::math::Transform::createLinearTransform(VOXEL_SIZE);
+    binary_grid->setTransform(scale);
+}
 
-    // Use the transformation given by the reorienter object
-    // since the info given in the binvox file is not standardized in the
-    // way we need.
-    Transform::Ptr xform = reorienter.compute_transform();
-    binary_grid->setTransform(xform);
+openvdb::math::Transform::Ptr BinaryToLevelSet::compute_transform(
+        const BinvoxData& data) {
+    Reorienter reorienter;
+    int voxel_count = 0;
+    for (const RunLength& run : data) {
+        int value = run.first;
+        int length = run.second;
+
+        if (value == 0) {
+            // No voxel, no problem
+            voxel_count += length;
+        } else {
+            update_reorienter(reorienter, length, voxel_count);
+            voxel_count += length;
+        }
+    }
+    return reorienter.compute_transform();
 }
 
 /**
  * Write a sequence of 1s into the grid starting at start_voxel
  */
-void BinaryToLevelSet::populate_run(int length, int start_voxel) {
+void BinaryToLevelSet::populate_run(
+        const openvdb::math::Transform::Ptr& reorient_xform, 
+        int length, 
+        int start_voxel) {
     openvdb::FloatGrid::Accessor acc = binary_grid->getAccessor();
     for (int i = 0; i < length; i++) {
+        // Get the index space coord 
         openvdb::Coord loc = index_to_coord(i + start_voxel);
-        acc.setValue(loc, 1.0);
+
+        // Transform it to the reoriented position. This only applies
+        // a rotation and scale so it is still measured in index space
+        // units
+        openvdb::Vec3d world_pos = reorient_xform->indexToWorld(loc);
+
+        //std::cout << world_pos << std::endl;
+
+        // Convert back to a coord.
+        openvdb::Vec3i int_pos(world_pos);
+        openvdb::Coord transformed(int_pos);
+
+        // Convert to a coord
+        acc.setValue(transformed, 1.0);
     }
 }
 
