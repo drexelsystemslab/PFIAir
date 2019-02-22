@@ -12,3 +12,10 @@ time ./morph_tests.py -i 500 -p all
 
 # 2. Post-process the JSON files into a big CSV table + HTML Table
 ./post_process.py
+
+# 3. Refresh the ground truth data. This doesn't need to be done every time,
+# but it doesn't take very long to compute compared to the other steps
+./ground_truth.py
+
+# 4. Apply machine learning to the results
+./analyze_morphs.py
