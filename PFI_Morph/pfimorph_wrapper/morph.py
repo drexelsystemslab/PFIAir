@@ -24,6 +24,7 @@ def cache_morph(args, fnames):
 
     json_fname = "{}/{}-{}.json".format(JSON_DIR, source_name, target_name)
     if os.path.exists(json_fname):
+        print("Using cached morph data: {}".format(json_fname))
         with open(json_fname, 'r') as f:
             stat_data = json.load(f)
         stat_pair = pfimorph.StatPair.from_dict(stat_data)
