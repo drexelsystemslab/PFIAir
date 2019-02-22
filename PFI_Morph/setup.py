@@ -30,7 +30,8 @@ MORPH_FNAMES = [
 ]
 
 BINVOX_FNAMES = [
-    'BinaryToLevelSet.cpp'
+    'BinaryToLevelSet.cpp',
+    'Reorienter.cpp'
 ]
 
 MORPH_SOURCES = [os.path.join(MORPH_DIR, x) for x in MORPH_FNAMES]

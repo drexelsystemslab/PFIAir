@@ -6,6 +6,9 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/TopologyToLevelSet.h>
 
+#include "Reorienter.h"
+
+
 // Binvox data is stored as pairs of (value, run length)
 typedef std::pair<int, int> RunLength;
 typedef std::vector<RunLength> BinvoxData;
@@ -61,6 +64,11 @@ private:
      * Handle a single run in the run-length encoded voxel data
      */
     void populate_run(int length, int start_voxel);
+    /**
+     * Add a run of voxels to a reorienter
+     */
+    void update_reorienter(
+        Reorienter& reorienter, int length, int start_voxel);
 
     /**
      * Convert a 1D index to (x, y, z coordinates)

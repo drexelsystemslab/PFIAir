@@ -17,6 +17,13 @@ void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
 
     int voxel_count = 0;
 
+    /**
+     * Utilitty for computing the correct translation/rotation of the model
+     * that uses the bounding box and centroid to reorient the model
+     */
+    Reorienter reorienter;
+
+    // Loop over the runs of voxels in the file and populate the grid
     for (const RunLength& run : data) {
         // Value is either 0 to 1
         int value = run.first;
@@ -27,7 +34,9 @@ void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
             // for topologyToLevelSet() to work properly
             voxel_count += length;
         } else {
+            // Update the VDB and the reorienter's centroid/bounding box
             populate_run(length, voxel_count);
+            update_reorienter(reorienter, length, voxel_count);
             voxel_count += length;
         }
     }
@@ -35,13 +44,10 @@ void BinaryToLevelSet::populate_grid(const BinvoxData& data) {
     // Set the scale and origin =============================
     using namespace openvdb::math;
 
-    // Scale down so 128 voxels = 1 unit
-    double voxel_size = 1.0 / 128.0;
-
-    // Apply the transformation listed in the binvox file
-    Transform::Ptr xform = Transform::createLinearTransform(voxel_size);
-    xform->preScale(Vec3d(scale, scale, scale));
-    xform->postTranslate(translation);
+    // Use the transformation given by the reorienter object
+    // since the info given in the binvox file is not standardized in the
+    // way we need.
+    Transform::Ptr xform = reorienter.compute_transform();
     binary_grid->setTransform(xform);
 }
 
@@ -53,6 +59,18 @@ void BinaryToLevelSet::populate_run(int length, int start_voxel) {
     for (int i = 0; i < length; i++) {
         openvdb::Coord loc = index_to_coord(i + start_voxel);
         acc.setValue(loc, 1.0);
+    }
+}
+
+/**
+ * Add a sequence of active voxels to the reorienter so it can update
+ * its bounding box and centroid calculations
+ */
+void BinaryToLevelSet::update_reorienter(
+        Reorienter& reorienter, int length, int start_voxel) {
+    for (int i = 0; i < length; i++) {
+        openvdb::Coord loc = index_to_coord(i + start_voxel);
+        reorienter.add_voxel(loc);
     }
 }
 
