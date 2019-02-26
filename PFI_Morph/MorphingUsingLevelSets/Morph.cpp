@@ -41,8 +41,12 @@ MorphStats Morph::morph(
     int frame_count;
     for (frame_count = 1; frame_count < max_iters; frame_count++) {
         // Check if we've consumed too much energy
-        if (energy_consumed < MIN_ENERGY)
+        if (energy_consumed < MIN_ENERGY) {
+            // Increment the frame count so the last frame doesn't get
+            // overwritten by the target frame
+            frame_count++;
             break;
+        }
 
 
         //if(this->checkStopMorph(source_grid, target_grid)) break;
@@ -84,8 +88,12 @@ MorphStats Morph::morph(
         maybe_save_frame(frames_dir, current_ls, frame_count);
 
         // Check if the morph is finished
-        if (morph_is_finished(prev_ls, current_ls, target))
+        if (morph_is_finished(prev_ls, current_ls, target)) {
+            // Again, update the frame count so we don't overwrite the last
+            // frame with the target frame
+            frame_count++;
             break;
+        }
     }
 
     maybe_save_frame(frames_dir, target, frame_count);
