@@ -6,9 +6,9 @@ in a Python function.
 """
 import json
 import os
-from pfimorph cimport morph_cpp
-from pfimorph cimport ModelInfo
-from pfimorph cimport MorphStatsPair
+from lsmorph cimport morph_cpp
+from lsmorph cimport ModelInfo
+from lsmorph cimport MorphStatsPair
 
 cdef class StatPair:
     """

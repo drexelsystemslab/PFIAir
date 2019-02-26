@@ -3,8 +3,8 @@ from Cython.Build import cythonize
 import os
 import multiprocessing
 
-MORPH_DIR = 'MorphingUsingLevelSets'
-BINVOX_DIR = 'VoxelConvert'
+MORPH_DIR = 'cpp/lsmorph'
+BINVOX_DIR = 'cpp/binvox2vdb'
 
 def find_sources():
     """
@@ -17,6 +17,7 @@ def find_sources():
 
 # The source directory has old and new source code. For now, I'm manually
 # filtering for source files
+#TODO: Use the find_sources() method aabove
 MORPH_FNAMES = [
     'morph_extension.cpp',
     'Timer.cpp',
@@ -40,9 +41,9 @@ BINVOX_SOURCES = [os.path.join(BINVOX_DIR, x) for x in BINVOX_FNAMES]
 # Declare an extension module
 morph_ext = Extension(
     # This labels the resulting module, pfimorph.so
-    'pfimorph',
+    'lsmorph',
     # List the main pyx file and all .cpp files needed
-    sources=['pfimorph.pyx'] + MORPH_SOURCES,
+    sources=['pfimorph/lsmorph.pyx'] + MORPH_SOURCES,
     # We need to compile against OpenVDB and other C++ libraries
     libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
     # This is a C++, not C library.
@@ -50,9 +51,11 @@ morph_ext = Extension(
 
 binvox_ext = Extension(
     'binvox2vdb',
-    sources=['binvox2vdb.pyx'] + BINVOX_SOURCES,
+    sources=['pfimorph/binvox2vdb.pyx'] + BINVOX_SOURCES,
     libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
     language='c++')
 
+cython_modules = cythonize([binvox_ext, morph_ext], build_dir='build/cython')
+
 # Setup like any other python library
-setup(ext_modules=cythonize([binvox_ext, morph_ext]))
+setup(ext_modules=cython_modules, include_dirs=['pfimorph'])
