@@ -43,14 +43,14 @@ morph_ext = Extension(
     # This labels the resulting module
     'pfimorph.lsmorph',
     # List the main pyx file and all .cpp files needed
-    sources=['cython/lsmorph.pyx'] + MORPH_SOURCES,
+    sources=['pfimorph/lsmorph.pyx'] + MORPH_SOURCES,
     # We need to compile against OpenVDB and other C++ libraries
     libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
     # This is a C++, not C library.
     language='c++')
 
 binvox_ext = Extension(
-    'binvox2vdb',
+    'pfimorph.binvox2vdb',
     sources=['pfimorph/binvox2vdb.pyx'] + BINVOX_SOURCES,
     libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
     language='c++')
@@ -58,4 +58,4 @@ binvox_ext = Extension(
 cython_modules = cythonize([morph_ext, binvox_ext], build_dir='build/cython')
 
 # Setup like any other python library
-setup(ext_modules=cython_modules) #, include_dirs=['pfimorph'])
+setup(ext_modules=cython_modules)#, include_dirs=['.', 'cython'])
