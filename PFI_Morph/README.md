@@ -63,19 +63,15 @@ PFI_Morph/
 |     |--*.h
 |     |--*.cpp
 |
-|--cython/
+|--pfimorph/            Python/Cython source for orchestrating morphing
+|  |--templates/        Jinja2 templates for generating reports
+|  |--*.py              Python helper source code
+|  |
 |  |--binvox2vdb.pxd    Cython wrapper around the binvox2vdb C++ module
 |  |--binvox2vdb.pyx
 |  |
 |  |--lsmorph.pxd       Cython wrapper around the lsmorph C++ module
 |  |--lsmorph.pyx
-|
-|--pfimorph/            High-level Python source for orchestrating morphing
-|  |--templates/        Jinja2 templates for generating reports
-|  |--*.py              Python helper source code
-|  |
-|  |--binvox2vdb.so     (Generated) The compiled Cython extensions go here
-|  |--lsmorph.so
 |
 |--input/               Input .binvox models will go here
 |  |
