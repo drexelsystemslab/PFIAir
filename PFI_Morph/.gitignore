@@ -24,3 +24,6 @@ Makefile
 pfimorph.cpp
 binvox2vdb.cpp
 cython_debug/
+
+# Python stuff
+*.pyc
