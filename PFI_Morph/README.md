@@ -100,7 +100,7 @@ PFI_Morph/
 |  |  |                         output/morph_table.csv for easier viewing
 |  |  |--<model>_all.html       After morphing, one report is generated
 |  |                           per model, including graphs of the morph data
-|  |--analysis_results  Graphs and other miscellaneous data files
+|  |--analysis_results/ Graphs and other miscellaneous data files
 |                       from the analysis script will go here.
 |
 |--setup.py             Build script for Cython modules (binvox2vdb, lsmorph)

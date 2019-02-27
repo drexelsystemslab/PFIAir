@@ -55,7 +55,7 @@ binvox_ext = Extension(
     libraries=['openvdb', 'tbb', 'Half', 'boost_iostreams'],
     language='c++')
 
-cython_modules = cythonize([morph_ext, binvox_ext], build_dir='build/cython')
+cython_modules = cythonize([binvox_ext, morph_ext], build_dir='build/cython')
 
 # Setup like any other python library
-setup(ext_modules=cython_modules)#, include_dirs=['.', 'cython'])
+setup(ext_modules=cython_modules, include_dirs=['.'])

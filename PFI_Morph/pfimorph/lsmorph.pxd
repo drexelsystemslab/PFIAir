@@ -8,7 +8,7 @@ This module is imported by pfimorph.pyx
 """
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-cdef extern from "MorphingUsingLevelSets/morph_extension.h":
+cdef extern from "cpp/lsmorph/morph_extension.h":
 
     # Input Info ============================================
 

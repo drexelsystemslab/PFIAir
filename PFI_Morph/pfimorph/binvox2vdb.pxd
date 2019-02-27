@@ -4,7 +4,7 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair
 
-cdef extern from "VoxelConvert/BinaryToLevelSet.h":
+cdef extern from "cpp/binvox2vdb/BinaryToLevelSet.h":
     ctypedef pair[int, int] RunLength
     ctypedef vector[RunLength] BinvoxData
 

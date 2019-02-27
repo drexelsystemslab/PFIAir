@@ -20,8 +20,7 @@ cmake_install.cmake
 Makefile
 
 # Cython stuff
+*.so
 pfimorph.cpp
-pfimorph.so
-binvox2vdb.so
 binvox2vdb.cpp
 cython_debug/
