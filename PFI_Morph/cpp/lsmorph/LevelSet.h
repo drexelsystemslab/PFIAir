@@ -3,9 +3,6 @@
 #include <string>
 #include <memory>
 #include <openvdb/openvdb.h>
-#include "Mesh.h"
-
-class Mesh;
 
 /**
  * Utility class that helps iterate over surface values (read-only)
@@ -99,17 +96,6 @@ public:
     LevelSet(std::string fname);
 
     /**
-     * Constructor from vertex list
-     * This is mainly used by Mesh::to_level_set();
-     */
-    LevelSet(
-        const std::vector<openvdb::Vec3s>& vertices,
-        const std::vector<openvdb::Vec3I>& indices_tri,
-        const std::vector<openvdb::Vec4I>& indices_quad,
-        bool is_open_mesh,
-        double half_bandwidth=HALF_BANDWIDTH);
-
-    /**
      * Initialize from a grid pointer.
      */
     LevelSet(openvdb::FloatGrid::Ptr level_set): level_set(level_set) {}
@@ -132,20 +118,6 @@ public:
      * Get the voxel size of the underlying level set
      */
     double get_voxel_size() const;
-
-    /**
-     * Convert a LevelSet to a new Mesh object
-     */
-    Mesh to_mesh();
-
-    /**
-     * Convert to a mesh, populating lists of vertices and faces.
-     * This is used to update an existing Mesh
-     */
-    void to_mesh(
-        std::vector<openvdb::Vec3s>& out_vertices,
-        std::vector<openvdb::Vec3I>& out_indices_tri,
-        std::vector<openvdb::Vec4I>& out_indices_quad);
 
     /**
      * Deep copy the underlying level set and 

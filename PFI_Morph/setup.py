@@ -6,37 +6,17 @@ import multiprocessing
 MORPH_DIR = 'cpp/lsmorph'
 BINVOX_DIR = 'cpp/binvox2vdb'
 
-def find_sources():
+def find_sources(src_dir):
     """
     Find source files automatically
     """
-    for root, dirs, files in os.walk(SRC_DIR):
+    for root, dirs, files in os.walk(src_dir):
         for fname in files:
             if fname.endswith('.cpp'):
                 yield os.path.join(root, fname)
 
-# The source directory has old and new source code. For now, I'm manually
-# filtering for source files
-#TODO: Use the find_sources() method aabove
-MORPH_FNAMES = [
-    'morph_extension.cpp',
-    'Timer.cpp',
-    'Mesh.cpp',
-    'LevelSet.cpp',
-    'BoundingBox.cpp',
-    'PCACalculator.cpp',
-    'Morph.cpp',
-    'MorphStats.cpp',
-    'EnergyCalculator.cpp'
-]
-
-BINVOX_FNAMES = [
-    'BinaryToLevelSet.cpp',
-    'Reorienter.cpp'
-]
-
-MORPH_SOURCES = [os.path.join(MORPH_DIR, x) for x in MORPH_FNAMES]
-BINVOX_SOURCES = [os.path.join(BINVOX_DIR, x) for x in BINVOX_FNAMES]
+MORPH_SOURCES = list(find_sources(MORPH_DIR))
+BINVOX_SOURCES = list(find_sources(BINVOX_DIR))
 
 # Declare an extension module
 morph_ext = Extension(

@@ -1,7 +1,5 @@
 #include "LevelSet.h"
 #include <stdexcept>
-#include <openvdb/tools/MeshToVolume.h>
-#include <openvdb/tools/VolumeToMesh.h>
 #include <openvdb/tools/LevelSetFilter.h>
 
 // SurfaceIterator ====================================================
@@ -88,44 +86,6 @@ LevelSet::LevelSet(std::string fname) {
     level_set = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
 }
 
-LevelSet::LevelSet(
-        const std::vector<openvdb::Vec3s>& vertices,
-        const std::vector<openvdb::Vec3I>& indices_tri,
-        const std::vector<openvdb::Vec4I>& indices_quad,
-        bool is_open_mesh,
-        double half_bandwidth) {
-    using namespace openvdb;
-
-    math::Transform scale = math::Transform();
-    scale.preScale(Vec3d(VOXEL_SIZE));
-
-    if (is_open_mesh) {
-        // Open meshes can only be read in as unsigned distance fields.
-        // However, if we offset the distance field by a constant amount
-        // (3 voxels) we now have an inside which is negative and an outside
-        // which is positive. The inner size will always be the default
-        // bandwidth
-        double inside_width = HALF_BANDWIDTH;
-        // However, the outside bandwidth may be much larger to help prevent
-        // aliasing.
-        double outside_width = half_bandwidth;
-        double full_width = inside_width + outside_width;
-
-        // Convert to an *unsigned* distance field with a width of the
-        // entire desired bandwidth
-        level_set = tools::meshToUnsignedDistanceField<FloatGrid>(
-            scale, vertices, indices_tri, indices_quad, full_width);
-
-        // Set the 0 surface 3 voxels away so we have a level set.
-        convert_unsigned_to_signed();
-    } else {
-        float width = half_bandwidth;
-        level_set = tools::meshToLevelSet<FloatGrid>(
-            scale, vertices, indices_tri, indices_quad, width);
-        level_set->setGridClass(openvdb::GRID_LEVEL_SET);
-    } 
-}
-
 openvdb::FloatGrid::Ptr LevelSet::get_level_set() {
     return level_set;
 }
@@ -191,15 +151,6 @@ void LevelSet::convert_unsigned_to_signed() {
 
     // Mark this grid as a level set so OpenVDB doesn't complain.
     level_set->setGridClass(openvdb::GRID_LEVEL_SET);
-}
-
-void LevelSet::to_mesh(
-        std::vector<openvdb::Vec3s>& out_vertices,
-        std::vector<openvdb::Vec3I>& out_indices_tri,
-        std::vector<openvdb::Vec4I>& out_indices_quad) {
-
-    openvdb::tools::volumeToMesh<openvdb::FloatGrid>(
-        *level_set, out_vertices, out_indices_tri, out_indices_quad);
 }
 
 LevelSet LevelSet::deep_copy() const { 
