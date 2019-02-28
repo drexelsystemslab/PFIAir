@@ -1,14 +1,27 @@
 #!/bin/bash
+set -e
+
+if [[ -z "$1" ]]
+then
+    echo "Usage: ./find_shapenet_models.sh <shapenet_directory> [model_index]"
+    echo "Default Model Index: model_index.csv"
+    exit 1
+fi
+
+# Path to the ShapeNet database
+SHAPENET_DIR="$1"
+
+# Path to the index CSV file. defaults to model_index.csv in the same
+# directory
+INDEX_FILE=${2:-model_index.csv}
 
 # Get the first 2 columns from the CSV file, ignoring the header row
 function get_uuids {
     # column 1 is my human-readable model IDs. column 2 is the official
     # ShapeNet UUID
-    awk -F ',' 'NR > 1 {print $1, $2}' ShapeNetGroundTruth.csv
+    awk -F ',' 'NR > 1 {print $1, $2}' $INDEX_FILE
 }
 
-# This is where I keep the ShapeNet database
-SHAPENET_DIR=~/RES/data_partition/ShapeNetCore.v2
 
 # Unfortunately, all the models have the same generic filename
 MODEL_FNAME=models/model_normalized.solid.binvox
