@@ -35,7 +35,7 @@ do
     for model in $SHAPENET_DIR/*/$uuid/$MODEL_FNAME
     do
         # Copy the model to this directory, giving it a better name
-        cp $model ./$model_name.binvox
+        cp $model ./binvox/$model_name.binvox
 
     done
 done < <(get_uuids)
