@@ -2,7 +2,7 @@
 from __future__ import print_function
 import argparse
 
-from pfimorph_wrapper import util, morph, reports
+from pfimorph import util, morph, reports
 
 def mesh_fname(fname):
     """
@@ -72,7 +72,7 @@ def morph_one(args):
     # Save a report
     source_name = util.get_short_name(args.source_model)
     target_name = util.get_short_name(args.target_model)
-    report_fname = "Reports/{}_{}.html".format(source_name, target_name)
+    report_fname = "output/reports/{}_{}.html".format(source_name, target_name)
     reports.write_report(report_fname, [stat_pair]) 
 
 def parse_args():

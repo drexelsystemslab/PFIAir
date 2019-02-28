@@ -4,8 +4,8 @@ import json
 import multiprocessing
 import functools
 
-import pfimorph
-from pfimorph_wrapper import util
+import lsmorph
+from pfimorph import util
 
 def cache_morph(args, fnames):
     """
@@ -27,7 +27,7 @@ def cache_morph(args, fnames):
         print("Using cached morph data: {}".format(json_fname))
         with open(json_fname, 'r') as f:
             stat_data = json.load(f)
-        stat_pair = pfimorph.StatPair.from_dict(stat_data)
+        stat_pair = lsmorph.StatPair.from_dict(stat_data)
     else:
         stat_pair = morph_pair(args, fnames)
         # Save the stats as a JSON file for later analysis
@@ -55,7 +55,7 @@ def morph_pair(args, fnames):
     target_vdb, target_high_res = util.binvox_to_vdb(target_fname)
 
     # Set up the morph
-    morpher = pfimorph.Morpher()
+    morpher = lsmorph.Morpher()
     morpher.set_source_info(source_name, source_vdb, source_high_res)
     morpher.set_target_info(target_name, target_vdb, target_high_res)
     

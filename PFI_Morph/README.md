@@ -124,7 +124,7 @@ PFI_Morph/
 |                               from a copy of the ShapeNet dataset or supplied
 |                               by the user.
 |--output/              Default output directory for this project. This
-|  |                    can be reconfigured in the config file.
+|  |                    can be reconfigured in `pfimorph.cfg`
 |  |--vdb_cache/        After converting .binvox -> .vdb files, the results
 |  |                    are cached here. This directory can be 
 |  |--morphs/           If the user opts to save .vdb files for each frame

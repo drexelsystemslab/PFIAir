@@ -2,7 +2,7 @@ import math
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pfimorph_wrapper import util 
+from pfimorph import util 
 
 def format_number(num):
     # Can't compute log10(0)
@@ -26,7 +26,7 @@ def write_report(fname, stat_pairs):
     # Set up a Jinja templating environment, including a custom
     # format function for numbers
     env = Environment(
-        loader=FileSystemLoader("templates"),
+        loader=FileSystemLoader("pfimorph/templates"),
         autoescape=select_autoescape(['html', 'xml']))
     env.filters['format_number'] = format_number
 
@@ -61,5 +61,5 @@ def write_many_reports(models, table):
     N = len(models)
     for i in xrange(N):
         source = util.get_short_name(models[i])
-        report_fname = "Reports/{}_all.html".format(source)
+        report_fname = "output/reports/{}_all.html".format(source)
         write_report(report_fname, table[i])
