@@ -113,33 +113,41 @@ PFI_Morph/
 |
 |--input/               Input .binvox models will go here
 |  |
-|  |--ShapeNetModels.csv        List of models from the ShapeNet database with
+|  |--model_index.csv           List of models from the ShapeNet database with
 |  |                            their UUIDs, along with a list of human-defined
 |  |                            features to describe each model for creating
 |  |                            the ground truth data. NOTE: This file can
-|  |                            be modified by the user
+|  |                            be modified by the user to select different
+|  |                            models
 |  |--find_shapenet_models.sh   Utility script to locate ShapeNet models via
 |  |                            UUIDs usiing ShapeNetModels.csv
-|  |--*.binvox                  (Not Included) binvox files either fetched
+|  |--binvox/
+|     |--*.binvox               (Not Included) binvox files either fetched
 |                               from a copy of the ShapeNet dataset or supplied
 |                               by the user.
-|--output/              Default output directory for this project. This
-|  |                    can be reconfigured in `pfimorph.cfg`
-|  |--vdb_cache/        After converting .binvox -> .vdb files, the results
-|  |                    are cached here. This directory can be 
-|  |--morphs/           If the user opts to save .vdb files for each frame
-|  |                    in the morph animation, they will show up here.
-|  |--morph_cache/      Cache of .json files that store the calculated stats
-|  |                    from each pair of morphs. If the initial processing
-|  |                    has to be stopped halfway through, this allows the
-|  |                    user to continue from the last complted morph.
+|--output/                  Default output directory for this project. This
+|  |                        can be reconfigured in `pfimorph.cfg`
+|  |--preprocessed_vdbs/    After converting .binvox -> .vdb files, the results
+|  |  |--*.vdb
+|  |                        are cached here.
+|  |--morph_animations/     If the user opts to save .vdb files for each frame
+|  |  |--*.vdb              in the morph animation, they will show up here.
+|  |
+|  |--morph_cache/          Cache of .json files that store the calculated 
+|  |  |--*.json             stats from each pair of morphs. If the initial 
+|  |                        processing has to be stopped halfway through, this 
+|  |                        allows the user to continue from the last completed
+|  |                        morph.
 |  |--reports/          HTML files of the morphing results and other reports
 |  |  |--morph_table.html       HTML table representation of 
 |  |  |                         output/morph_table.csv for easier viewing
 |  |  |--<model>_all.html       After morphing, one report is generated
 |  |                           per model, including graphs of the morph data
-|  |--analysis_results/ Graphs and other miscellaneous data files
-|                       from the analysis script will go here.
+|  |--analytics/            Graphs and other miscellaneous data files
+|                           from the analysis script will go here.
 |
 |--setup.py             Build script for Cython modules (binvox2vdb, lsmorph)
+|--pfimorph.cfg         Config file so the user can specify where input/output
+                        files will go. The example file given includes
+                        comments about what each directory is for
 ```
