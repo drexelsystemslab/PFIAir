@@ -3,6 +3,7 @@ import math
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pfimorph import util 
+from pfimorph.config import config
 
 def format_number(num):
     # Can't compute log10(0)
@@ -59,7 +60,9 @@ def write_many_reports(models, table):
     make_stat_table()
     """
     N = len(models)
+    report_dir = config.get('output', 'report_dir')
     for i in xrange(N):
         source = util.get_short_name(models[i])
-        report_fname = "output/reports/{}_all.html".format(source)
+        report_basename = "{}_all.html".format(source)
+        report_fname = os.path.join(report_dir, report_basename)
         write_report(report_fname, table[i])

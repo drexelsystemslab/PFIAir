@@ -1,4 +1,4 @@
-from ConfigParser import ConfigParser
+from ConfigParser import SafeConfigParser
 
-config = ConfigParser()
+config = SafeConfigParser()
 config.read('pfimorph.cfg')

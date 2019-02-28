@@ -4,8 +4,9 @@ import json
 import multiprocessing
 import functools
 
-import lsmorph
 from pfimorph import util
+from pfimorph import lsmorph
+from pfimorph.config import config
 
 def cache_morph(args, fnames):
     """
@@ -17,12 +18,12 @@ def cache_morph(args, fnames):
     This is a wrapper function designed to 
     """
 
-    JSON_DIR = 'output/json'
+    json_dir = config.get('output', 'morph_cache')
     source_fname, target_fname = fnames
     source_name = util.get_short_name(source_fname)
     target_name = util.get_short_name(target_fname)
 
-    json_fname = "{}/{}-{}.json".format(JSON_DIR, source_name, target_name)
+    json_fname = "{}/{}-{}.json".format(json_dir, source_name, target_name)
     if os.path.exists(json_fname):
         print("Using cached morph data: {}".format(json_fname))
         with open(json_fname, 'r') as f:
@@ -31,7 +32,7 @@ def cache_morph(args, fnames):
     else:
         stat_pair = morph_pair(args, fnames)
         # Save the stats as a JSON file for later analysis
-        stat_pair.save_json(JSON_DIR)
+        stat_pair.save_json(json_dir)
 
     return stat_pair
 

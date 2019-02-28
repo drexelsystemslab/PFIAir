@@ -1,28 +1,12 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import os
 import argparse
 
-from pfimorph import util, morph, reports
-
-def mesh_fname(fname):
-    """
-    Argparse type function for picking a mesh filename. 
-   
-    If the mesh is in .obj format, the filename is returned unmodified
-
-    If the mesh is in .stl format, convert the model to {CONVERTED_DIR}/foo.obj
-    and return this new path.
-    """
-    if fname.endswith('.obj'):
-        # OBJ files are the desired format
-        return fname
-    elif fname.endswith('.stl'):
-        # Convert the model into an object file
-        return util.stl_to_obj(fname)
-    else:
-        # No other model formats are expected
-        raise argparse.ArgumentTypeError(
-            "'{}': Filename must end in .obj or .stl".format(fname))
+from pfimorph import util
+from pfimorph import morph
+from pfimorph import reports
+from pfimorph.config import config
 
 def binvox_fname(fname):
     """
@@ -72,7 +56,10 @@ def morph_one(args):
     # Save a report
     source_name = util.get_short_name(args.source_model)
     target_name = util.get_short_name(args.target_model)
-    report_fname = "output/reports/{}_{}.html".format(source_name, target_name)
+
+    report_dir = config.get('output', 'report_dir')
+    report_basename = '{}_{}.html'.format(source_name, target_name)
+    report_fname = os.path.join(report_dir, report_basename)
     reports.write_report(report_fname, [stat_pair]) 
 
 def parse_args():

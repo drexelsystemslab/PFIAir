@@ -4,13 +4,7 @@ import glob
 import trimesh
 
 from binvox2vdb import BinvoxConverter
-
-def is_open_mesh(obj_file):
-    """
-    Check if a model is closed or open
-    """
-    mesh = trimesh.io.load.load(obj_file);
-    return not mesh.is_watertight
+from pfimorph.config import config
 
 def make_directories(dirname):
     """
@@ -18,27 +12,6 @@ def make_directories(dirname):
     """
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-
-def stl_to_obj(stl_fname):
-    """
-    Given an STL filename, convert it to an OBJ file if we haven't
-    already. Then return the converted OBJ filename
-    """
-    CONVERTED_DIR = 'converted_objs'
-
-    # Get the model name minus the path and extension
-    model_name = get_short_name(stl_fname)
-
-    # new output file is in the converted model directory
-    new_fname = os.path.join(CONVERTED_DIR, model_name + '.obj')
-
-    # Convert the model if it doesn't already exist
-    if not os.path.exists(new_fname):
-        make_directories(CONVERTED_DIR)
-        mesh = trimesh.io.load.load(stl_fname)
-        trimesh.io.export.export_mesh(mesh, new_fname)
-
-    return new_fname
 
 def vdb_filenames(binvox_fname):
     """
@@ -53,11 +26,11 @@ def vdb_filenames(binvox_fname):
     vdb_fname = '{}.vdb'.format(model_name)
     high_res_fname = '{}_high_res.vdb'.format(model_name) 
 
-    VDB_DIR = 'output/converted_vdbs'
-    make_directories(VDB_DIR)
+    vdb_dir = config.get('output', 'preprocessed_cache')
+    make_directories(vdb_dir)
     return (
-        os.path.join(VDB_DIR, vdb_fname),
-        os.path.join(VDB_DIR, high_res_fname))
+        os.path.join(vdb_dir, vdb_fname),
+        os.path.join(vdb_dir, high_res_fname))
 
 def binvox_to_vdb(binvox_fname):
     """
@@ -90,13 +63,9 @@ def get_models():
     """
     Get a list of models from one of the data sets
     """
-    return glob.glob('input/shapenet/*.binvox')
-    '''
-    if model_type == 'closed':
-        return glob.glob('princeton/*.obj')
-    else:
-        return glob.glob('open_mesh_objs/all_pairs/*.obj')
-    '''
+    binvox_dir = config.get('input', 'binvox_dir')
+    glob_pattern = os.path.join(binvox_dir, '*.binvox')
+    return glob.glob(glob_pattern)
 
 def get_model_pairs(models):
     """
