@@ -65,7 +65,7 @@ def morph_pair(args, fnames):
     
     # Actually run the morph and return the result
     return morpher.morph(
-        vdb_dir=vdb_dir,
+        vdb_dir=os.path.join(vdb_dir, ''),
         save_debug_models=args.save_debug_models, 
         profile=args.profile,
         max_iters=args.iter_limit) 
