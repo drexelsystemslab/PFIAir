@@ -59,9 +59,13 @@ def morph_pair(args, fnames):
     morpher = lsmorph.Morpher()
     morpher.set_source_info(source_name, source_vdb, source_high_res)
     morpher.set_target_info(target_name, target_vdb, target_high_res)
+
+    # look up where to store VDB files from the config
+    vdb_dir = config.get('output', 'morph_animations_dir')
     
     # Actually run the morph and return the result
     return morpher.morph(
+        vdb_dir=vdb_dir,
         save_debug_models=args.save_debug_models, 
         profile=args.profile,
         max_iters=args.iter_limit) 

@@ -120,7 +120,10 @@ PFI_Morph/
 |  |                            be modified by the user to select different
 |  |                            models
 |  |--find_shapenet_models.sh   Utility script to locate ShapeNet models via
-|  |                            UUIDs usiing ShapeNetModels.csv
+|  |                            UUIDs usiing ShapeNetModels.csv. The models
+|  |                            are always put in the binvox folder in this
+|  |                            directory, it is up to the user to move
+|  |                            them if a different directory is desired
 |  |--binvox/
 |     |--*.binvox               (Not Included) binvox files either fetched
 |                               from a copy of the ShapeNet dataset or supplied

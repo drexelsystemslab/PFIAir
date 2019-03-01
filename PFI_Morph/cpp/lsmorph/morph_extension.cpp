@@ -12,6 +12,7 @@
 MorphStatsPair morph_cpp(
         const ModelInfo& source_model,
         const ModelInfo& target_model,
+        std::string vdb_dir,
         bool save_debug_models,
         bool profile,
         int max_iters) {
@@ -36,13 +37,13 @@ MorphStatsPair morph_cpp(
     std::string forwards_dir = "";
     std::string backwards_dir = "";
     if (save_debug_models) {
-        mkdir_quiet(VDB_DIR);
+        mkdir_quiet(vdb_dir);
         forwards_dir = 
-            VDB_DIR + source_model.name + "-" + target_model.name + "/";
+            vdb_dir + source_model.name + "-" + target_model.name + "/";
         mkdir_quiet(forwards_dir);
 
         backwards_dir = 
-            VDB_DIR + target_model.name + "-" + source_model.name + "/";
+            vdb_dir + target_model.name + "-" + source_model.name + "/";
         mkdir_quiet(backwards_dir);
     }
 
@@ -93,17 +94,4 @@ bool file_exists(std::string fname) {
 void mkdir_quiet(std::string dirname) {
     if (!file_exists(dirname))
         mkdir(dirname.c_str(), S_IRWXU);
-}
-
-std::string get_cache_name(
-        std::string original_name, std::string new_extension) {
-    // Strip off the old path
-    int last_slash = original_name.find_last_of("/");
-    std::string basename = original_name.substr(last_slash + 1);
-    
-    // Change the extension
-    int dot_pos = basename.find_last_of(".");
-    std::string name = basename.substr(0, dot_pos);
-
-    return PREPROCESS_CACHE + name + "." + new_extension;
 }

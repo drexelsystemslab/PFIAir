@@ -57,6 +57,7 @@ cdef extern from "cpp/lsmorph/morph_extension.h":
     cdef MorphStatsPair morph_cpp(
         ModelInfo source_model,
         ModelInfo target_model,
+        string vdb_dir,
         bint save_debug_models,
         bint profile,
         int max_iters) except +

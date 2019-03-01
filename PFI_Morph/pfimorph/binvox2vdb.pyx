@@ -1,6 +1,6 @@
 # cython: language_level = 2
 # distutils: language = c++
-from binvox2vdb cimport BinaryToLevelSet, BinvoxData, RunLength
+from pfimorph.binvox2vdb cimport BinaryToLevelSet, BinvoxData, RunLength
 
 cdef class BinvoxConverter:
     cdef string fname

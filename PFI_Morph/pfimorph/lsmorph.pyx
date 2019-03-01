@@ -6,9 +6,9 @@ in a Python function.
 """
 import json
 import os
-from lsmorph cimport morph_cpp
-from lsmorph cimport ModelInfo
-from lsmorph cimport MorphStatsPair
+from pfimorph.lsmorph cimport morph_cpp
+from pfimorph.lsmorph cimport ModelInfo
+from pfimorph.lsmorph cimport MorphStatsPair
 
 cdef class StatPair:
     """
@@ -289,6 +289,7 @@ cdef class Morpher:
 
     def morph(
             self, 
+            vdb_dir,
             save_debug_models=False, 
             profile=False, 
             max_iters=500):
@@ -298,6 +299,7 @@ cdef class Morpher:
         result = morph_cpp(
             self.source_model,
             self.target_model,
+            vdb_dir,
             save_debug_models,
             profile,
             max_iters)
