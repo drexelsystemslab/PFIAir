@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import os
 
 import pandas
 import matplotlib.pyplot as plt
 import seaborn
 seaborn.set()
 
-FEATURE_FILE = "input/shapenet/ShapeNetGroundTruth.csv"
+from pfimorph.config import config
 
 def get_data():
-    df = pandas.read_csv(FEATURE_FILE)
+    model_index = config.get('input', 'model_index')
+    df = pandas.read_csv(model_index)
     # The UUID is only needed for locating the binvox files. For this
     # script we only care about the other columns.
     return df.drop(columns='UUID').sort_values('Category')
@@ -88,7 +90,6 @@ def make_heatmap(adjacency_list, fname):
     label_order = adjacency_list.index.get_level_values(0).unique()
 
     adjacency_matrix = adjacency_list.unstack()
-    #adjacency_matrix.columns = adjacency_matrix.columns.droplevel()
     adjacency_matrix = adjacency_matrix.reindex(
         index=label_order, columns=label_order.copy())
     adjacency_matrix.index.name = 'Source Model'
@@ -117,17 +118,32 @@ def main():
     # Apply a dissimilarity function to each row
     n_by_n['dissimilarity'] = n_by_n.apply(compute_dissimilarity, axis=1)
 
+    # Output directory
+    analytics_dir = config.get('output', 'analytics_dir')
+
     # for the detailed view, drop all features but the dissimilarity
     adjacency_list = n_by_n.set_index(
         ['Model Name_source', 'Model Name_target'])['dissimilarity']
-    adjacency_list.to_csv('output/expected_dissimilarity.csv')
-    make_heatmap(adjacency_list, 'output/expected_dissimilarity.png')
+
+    # Output a CSV file of the data and a heatmap for an easier view
+    dissim_csv = os.path.join(analytics_dir, 'expected_dissimilarity.csv')
+    adjacency_list.to_csv(dissim_csv)
+    print("Created Dissimilarity Data File, {}".format(dissim_csv))
+    dissim_png = os.path.join(analytics_dir, 'expected_dissimilarity.png')
+    make_heatmap(adjacency_list, dissim_png)
+    print("Created Dissimilarity Heatmap, {}".format(dissim_png))
 
     # For a higher-level view, let's just average the categories
     category_avgs = n_by_n.groupby(
         ['Category_source', 'Category_target']).mean()['dissimilarity']
-    category_avgs.to_csv('output/expected_category_avgs.csv')
-    make_heatmap(category_avgs, 'output/expected_category_avgs.png')
+
+    # Again, output a CSV file and a heatmap
+    category_csv = os.path.join(analytics_dir, 'expected_category_avgs.csv')
+    category_avgs.to_csv(category_csv)
+    print("Created Category Avg. Data File, {}".format(category_csv))
+    category_png = os.path.join(analytics_dir, 'expected_category_avgs.png')
+    make_heatmap(category_avgs, category_png)
+    print("Created Category Avg. Heatmap, {}".format(category_png))
 
 if __name__ == "__main__":
     main()
