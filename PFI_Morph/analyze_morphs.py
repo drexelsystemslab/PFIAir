@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import os
 
 import pandas
 import numpy
@@ -13,19 +14,25 @@ from sklearn.pipeline import make_pipeline
 
 numpy.set_printoptions(precision=3, suppress=True)
 
+from pfimorph.config import config
+
+ANALYTICS_DIR = config.get('output', 'analytics_dir')
+
 def get_data_frame():
     """
     Read the CSV file outputted by post_process.py
     """
-    df = pandas.read_csv('output/test_table.csv')
+    csv_file = os.path.join(ANALYTICS_DIR, 'morph_table.csv')
+    df = pandas.read_csv(csv_file)
     return df.set_index(['source', 'target'])
 
 def get_expected_dissimilarity():
     """
     Get the expected dissimilarity table created in ground_truth.py
     """
+    csv_file = os.path.join(ANALYTICS_DIR, 'expected_dissimilarity.csv')
     df = pandas.read_csv(
-        'output/expected_dissimilarity.csv', 
+        csv_file,
         header=None,
         names=['source', 'target', 'expected_dissimilarity'])
     return df.set_index(['source', 'target'])
@@ -81,8 +88,9 @@ def linreg(X, Y):
     pipeline = make_pipeline(StandardScaler(), LinearRegression())
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
+    plot_file = os.path.join(ANALYTICS_DIR, 'linreg.png')
     plot_reg(
-        'output/linreg.png', 
+        plot_file,
         'LinReg', 
         predicted, 
         Y_test)
@@ -100,8 +108,9 @@ def linreg_pca(X, Y, n):
         StandardScaler(), PCA(n_components=n), LinearRegression())
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
+    plot_file = os.path.join(ANALYTICS_DIR, 'linreg_pca{}.png'.format(n))
     plot_reg(
-        'output/linreg_pca{}.png'.format(n), 
+        plot_file,
         'LinReg with PCA ({} Components)'.format(n), 
         predicted, 
         Y_test)
@@ -114,8 +123,9 @@ def svr(X, Y, deg):
         StandardScaler(), SVR(kernel='poly', degree=deg))
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
+    plot_file = os.path.join(ANALYTICS_DIR, 'svr{}.png'.format(deg))
     plot_reg(
-        'output/svr{}.png'.format(deg), 
+        plot_file, 
         'SVR (Polynomial degree={})'.format(deg), 
         predicted, 
         Y_test) 
@@ -129,8 +139,9 @@ def svr_pca(X, Y, deg, n):
         StandardScaler(), PCA(n_components=n), SVR(kernel='poly', degree=deg, gamma='auto'))
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
+    plot_file = os.path.join(ANALYTICS_DIR, 'svr{}_pca{}.png'.format(deg, n))
     plot_reg(
-        'output/svr{}_pca{}.png'.format(deg, n), 
+        plot_file,
         'SVR (Polynomial degree={}) with PCA ({})'.format(deg, n), 
         predicted, 
         Y_test) 
