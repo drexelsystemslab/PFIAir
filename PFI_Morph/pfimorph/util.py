@@ -1,8 +1,6 @@
 import os
 import glob
 
-import trimesh
-
 from binvox2vdb import BinvoxConverter
 from pfimorph.config import config
 

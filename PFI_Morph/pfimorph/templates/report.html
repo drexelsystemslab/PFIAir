@@ -78,28 +78,12 @@
                 {{stat_pair.forward_curves['max_diff_target'] | tojson}},
                 {{stat_pair.backward_curves['max_diff_target'] | tojson}},
                 WINDOW_SIZE);
-            make_chart(
-                '{{stat_pair.source_name}}',
-                '{{stat_pair.target_name}}',
-                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-prev', 
-                '# Voxels Different (prev -> curr)',
-                {{stat_pair.forward_curves['voxels_diff_prev'] | tojson}},
-                {{stat_pair.backward_curves['voxels_diff_prev'] | tojson}},
-                WINDOW_SIZE);
-            make_chart(
-                '{{stat_pair.source_name}}',
-                '{{stat_pair.target_name}}',
-                '{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-target', 
-                '# Voxels Different (curr -> target)',
-                {{stat_pair.forward_curves['voxels_diff_target'] | tojson}},
-                {{stat_pair.backward_curves['voxels_diff_target'] | tojson}},
-                WINDOW_SIZE);
             {% endfor -%}
         };
     </script>
 </head>
 <body>
-    <img src='images/{{source_name}}.png' alt="{{source_name}}"/>
+    <h3>Morph Results for Source Model {{source_name}}</h3>
     <table id='morph_table' class='table table-striped table-bordered'>
         <tbody>
             {% for stat_pair in stat_pairs -%}
@@ -109,10 +93,8 @@
                 {% endfor -%}
             </tr>
             <tr>
-                <td rowspan='4' style='border-bottom:1px black solid'>
-                    <img class="table_img", 
-                         src="images/{{stat_pair.target_name}}.png" 
-                         alt="{{stat_pair.target_name}}" />
+                <td rowspan='4'>
+                    {{stat_pair.target_name}}
                 </td>
                 <td colspan="{{columns|length}}">
                     Forward: {{stat_pair.source_name}}&rarr;{{stat_pair.target_name}}
@@ -144,12 +126,8 @@
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-surf-voxels" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-prev" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-target" width="600" height="300"></canvas>
-                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-prev" width="600" height="300"></canvas>
-                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-target" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-prev-rolling-avg" width="600" height="300"></canvas>
                 <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-max-diff-target-rolling-avg" width="600" height="300"></canvas>
-                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-prev-rolling-avg" width="600" height="300"></canvas>
-                <canvas id="{{stat_pair.source_name}}-{{stat_pair.target_name}}-voxels-diff-target-rolling-avg" width="600" height="300"></canvas>
                 </td>
             </tr>
             {% endfor -%}

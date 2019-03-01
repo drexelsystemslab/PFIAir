@@ -15,7 +15,7 @@ cdef class StatPair:
     Thin Python wrapper around a MorphStatsPair from C++ land.
     """
     COLUMNS = [
-        "Image",
+        "Target Model",
         "CFL Iterations",
         "Time steps",
         "Source Voxel Count",

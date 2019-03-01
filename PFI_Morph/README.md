@@ -145,7 +145,11 @@ PFI_Morph/
 |  |  |--morph_table.html       HTML table representation of 
 |  |  |                         output/morph_table.csv for easier viewing
 |  |  |--<model>_all.html       After morphing, one report is generated
-|  |                           per model, including graphs of the morph data
+|  |  |                         per model, including graphs of the morph data
+|  |  |
+|  |  |--styles.css             Stylesheet for the report
+|  |  |--scripts/graph.js       Needed to display the graphs in each report
+|  |  
 |  |--analytics/            Graphs and other miscellaneous data files
 |                           from the analysis script will go here.
 |
