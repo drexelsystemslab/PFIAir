@@ -140,7 +140,9 @@ PFI_Morph/
 |  |  |--*.json             stats from each pair of morphs. If the initial 
 |  |                        processing has to be stopped halfway through, this 
 |  |                        allows the user to continue from the last completed
-|  |                        morph.
+|  |                        morph. These files are also used as input to the
+|  |                        analysis scripts
+|  |                        
 |  |--reports/          HTML files of the morphing results and other reports
 |  |  |--morph_table.html       HTML table representation of 
 |  |  |                         output/morph_table.csv for easier viewing

@@ -5,20 +5,24 @@ import os
 
 import pandas
 
+from pfimorph.config import config
+
 def get_fnames():
     """
-    Crawl through the output/json/ directory and
-    gather up all json files
+    Crawl through the morph cache directory and
+    gather up all json files.
 
     This assumes that there are no extraneous files
     """
-    for root, _, files in os.walk('output/json'):
+    morph_cache = config.get('output', 'morph_cache')
+    for root, _, files in os.walk(morph_cache):
         for f in files:
-            yield os.path.join(root, f)
+            if f.endswith('.json'):
+                yield os.path.join(root, f)
 
 def get_stat_pairs():
     """
-    Iterate over .json files in the output/json/ directory
+    Iterate over .json files in the morph cache directory
     and generate a list of dictionaries of the contents
     """
     for fname in get_fnames():
@@ -170,11 +174,19 @@ def main():
     table = make_data_frame()
     
     # Generate an HTML table for viewing in the browser
-    with open('Reports/test_table.html', 'w') as f:
+    report_dir = config.get('output', 'report_dir') 
+    report_html = 'morph_table.html'
+    html_fname = os.path.join(report_dir, report_html)
+    with open(html_fname, 'w') as f:
         f.write('<html><body>{}</body></html>'.format(table.to_html()));
+    print("Saved HTML report to {}".format(html_fname))
 
     # and a CSV file for use in a later script for machine learning
-    table.to_csv('output/test_table.csv')
+    analytics_dir = config.get('output', 'analytics_dir')
+    report_csv = 'morph_table.csv'
+    csv_fname = os.path.join(analytics_dir, report_csv)
+    table.to_csv(csv_fname)
+    print("Saved CSV report to {}".format(csv_fname))
 
 if __name__ == "__main__":
     main()
