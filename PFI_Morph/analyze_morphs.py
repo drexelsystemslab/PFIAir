@@ -7,6 +7,8 @@ import numpy
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.svm import SVR
@@ -85,17 +87,60 @@ def linreg(X, Y):
     X_train, X_test, Y_train, Y_test = train_test_split(
         X, Y, test_size=0.25, random_state=0)
 
-    pipeline = make_pipeline(StandardScaler(), LinearRegression())
+    print(X_train.shape)
+
+    pipeline = make_pipeline(
+        StandardScaler(), LinearRegression())
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
+
+    model = pipeline.named_steps['linearregression'].coef_
+    intercept = pipeline.named_steps['linearregression'].intercept_
+    print(model)
+    print(intercept)
+
     plot_file = os.path.join(ANALYTICS_DIR, 'linreg.png')
     plot_reg(
         plot_file,
-        'LinReg', 
+        'Dissimilarity: (LinReg) Predicted vs Actual', 
         predicted, 
         Y_test)
     print("linreg R^2", pipeline.score(X_test, Y_test))
 
+def linreg_cross_validation(X, Y):
+    """
+    Perform linear regression on arrays X and Y. This is done with the
+    traditional test/train split
+    """
+
+    pipeline = make_pipeline(
+        StandardScaler(), LinearRegression())
+
+    predictions = cross_val_predict(pipeline,  X, Y, cv=10)
+    scores = cross_val_score(pipeline, X, Y, cv=10)
+
+    plot_file = os.path.join(ANALYTICS_DIR, 'linreg_cv.png')
+    plot_reg(
+        plot_file,
+        'Dissimilarity: (LinReg Cross-Validated) Predicted vs Actual', 
+        predictions, 
+        Y)
+    print("Average Cross-Validated Score", scores.mean())
+
+
+    '''
+    pipeline.fit(X_train, Y_train)
+    predicted = pipeline.predict(X_test)
+
+    model = pipeline.named_steps['linearregression'].coef_
+    intercept = pipeline.named_steps['linearregression'].intercept_
+    print(model)
+    print(intercept)
+
+    '''
+    
+
+'''
 def linreg_pca(X, Y, n):
     """
     Perform linear regression using PCA analysis to reduce the feature
@@ -105,7 +150,7 @@ def linreg_pca(X, Y, n):
         X, Y, test_size = 0.25, random_state=0)
     
     pipeline = make_pipeline(
-        StandardScaler(), PCA(n_components=n), LinearRegression())
+        StandardScaler(), PCA(n_components=n), LinearRegression(fit_intercept=False))
     pipeline.fit(X_train, Y_train)
     predicted = pipeline.predict(X_test)
     plot_file = os.path.join(ANALYTICS_DIR, 'linreg_pca{}.png'.format(n))
@@ -114,6 +159,7 @@ def linreg_pca(X, Y, n):
         'LinReg with PCA ({} Components)'.format(n), 
         predicted, 
         Y_test)
+'''
 
 def svr(X, Y, deg):
     X_train, X_test, Y_train, Y_test = train_test_split(
@@ -152,14 +198,12 @@ def main():
     expected = get_expected_dissimilarity()
     merged = pandas.merge(data, expected, left_index=True, right_index=True)
 
+    print(merged.columns)
+
     X, Y = to_arrays(merged)
     linreg(X, Y)
-    #linreg_pca(X, Y, 2)
-    #linreg_pca(X, Y, 3)
-    svr(X, Y, 3)
-    #svr(X, Y, 4)
-    #svr_pca(X, Y, 3, 2)
-    #svr_pca(X, Y, 4, 3)
+    linreg_cross_validation(X, Y)
+    #svr(X, Y, 3)
 
 if __name__ == '__main__':
     main()
