@@ -3,11 +3,9 @@ from __future__ import print_function
 import os
 
 import pandas
-import matplotlib.pyplot as plt
-import seaborn
-seaborn.set()
 
 from pfimorph.config import config
+from pfimorph import plots
 
 def get_data():
     model_index = config.get('input', 'model_index')
@@ -80,34 +78,6 @@ def compute_dissimilarity(row):
     # dissimilarity = 1 - similarity
     return 1.0 - similarity
 
-def make_heatmap(adjacency_list, fname):
-    """
-    Make a heatmap of the nxn matrix to make it easier to check the
-    results
-    """
-
-    # Use this label order to keep the models together
-    label_order = adjacency_list.index.get_level_values(0).unique()
-
-    adjacency_matrix = adjacency_list.unstack()
-    adjacency_matrix = adjacency_matrix.reindex(
-        index=label_order, columns=label_order.copy())
-    adjacency_matrix.index.name = 'Source Model'
-    adjacency_matrix.columns.name = 'Target Model'
-
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.set_title('Expected Dissimilarity')
-    heatmap = seaborn.heatmap(
-        adjacency_matrix,
-        xticklabels=True, 
-        yticklabels=True,
-        cmap='plasma',
-        square=True,
-        ax=ax,
-        cbar_kws={'label': 'Dissimilarity'})
-    fig.tight_layout()
-    fig.savefig(fname)
-
 def main():
     # Read in the CSV file
     data_frame = get_data() 
@@ -130,7 +100,7 @@ def main():
     adjacency_list.to_csv(dissim_csv)
     print("Created Dissimilarity Data File, {}".format(dissim_csv))
     dissim_png = os.path.join(analytics_dir, 'expected_dissimilarity.png')
-    make_heatmap(adjacency_list, dissim_png)
+    plots.make_heatmap('Expected Dissimilarity', adjacency_list, dissim_png)
     print("Created Dissimilarity Heatmap, {}".format(dissim_png))
 
     # For a higher-level view, let's just average the categories
@@ -142,7 +112,7 @@ def main():
     category_avgs.to_csv(category_csv)
     print("Created Category Avg. Data File, {}".format(category_csv))
     category_png = os.path.join(analytics_dir, 'expected_category_avgs.png')
-    make_heatmap(category_avgs, category_png)
+    plots.make_heatmap('Expected Dissimilarity', category_avgs, category_png)
     print("Created Category Avg. Heatmap, {}".format(category_png))
 
 if __name__ == "__main__":
