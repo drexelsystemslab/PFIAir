@@ -71,8 +71,8 @@ def split_stat_pairs(pairs):
     for pair in pairs:
         # skip cases where source = target, they're not going to be 
         # helpful for this analysis
-        if pair['source_name'] == pair['target_name']: 
-            continue
+        #if pair['source_name'] == pair['target_name']: 
+        #    continue
 
         forward = get_forward_stats(pair)
         backward = get_backward_stats(pair)

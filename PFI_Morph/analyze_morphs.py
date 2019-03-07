@@ -17,6 +17,7 @@ from sklearn.pipeline import make_pipeline
 numpy.set_printoptions(precision=3, suppress=True)
 
 from pfimorph.config import config
+from pfimorph import plots
 
 ANALYTICS_DIR = config.get('output', 'analytics_dir')
 
@@ -82,6 +83,8 @@ def linreg(X, Y):
     """
     Perform linear regression on arrays X and Y. This is done with the
     traditional test/train split
+
+    NOTE: This is not currently used
     """
     # Split into training and testing data
     X_train, X_test, Y_train, Y_test = train_test_split(
@@ -111,6 +114,7 @@ def linreg_cross_validation(X, Y):
     """
     Perform linear regression on arrays X and Y. This is done with the
     traditional test/train split
+    NOTE: This is not currently used
     """
 
     pipeline = make_pipeline(
@@ -126,18 +130,6 @@ def linreg_cross_validation(X, Y):
         predictions, 
         Y)
     print("Average Cross-Validated Score", scores.mean())
-
-
-    '''
-    pipeline.fit(X_train, Y_train)
-    predicted = pipeline.predict(X_test)
-
-    model = pipeline.named_steps['linearregression'].coef_
-    intercept = pipeline.named_steps['linearregression'].intercept_
-    print(model)
-    print(intercept)
-
-    '''
 
 def linreg(X, Y):
     """
@@ -169,10 +161,32 @@ def plot_expected_vs_actual(predictions, Y):
         predictions,
         Y)
 
-def plot_heatmap(n_by_n_table, predictions):
+def plot_heatmap(n_by_n_table, predictions, expected):
     """
     Plot a heatmap of the results
     """
+    # The data we have is the upper triangle of the nxn dissimilarity matrix
+    upper_triangle = pandas.DataFrame(
+        data=predictions,
+        index=n_by_n_table.index).reset_index()
+
+    # Relabel the lower triangle
+    lower_triangle = (upper_triangle
+        .rename(columns={'source': 'target', 'target': 'source'}))
+
+    # Merge the two and remove duplicates to get the full nxn table
+    merged = (pandas
+        .concat([upper_triangle, lower_triangle], join='outer', sort=False)
+        .drop_duplicates()
+        .set_index(['source', 'target']))
+
+    # We want to reorder this to match the heatmap from the ground truth
+    # The [0] is to select out the first column as a Series
+    reordered = merged.loc[expected.index][0]
+
+    # Finally, we can make the heatmap.
+    heatmap_fname = os.path.join(ANALYTICS_DIR, 'predicted_dissimilarity.png')
+    plots.make_heatmap('Predicted Dissimilarity', reordered, heatmap_fname)
 
 def display_model(model, intercept, column_labels):
     """
@@ -204,7 +218,7 @@ def main():
     X, Y = to_arrays(merged)
     model, intercept, predictions = linreg(X, Y)
     plot_expected_vs_actual(predictions, Y)
-    plot_heatmap(merged, predictions)
+    plot_heatmap(merged, predictions, expected)
     display_model(model, intercept, merged.columns[:-1]) 
 
 if __name__ == '__main__':

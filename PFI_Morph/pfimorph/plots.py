@@ -6,6 +6,8 @@ def make_heatmap(title, adjacency_list, fname):
     """
     Make a heatmap of the nxn matrix to make it easier to check the
     results
+
+    adjacency_list is a pandas.Series, not a dataframe!
     """
 
     # Use this label order to keep the models together
