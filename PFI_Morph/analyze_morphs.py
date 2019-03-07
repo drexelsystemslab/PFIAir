@@ -138,72 +138,74 @@ def linreg_cross_validation(X, Y):
     print(intercept)
 
     '''
-    
 
-'''
-def linreg_pca(X, Y, n):
+def linreg(X, Y):
     """
-    Perform linear regression using PCA analysis to reduce the feature
-    set down to n features for graphing purposes
+    Perform linear regression on all the data and return the model
+    coefficients as well as a vector of predictions for each model
+
+    This has a danger of overfitting the data, but we're out of time on
+    this project and we just wanted to see how much of a correlation between
+    morph data and expected results there is.
     """
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size = 0.25, random_state=0)
-    
     pipeline = make_pipeline(
-        StandardScaler(), PCA(n_components=n), LinearRegression(fit_intercept=False))
-    pipeline.fit(X_train, Y_train)
-    predicted = pipeline.predict(X_test)
-    plot_file = os.path.join(ANALYTICS_DIR, 'linreg_pca{}.png'.format(n))
+        StandardScaler(), LinearRegression())
+    pipeline.fit(X, Y)
+
+    predictions = pipeline.predict(X)
+    model = pipeline.named_steps['linearregression'].coef_
+    intercept = pipeline.named_steps['linearregression'].intercept_
+
+    return model, intercept, predictions 
+
+def plot_expected_vs_actual(predictions, Y):
+    """
+    Plot a graph of regression results
+    """
+    plot_fname = os.path.join(ANALYTICS_DIR, 'linreg_results.png')
     plot_reg(
-        plot_file,
-        'LinReg with PCA ({} Components)'.format(n), 
-        predicted, 
-        Y_test)
-'''
+        plot_fname,
+        'Dissimilarity: Predicted vs Actual',
+        predictions,
+        Y)
 
-def svr(X, Y, deg):
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size = 0.25, random_state=0)
+def plot_heatmap(n_by_n_table, predictions):
+    """
+    Plot a heatmap of the results
+    """
 
-    pipeline = make_pipeline(
-        StandardScaler(), SVR(kernel='poly', degree=deg))
-    pipeline.fit(X_train, Y_train)
-    predicted = pipeline.predict(X_test)
-    plot_file = os.path.join(ANALYTICS_DIR, 'svr{}.png'.format(deg))
-    plot_reg(
-        plot_file, 
-        'SVR (Polynomial degree={})'.format(deg), 
-        predicted, 
-        Y_test) 
-    print("svr R^2", pipeline.score(X_test, Y_test))
+def display_model(model, intercept, column_labels):
+    """
+    Pretty print the model coefficients labeled by feature name, sorted
+    descending by magnitude of the coefficient. This should give a rough
+    view of what features have the biggest impact on the model
 
-def svr_pca(X, Y, deg, n):
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size = 0.25, random_state=0)
+    Also, note that the coefficients are computed after standardizing
+    the data to have mean 0 and standard deviation 1, so they do not 
+    correspond to weights of the raw features.
+    """
+    table = pandas.DataFrame(
+        data=model,
+        index=column_labels,
+        columns=["Coefficient"])
+    table['Magnitude'] = table['Coefficient'].abs()
+    by_magnitude = table.sort_values(by='Magnitude', ascending=False)
+    print(by_magnitude)
 
-    pipeline = make_pipeline(
-        StandardScaler(), PCA(n_components=n), SVR(kernel='poly', degree=deg, gamma='auto'))
-    pipeline.fit(X_train, Y_train)
-    predicted = pipeline.predict(X_test)
-    plot_file = os.path.join(ANALYTICS_DIR, 'svr{}_pca{}.png'.format(deg, n))
-    plot_reg(
-        plot_file,
-        'SVR (Polynomial degree={}) with PCA ({})'.format(deg, n), 
-        predicted, 
-        Y_test) 
-    print("svr pca R^2", pipeline.score(X_test, Y_test))
+    # Also save it in a csv file
+    csv_file = os.path.join(ANALYTICS_DIR, 'model_coeffs.csv')
+    by_magnitude.to_csv(csv_file)
 
 def main():
     data = get_data_frame()
     expected = get_expected_dissimilarity()
     merged = pandas.merge(data, expected, left_index=True, right_index=True)
 
-    print(merged.columns)
-
     X, Y = to_arrays(merged)
-    linreg(X, Y)
-    linreg_cross_validation(X, Y)
-    #svr(X, Y, 3)
+    model, intercept, predictions = linreg(X, Y)
+    plot_expected_vs_actual(predictions, Y)
+    plot_heatmap(merged, predictions)
+    display_model(model, intercept, merged.columns[:-1]) 
 
 if __name__ == '__main__':
     main()
