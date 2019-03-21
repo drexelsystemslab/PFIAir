@@ -27,3 +27,6 @@ cython_debug/
 
 # Python stuff
 *.pyc
+
+# Zip files
+*.zip
