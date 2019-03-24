@@ -40,7 +40,7 @@ MorphStats Morph::morph(
     // the final value to save the last frame.
     int frame_count;
     for (frame_count = 1; frame_count < max_iters; frame_count++) {
-        // Check if we've consumed too much energy
+        // Check if we've consumed too little energy
         if (energy_consumed < MIN_ENERGY) {
             // Increment the frame count so the last frame doesn't get
             // overwritten by the target frame
@@ -61,7 +61,7 @@ MorphStats Morph::morph(
         LevelSet prev_ls = current_ls.deep_copy();
 
         // Advect the level set and count the 
-        // Courrant-Friedrrichs-Lewy iterations
+        // Courant-Friedrichs-Lewy iterations
         // NOTE: This modifies current_ls in place
         double cfl_iters = ls_morph->advect(start_time, end_time);
         stats.add_cfl_iterations(cfl_iters);

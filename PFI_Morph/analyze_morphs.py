@@ -205,6 +205,7 @@ def display_model(model, intercept, column_labels):
     table['Magnitude'] = table['Coefficient'].abs()
     by_magnitude = table.sort_values(by='Magnitude', ascending=False)
     print(by_magnitude)
+    print("Intercept", intercept)
 
     # Also save it in a csv file
     csv_file = os.path.join(ANALYTICS_DIR, 'model_coeffs.csv')
