@@ -234,12 +234,45 @@ def E_fit_Sphere(face_adjacency, face_vertices):
         x = np.dot(A.T, A)
         if np.linalg.cond(x) < 1 / sys.float_info.epsilon:
             w = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, b))
-            c_x = w[0, 0]
-            c_y = w[1, 0]
-            c_z = w[2, 0]
+            c_x = w[0, 0]/2.0
+            c_y = w[1, 0]/2.0
+            c_z = w[2, 0]/2.0
             center = np.array([c_x, c_y, c_z])
             r = np.sqrt(w[3, 0] + c_x ** 2 + c_y ** 2 + c_z ** 2)
             E_fit_spheres.append([np.sum(dist_from_Sphere(verts, center, r))])
+        else:
+            E_fit_spheres.append([np.inf])
+    return np.array(E_fit_spheres)
+
+def dist_Tctr_from_Sphere(model,adjacent, face_leaves, face_area_array , radius, center):
+    triangles_index = face_leaves[adjacent[0]] + face_leaves[adjacent[1]]
+    Tctr = model.triangles_center[triangles_index]  # Triangles centers
+    Tarea = model.area_faces[triangles_index]
+    # dist2 = ((np.dot(Tctr, n) + n_v_bar) ** 2) * Tarea
+    return np.sum(np.square(np.linalg.norm(Tctr - center.reshape(1,-1), axis=1) - radius) * Tarea)
+
+def E_fit_Sphere2(model, face_adjacency, face_area_array, face_leaves, AtA, Atb):
+    E_fit_spheres=[]
+    for adjacent in face_adjacency:
+        tot_area = face_area_array[adjacent[0]] + face_area_array[adjacent[1]]
+        ata = AtA[adjacent[0]] + AtA[adjacent[1]]
+        atb = Atb[adjacent[0]] + Atb[adjacent[1]]
+        if np.linalg.cond(ata) < 1 / sys.float_info.epsilon:
+            w = np.dot(np.linalg.inv(ata), atb)
+            c_x = w[0]/2.
+            c_y = w[1]/2.
+            c_z = w[2]/2.
+            center = np.array([c_x[0], c_y[0], c_z[0]])
+            r2 = w[3] + c_x ** 2 + c_y ** 2 + c_z ** 2
+            if r2 < 0:
+                E_fit_spheres.append([np.inf])
+            else:
+                r = np.sqrt(r2)
+                if (tot_area / r < 1.0e-9 ):
+                    E_fit_spheres.append([np.inf])
+                else:
+                    t = dist_Tctr_from_Sphere(model, adjacent, face_leaves, face_area_array , r, center)
+                    E_fit_spheres.append([dist_Tctr_from_Sphere(model, adjacent, face_leaves, face_area_array , r, center)])
         else:
             E_fit_spheres.append([np.inf])
     return np.array(E_fit_spheres)
@@ -261,9 +294,8 @@ def E_fit_plane(p_array, face_adjacency):
 def E_fit_plane2(model, face_adjacency, voronoi_area_array, face_vertices_index):
     E_fits = []
     for adjacent in face_adjacency:
-        if adjacent[0] == 35:
-            print ("checkPl")
         verts_index =  np.unique(np.hstack((face_vertices_index[adjacent[0]], face_vertices_index[adjacent[1]])))
+        verts_index = np.hstack((face_vertices_index[adjacent[0]], face_vertices_index[adjacent[1]]))
         verts = model.vertices[verts_index]
         # vertex_voronoi = voronoi_area_array[:, adjacent[0]] + voronoi_area_array[:, adjacent[1]]
         # voronoi = vertex_voronoi[verts_index][:,None]
@@ -278,6 +310,31 @@ def E_fit_plane2(model, face_adjacency, voronoi_area_array, face_vertices_index)
         dist2 = (np.dot(A,n)) **2
         # check2  = voronoi * dist2[:,None]
         # E_fit_plane = np.sum(voronoi * dist2[:,None])
+        E_fit_plane = np.sum(dist2[:,None])
+        E_fits.append(E_fit_plane)
+    return np.array(E_fits)[:,None]
+
+def E_fit_plane3(model, face_adjacency, face_area_array, cov_v_list, weighted_center, face_leaves):
+    E_fits = []
+    for adjacent in face_adjacency:
+        print (adjacent[0])
+        print (adjacent[1])
+        tot_area = face_area_array[adjacent[0]] + face_area_array[adjacent[1]]
+        TM =  cov_v_list[adjacent[0]] + cov_v_list[adjacent[1]]
+        v_bar = (((weighted_center[adjacent[0]] + weighted_center[adjacent[1]]))/ tot_area).reshape(1,-1)
+        TM = TM - (np.matmul(v_bar.T , v_bar) * tot_area)
+        eigenValues, eigenVectors = np.linalg.eig(TM)
+        n = eigenVectors[:, np.argmin(eigenValues)][:,None]
+        n_v_bar = -(np.dot(v_bar, n))
+        triangles_index = face_leaves[adjacent[0]] + face_leaves[adjacent[1]]
+        Tctr = model.triangles_center[triangles_index] #Triangles centers
+        Tarea = model.area_faces[triangles_index][:,None]
+        # t1 = (np.dot(Tctr, n))
+        # t2 = (np.dot(Tctr, n)) + n_v_bar
+        # t3 = Tctr - v_bar
+        # t4 = np.dot(t3,n)
+        # t = ((np.dot(Tctr, n) + n_v_bar) ** 2 )
+        dist2 = ((np.dot(Tctr, n) + n_v_bar) ** 2 ) *  Tarea
         E_fit_plane = np.sum(dist2[:,None])
         E_fits.append(E_fit_plane)
     return np.array(E_fits)[:,None]
@@ -334,6 +391,14 @@ def calculate_COV(int_edge, face_adjacency_info, cov):
         cov = cov + e_info[3] * e_info[7] * np.dot(e_info[4:7].reshape(-1, 1), e_info[4:7].reshape(1, -1))
     return cov
 
+def calculate_cov_c(face_index,face_adjacency_info,edges_array ):
+    cov = np.zeros((3,3))
+    e = [edges_array[face_index][0], edges_array[face_index][1], edges_array[face_index][2]]
+    for i in range(3):
+        e_info = face_adjacency_info[e[i]]
+        cov = cov + (e_info[3] * e_info[7] * np.dot(e_info[4:7].reshape(-1, 1), e_info[4:7].reshape(1, -1))) * 0.5
+    return cov
+
 
 def get_centroids(leaves, face_area, face_center):
     face_area = np.asarray(face_area)
@@ -383,6 +448,28 @@ def fit_cylinder(cov, leaves, face_area, face_center, vertices):
     except AssertionError as e:
         raise e
 
+def best_fitting_circle2(v):
+    d = v.shape[0]
+    ones = np.ones((d, 1))
+    A = np.hstack((2 * v[:,0:2], ones))
+    A = A * v[:,2][:,None]
+    b = v[:, 0] ** 2 + v[:, 1] ** 2
+    b = b[:, None]
+    b = b * (v[:,2])
+    AtA = np.dot(A.T, A)
+    A = np.hstack((2 * v[:, 0:2], ones))
+    Atb = np.dot(A.T, b)
+    if np.linalg.cond(AtA) < 1 / sys.float_info.epsilon:
+        w = np.dot(np.linalg.inv(AtA), Atb)
+        c_x = w[0, 0]
+        c_y = w[1, 0]
+        center = np.array([c_x, c_y])
+        r = np.sqrt(w[2, 0] + c_x ** 2 + c_y ** 2)
+        return center, r
+    else:
+        raise AssertionError("No Cylinder fitted")
+
+
 
 def find_leaves(contraction_graph, adjacent, n):
     if adjacent[0] < n:
@@ -396,6 +483,7 @@ def find_leaves(contraction_graph, adjacent, n):
         all_decendants = list(nx.descendants(contraction_graph, adjacent[0]))
         leaves = leaves + [i for i in all_decendants if i < n]
     return leaves
+
 
 
 def E_fit_cylinder(face_adjacency, face_vertices, cov_list, face_adjacency_info, edges_array, face_area, face_center,
@@ -431,6 +519,59 @@ def E_fit_cylinder(face_adjacency, face_vertices, cov_list, face_adjacency_info,
     return np.asarray(E_fit_cylinders)
 
 
+
+def fit_cylinder2(model, cov,  face_leaves, face_area, face_center, tot_area, weighted_center, adjacent):
+    # print (np.argmin(eigenValues))
+    try:
+        eigenValues, eigenVectors = np.linalg.eig(cov)
+        if not np.all(np.isreal(eigenValues)):
+            raise AssertionError("complex eigen values and vectors for cylinder")
+        else:
+            if ((np.max(eigenValues)/tot_area) < 1.0e-9):
+                raise AssertionError # check that???
+            n = eigenVectors[:, np.argmax(eigenValues)][:, None] #change the code to max
+            temp = list(range(3))
+            temp.pop(np.argmax(eigenValues))
+            e_x = eigenVectors[:, temp[0]][:, None]
+            e_y = eigenVectors[:, temp[1]][:, None]
+            cm = (((weighted_center[adjacent[0]] + weighted_center[adjacent[1]]))/ tot_area).reshape(1,-1)
+            face_leaves = face_leaves[adjacent[0]] + face_leaves[adjacent[1]]
+            vertices = model.vertices[model.faces[np.array(face_leaves).reshape(-1, 1)]].reshape(-1,3)
+            vertices1 = model.vertices[model.faces[np.array(face_leaves).reshape(-1,1)]]
+            # A = np.asarray(face_area)[np.array(face_leaves)]
+            Tarea = np.repeat(np.asarray(face_area)[np.array(face_leaves)], 3)[:,None]
+            test = np.dot(vertices - cm, e_x)
+            v_projected = np.hstack((np.dot(vertices - cm, e_x), (np.dot(vertices - cm, e_y)), Tarea))
+            c, r = best_fitting_circle2(v_projected)
+            c_cylinder = cm.reshape(-1,1) + c[0] * e_x + c[1] * e_y
+            return c_cylinder, r, n
+    except AssertionError as e:
+        raise e
+
+def E_fit_cylinder2(model,face_adjacency, cov_c, face_area, face_center, face_leaves,weighted_center):
+    E_fit_cylinders = []
+
+    for adjacent in face_adjacency:
+        leaves = face_leaves[adjacent[0]] + face_leaves[adjacent[1]]
+        tot_area = face_area[adjacent[0]] + face_area[adjacent[1]]
+        cov = cov_c[adjacent[0]] + cov_c[adjacent[1]]
+        if np.all(np.equal(cov_c, np.zeros((3,3)))):
+            E =np.inf
+        else:
+            try:
+                c_cylinder, r, c_cylinder_normal = fit_cylinder2(model, cov,  face_leaves, face_area, face_center, tot_area, weighted_center, adjacent)
+                c_cylinder = c_cylinder.reshape((1, 3))
+                Tctr = model.triangles_center[leaves]  # Triangles centers
+                Tarea = model.area_faces[leaves]
+                A = Tctr - c_cylinder
+                c_cylinder_normal = c_cylinder_normal.reshape((1, 3))
+                cross = np.linalg.norm(np.cross(A, c_cylinder_normal), axis=1)
+                E = np.sum(((cross - r) ** 2) * Tarea)
+            except AssertionError:
+                E = np.inf
+        E_fit_cylinders.append([E])
+    return np.asarray(E_fit_cylinders)
+
 def fit_shapes(model, face_adjacency, p_array, face_vertices, cov_list, face_adjacency_info, edges_array, face_area_array,
                face_center, contraction_graph, n, voronoi_area_array, face_vertices_index ):
     E_fit_array = E_fit_plane(p_array, face_adjacency)
@@ -442,6 +583,14 @@ def fit_shapes(model, face_adjacency, p_array, face_vertices, cov_list, face_adj
                                      face_area_array, face_center, contraction_graph, n)
     return np.hstack((E_plane, E_sphere, E_fit_cylinders))
 
+def fit_shapes2(model, face_adjacency, cov_v_list, cov_c, face_adjacency_info, edges_array, face_area_array,
+               face_center, weighted_center, face_leaves,AtA, Atb, voronoi_area_array, face_vertices_index ):
+    E_plane = E_fit_plane3(model, face_adjacency, face_area_array, cov_v_list, weighted_center, face_leaves)
+    # E_plane = E_fit_plane2(model, face_adjacency, voronoi_area_array, face_vertices_index)
+    print('E_plane_2 = ', E_plane)
+    E_sphere = E_fit_Sphere2(model, face_adjacency, face_area_array, face_leaves, AtA, Atb)
+    E_fit_cylinders = E_fit_cylinder2(model,face_adjacency, cov_c, face_area_array, face_center, face_leaves, weighted_center)
+    return np.hstack((E_plane, E_sphere, E_fit_cylinders))
 
 def E_fit(shape_fits):
     print(shape_fits)
@@ -457,6 +606,13 @@ def voronoi_area(model):
         result[model.faces[i,2], i] = face_area_array[i]/3.
     print (result)
     return result
+def calculate_AtA_Atb(vertices, area):
+    A = np.hstack((vertices, np.ones((3,1))))
+    b = (vertices[:,0]**2 + vertices[:, 1]**2 + vertices[:,2] ** 2).reshape(-1,1)
+    AtA =  np.matmul(A.T,A) * ((area **2)/9.)
+    Atb = np.matmul(A.T, b) * ((area **2)/9.)
+    return AtA, Atb
+
 
 
 def faceClustering(model):
@@ -471,29 +627,40 @@ def faceClustering(model):
     face_vertices = []
     face_vertices_index = []
     cov_list = []
+    cov_v_list = []
+    face_leaves = []
+    AtA = []
+    Atb = []
     face_center = model.triangles_center
+    weighted_center = list(model.triangles_center * model.area_faces[:,None])
     vertex_neighbors = model.vertex_neighbors[0]
     voronoi_area_array = voronoi_area(model)
     # model.vertex_neighbors[0].keys()
     b = model.faces
-    print (type(vertex_neighbors))
     dual_graph = nx.Graph()
+    cov_c=[]
+    edges_array = model.faces_unique_edges.tolist()
+    face_adjacency_info = get_face_adj_info(model, edges_array, edges_length, edges_vector_norm2, face_center)
     for i in range(0, len(model.faces)):
-        A = model.vertices
-        print(model.vertices[model.faces[i]])
+        A  = model.vertices[model.faces[i]]
         p_array.append(P_face(model.vertices[model.faces[i]]))
         r_array.append(R_face(model.face_normals[i]))
         irregularity_array.append(irregularity(face_area_array[i], model.vertices[model.faces[i]]))
         face_vertices.append(model.vertices[model.faces[i]])
         face_vertices_index.append(model.faces[i])
         cov_list.append(np.zeros((3, 3)))
+        cov_v_list.append(np.matmul(A.T, A) * face_area_array[i] / 3.)
         # dual_graph.add_node(i,degree = 0)
         dual_graph.add_node(i, degree=3)
+        face_leaves.append([i])
+        ata,atb= calculate_AtA_Atb(model.vertices[model.faces[i]], face_area_array[i])
+        AtA.append(ata)
+        Atb.append(atb)
+        cov_c.append(calculate_cov_c(i,face_adjacency_info,edges_array ))
     # print (A)
 
     # E_fit_array = np.asarray(E_fit_plane(p_array, model.face_adjacency))
     E_dir_array = np.asarray(E_dir(r_array, face_area_array, model.face_adjacency))
-    edges_array = model.faces_unique_edges.tolist()
     E_shape_array = np.asarray(E_shape(edges_array, edges_length, face_area_array,
                                        irregularity_array, model.face_adjacency))
     E_shape_array = E_shape_array.reshape((len(E_shape_array), 1))
@@ -506,7 +673,7 @@ def faceClustering(model):
     contraction_graph.add_nodes_from(range(0, len(model.faces)))
     counter = 0
     Normals = model.face_normals
-    face_adjacency_info = get_face_adj_info(model, edges_array, edges_length, edges_vector_norm2, face_center)
+    # face_adjacency_info = get_face_adj_info(model, edges_array, edges_length, edges_vector_norm2, face_center)
     # betha = calculate_betha(model, edges_array, edges_length, edges_vector_norm2)
     n = len(model.faces)
     # E_fit_cylinders = np.asarray(E_fit_cylinder(model.face_adjacency, face_vertices, cov_list, face_adjacency_info, edges_array, face_area_array, face_center,
@@ -515,13 +682,13 @@ def faceClustering(model):
     # e_fit = np.minimum(e_fit, E_fit_cylinders)
     # fit_primes = np.hstack((E_fit_array, E_sphere, E_fit_cylinders))
     # e_fit_primitive = fit_primes.min(axis=1)[:, None]
-    E_fit_shapes_array = fit_shapes(model, model.face_adjacency, p_array, face_vertices, cov_list, face_adjacency_info, edges_array,
-                        face_area_array, face_center, contraction_graph, n, voronoi_area_array, face_vertices_index)
+    E_fit_shapes_array = fit_shapes2(model, model.face_adjacency, cov_v_list, cov_c, face_adjacency_info, edges_array, face_area_array,
+               face_center, weighted_center, face_leaves,AtA, Atb, voronoi_area_array, face_vertices_index)
     E_fit_array = E_fit(E_fit_shapes_array)
     # print(E_fit_array.shape, E_dir_array.shape, E_shape_array.shape)
     # dual_graph = nx.Graph()  # keep record of graph to guide later edge contraction
     dual_graph.add_weighted_edges_from(
-        np.hstack((model.face_adjacency.astype("object"), E_fit_array + E_dir_array +  E_shape_array)))
+        np.hstack((model.face_adjacency.astype("object"), E_fit_array + 0*E_dir_array +  0*E_shape_array)))
     # plane_or_sphere_data = np.hstack((model.face_adjacency, np.where(E_fit_array < E_sphere, 0, 1)))
     # # print(plane_or_sphere_data)
     # map(lambda face: dual_graph.add_edge(face[0], face[1], plane_or_sphere=face[2]), plane_or_sphere_data)
@@ -537,21 +704,17 @@ def faceClustering(model):
     print (A)
     B = dual_graph.neighbors(0)
     while (dual_graph.number_of_nodes() > 1):
-        edges = np.array(map(lambda edge:[edge[0],edge[1],edge[2]['weight'],edge[2]['degree']],dual_graph.edges(data=True)))
-        candidate_edges = edges[edges[:,2]==np.min(edges[:,2],axis=0)]
-        candidate_edges = candidate_edges[candidate_edges[:,3]==np.min(candidate_edges[:,3])]
 
-        # edge_to_contract = min(dual_graph.edges(data=True), key=lambda edge: edge[2]['weight'])  # find edge to contract, which connects face a to face b
-        # min_weight = min([edge[2]['weight'] for edge in dual_graph.edges(data = True)])
-        # print (min_weight)
-        # candidate_edge = [(u,v,d) for (u,v,d) in dual_graph.edges(data=True) if d['weight'] == ]
-        # candidate_edges =
 
-        print (candidate_edges)
-
-        # edge_to_contract = np.argmin([cand_edge[2]['degree'] for cand_edge in candidate_edge])
-        edge_to_contract = candidate_edges[0]
-        print (edge_to_contract)
+        # edges = np.array(map(lambda edge:[edge[0],edge[1],edge[2]['weight'],edge[2]['degree']],dual_graph.edges(data=True)))
+        # candidate_edges = edges[edges[:,2]==np.min(edges[:,2],axis=0)]
+        # print (candidate_edges)
+        # candidate_edges = candidate_edges[candidate_edges[:,3]==np.min(candidate_edges[:,3])]
+        # print (candidate_edges)
+        # edge_to_contract = candidate_edges[0]
+        # print (edge_to_contract)
+        edges = np.array(map(lambda edge: [edge[0], edge[1], edge[2]['weight'], edge[2]['degree']], dual_graph.edges(data=True)))
+        edge_to_contract = edges[np.argmin(edges[:,2],axis=0)]
         a = int(edge_to_contract[0])
         b = int(edge_to_contract[1])
         print ('a = ', a, 'b = ',b)
@@ -570,7 +733,12 @@ def faceClustering(model):
         cov_prime = cov_list[a] + cov_list[b]
         cov_prime = calculate_COV(int_edge, face_adjacency_info, cov_prime)
         cov_list.append(cov_prime)
-
+        cov_v_list.append(cov_v_list[a] + cov_v_list[b])
+        weighted_center.append(weighted_center[a]+ weighted_center[b])
+        face_leaves.append(face_leaves[a] + face_leaves[b])
+        AtA.append(AtA[a] + AtA[b])
+        Atb.append(Atb[a] + Atb[b])
+        cov_c.append(cov_c[a] + cov_c[b])
         # print(ex_edge)
         edges_array.append(ex_edge.tolist())
         new_face_vertices = np.vstack((face_vertices[a], face_vertices[b]))
@@ -625,7 +793,11 @@ def faceClustering(model):
             #                    face_center, contraction_graph, n))[:, None]
             # print('e_fit_sphere_prime = ')
             # print(e_fit_sphere_prime)
-            e_fit_shapes_prime = fit_shapes(model, faces,p_array,face_vertices,cov_list,face_adjacency_info,edges_array,face_area_array,face_center,contraction_graph,n, voronoi_area_array, face_vertices_index)
+            # e_fit_shapes_prime = fit_shapes(model, faces,p_array,face_vertices,cov_list,face_adjacency_info,edges_array,face_area_array,face_center,contraction_graph,n, voronoi_area_array, face_vertices_index)
+            e_fit_shapes_prime = fit_shapes2(model, faces, cov_v_list, cov_c, face_adjacency_info, edges_array, face_area_array,face_center, weighted_center, face_leaves, AtA, Atb, voronoi_area_array, face_vertices_index)
+
+
+
             e_fit_prime = E_fit(e_fit_shapes_prime)
             # fit_prime = np.hstack((e_fit_prime, e_fit_sphere_prime, e_fit_cylinders))
             E_fit_shapes_array = np.vstack((E_fit_shapes_array, e_fit_shapes_prime))  # add our new fit prime to the larger fit list
@@ -636,13 +808,16 @@ def faceClustering(model):
             #     else:
             #         print ('plane')
 
-        dual_graph.add_node(int(face_prime))
+            dual_graph.add_node(int(face_prime))
 
-        degree_weighted = (e_fit_prime + e_dir_prime + e_shape_prime)
-        dual_graph.add_weighted_edges_from(np.hstack((faces, degree_weighted)))  # reconnect the new node
-        plane_or_sphere_data = np.hstack((faces, np.argmin(e_fit_shapes_prime[:,0:3], axis=1)[:, None]))
-        map(lambda face: dual_graph.add_edge(face[0], face[1], plane_or_sphere = face[2]), plane_or_sphere_data)
-            # test = map(lambda face:[face[0], face[1], [dual_graph[face[0]] , dual_graph[face[1]]]], faces )
+            degree_weighted = (e_fit_prime + 0*e_dir_prime + 0*e_shape_prime)
+            dual_graph.add_weighted_edges_from(np.hstack((faces, degree_weighted)))  # reconnect the new node
+            plane_or_sphere_data = np.hstack((faces, np.argmin(e_fit_shapes_prime[:,0:3], axis=1)[:, None]))
+            map(lambda face: dual_graph.add_edge(face[0], face[1], plane_or_sphere = face[2]), plane_or_sphere_data)
+            degree = map(lambda face: len(dual_graph[face[0]]) + len(dual_graph[face[1]]) - 2, faces)
+            edge_degree = np.hstack((faces, np.asarray(degree)[:, None]))
+            map(lambda face: dual_graph.add_edge(face[0], face[1], degree=face[2]), edge_degree)
+
         colors = [[229, 156, 11, 255], [11, 204, 229, 255], [226, 30, 9, 255]]
         model.visual.face_colors[leaves] = trimesh.visual.random_color()
         print("color", dual_graph.get_edge_data(a, b)["plane_or_sphere"])
@@ -650,9 +825,7 @@ def faceClustering(model):
         dual_graph.remove_node(a)  # remove the old nodes
         dual_graph.remove_node(b)
 
-        degree = map(lambda face: len(dual_graph[face[0]]) + len (dual_graph[face[1]]) -2, faces )
-        edge_degree = np.hstack((faces, np.asarray(degree)[:,None]))
-        map(lambda face: dual_graph.add_edge(face[0], face[1], degree=face[2]), edge_degree)
+
 
 
         # colors = [[229, 156, 11, 255], [11, 204, 229, 255], [226, 30, 9, 255]]  # plane, sphere, cylinder
@@ -676,9 +849,7 @@ def faceClustering(model):
         # leaves = [i for i in all_decendants if i < len(model.faces)]
         # print(leaves)
 
-        # print(a , b)
-        # if (dual_graph.number_of_nodes() == 2):
-        # if(counter == 166):
+
         if (counter %1  == 0):
             print(e_fit_shapes_prime)
             model.show(smooth=False)
