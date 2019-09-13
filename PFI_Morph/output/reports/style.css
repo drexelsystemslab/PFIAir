@@ -1,0 +1,22 @@
+img { 
+    width:200px; 
+    height:100px;
+}
+
+.table_img {
+    margin-top: 15%;
+}
+
+canvas {
+    float: left;
+}
+
+table th {
+    border-bottom: 1px black solid !important; 
+    border-top: 1px black solid !important
+}
+
+h3 {
+    text-align: center;
+    padding: 10px;
+}

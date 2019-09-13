@@ -1,0 +1,26 @@
+Model Name,UUID,Category,Long/Flat/Solid,Surface Complexity,Density,Has Thin Details,N-fold rotational symmetry,Reflection Axes
+stealth_plane,371a609f050b4ed3f6497dc58a9a6f8a,airplanes,long,3.1,3,FALSE,1,1
+concord_plane,f58b4ed02fc2fd1d4e7648015fd29a1c,airplanes,long,3,2.5,TRUE,1,1
+airliner,4561def0c651631122309ea5a3ab0f04,airplanes,long,2.5,3.1,FALSE,1,1
+biplane,67eac921334c130c336fa8434b94be14,airplanes,flat,4,2.8,TRUE,1,1
+stealth_bomber,a9b95631bcbefe9ad225a1c252daae25,airplanes,flat,1.5,2.4,FALSE,1,1
+oil_can,ac0eafed7aa1719b297d1fadd26a7035,cans,solid,0.5,7,FALSE,2,2
+soda_can1,3a7d8f866de1890bab97e834e9ba876c,cans,solid,0.7,7.5,FALSE,10,10
+soda_can2,297b1ba8efcbb6a86128527957a7bb1,cans,solid,0.8,8,FALSE,10,10
+beans_can,f6316c6702c49126193d9e76bb15876,cans,solid,0.7,7.5,FALSE,10,10
+tall_can,295be2a01cb9f29b716714dd1fd945b7,cans,long,0,9,FALSE,10,10
+high_rise,a2beb5f14190c1702637f1559971e0a6,tower,long,4,6,FALSE,1,1
+pylon,5da1ddcc8d5f62577f5d4139a48ddb6f,tower,long,9,1.3,TRUE,2,2
+watchtower,26e099d5d7040b03b96aa5dc23c036c,tower,long,4,8,FALSE,2,2
+silo,d24729b45b9192b8f1390d726a8b3e99,tower,long,0.2,8.5,FALSE,8,8
+leaning_tower,4264b506533b1e2e473f10e6caaeca56,tower,long,8,7.5,FALSE,1,1
+acoustic_guitar,aebe041eaae1962921d62dae9ac1d30f,guitar,long,2.6,4.5,FALSE,1,1
+double_neck_guitar,5dd9e0c35898183bfbeef84a1ff2df7f,guitar,long,4,4.5,FALSE,1,0
+flying_v_guitar,2be11b43e7a24b4a13dd57bbc3e006f9,guitar,long,2.5,4,FALSE,1,1
+stratocaster_guitar,c980271f356c3e9b605c81d3188a5b83,guitar,long,2.5,4,FALSE,1,0
+explorer_guitar,e3f45b5945315a939526648647837830,guitar,long,2.6,3.5,FALSE,1,0
+grand_piano,7aa18769bd5d996934d6aa31914c287d,piano,solid,6,4.5,FALSE,1,0
+upright_piano,532420acbb08cdb410a322420f6f5d87,piano,solid,4,7,FALSE,1,1
+keyboard_with_stand,b11213949b59e6bdfbed28a02a11bd9b,piano,solid,5,3.5,FALSE,2,2
+keyboard_without_stand,4c68319a9f02d3909807fae46dcfc049,piano,flat,0.2,0.6,FALSE,1,1
+piano_with_seat,1a8a5e4095e7ca4749f90dfc30e57686,piano,solid,4,5,TRUE,1,1

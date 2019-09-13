@@ -1,0 +1,32 @@
+# Executables
+morph
+PFI_Morph
+PFI_VoxelConvert
+
+# Output directories and files
+build/
+output/
+morphs/
+JSON/
+DerivedData/
+cmake-build-debug/
+srt.vdb
+Reports/
+
+# CMake stuff
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Cython stuff
+*.so
+pfimorph.cpp
+binvox2vdb.cpp
+cython_debug/
+
+# Python stuff
+*.pyc
+
+# Zip files
+*.zip

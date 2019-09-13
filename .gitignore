@@ -18,3 +18,15 @@
 /PFI_API/models/
 /PFI_Python/models/
 /PFI_API/static/previews/
+
+# Xcode
+/PFI_openVDBTools/Mac\ app/PFITools/Carthage/
+/PFI_openVDBTools/Mac\ app/PFITools/DerivedData/
+/PFI_openVDBTools/Mac\ app/PFITools/build/
+.DS_Store
+
+# iOS app
+/PFI_API/Depth/DerivedData/
+
+
+
